@@ -15,7 +15,7 @@ typedef struct	s_token
 
 typedef enum e_token_type
 {
-    TOKEN_TXT,         // Regular word (e.g., "ls", "-l")
+    TOKEN_WD,         // Regular word (e.g., "ls", "-l")
     TOKEN_PIPE,         // Pipe operator ("|")
     TOKEN_REDIRECT_IN,  // Input redirection ("<")
     TOKEN_REDIRECT_OUT, // Output redirection (">")
@@ -26,11 +26,19 @@ typedef enum e_token_type
     TOKEN_SQUOTE,
     TOKEN_DQUOTE,        // Quotes ("'", "\"")
     TOKEN_COMMENT,
+    TOKEN_VARIABLE,
     TOKEN_EOF           // End of input
 } t_token_type;
 
 //lex_handle
 int	lex_token_pipe(char *str, int *i, t_list **l_token);
+int	lex_token_bracket(char *str, int *i, t_list **l_token);
+int	lex_token_quote(char *str, int *i, t_list **l_token);
+int	lex_token_redirin_hdc(char *str, int *i, t_list **l_token);
+int	lex_token_redirout_app(char *str, int *i, t_list **l_token);
+int	lex_token_variable(char *str, int *i, t_list **l_token);
+int	lex_token_wd(char *str, int *i, t_list **l_token);
+void	free_token_list(t_list **l_token);
 //lex
 t_list *get_token_list(char *input);
 t_list	*lexer(char *input);

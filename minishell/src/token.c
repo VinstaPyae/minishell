@@ -12,7 +12,7 @@ t_list	*create_token(char *str, int type)
 	c_token->type = type;
 	token = ft_lstnew(c_token);
 	if (token == NULL)
-		return (NULL);
+		return (free(c_token),NULL);
 	token->next = NULL;
 	return (token);
 }

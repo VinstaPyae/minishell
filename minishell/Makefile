@@ -18,7 +18,7 @@ LIBFT = $(LIBFT_DIR)/libft.a
 INCLUDES = -I$(LIBFT_DIR) -I.
 LDLIBS = -lreadline -lhistory
 RM = rm -rf
-SRCS = main.c lexer.c lex_handle.c token.c
+SRCS = main.c lexer.c lex_handle.c lex_wd.c token.c
 SRC = $(addprefix ./src/,$(SRCS))
 OBJ = $(SRC:.c=.o)
 

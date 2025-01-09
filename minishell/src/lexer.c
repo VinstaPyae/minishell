@@ -6,12 +6,25 @@ t_list *get_token_list(char *input)
 	int	i;
 
 	i = 0;
+	l_token = NULL;
 	while (input[i])
 	{
-		if (lex_token_pipe(input, &i, &l_token) == -1)
+		if (lex_token_pipe(input, &i, &l_token))
 			break;
-		else
-			i++;		
+		if (lex_token_bracket(input, &i, &l_token))
+			break;
+		if (lex_token_quote(input, &i, &l_token))
+			break;
+		if (lex_token_redirin_hdc(input, &i, &l_token))
+			break;
+		if (lex_token_redirout_app(input, &i, &l_token))
+			break;
+		if (lex_token_variable(input, &i, &l_token))
+			break ;
+		if (lex_token_wd(input, &i, &l_token))
+			break;
+		while (input[i] == 32 || (input[i] >= 9 && input[i] <= 13))
+			i++;
 	}
 	return (l_token);
 }
@@ -22,6 +35,6 @@ t_list	*lexer(char *input)
 
 	l_token = get_token_list(input);
 	if (!l_token)
-		return (NULL);
+		return (free_token_list(&l_token), NULL);
 	return (l_token);
 }
