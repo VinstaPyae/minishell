@@ -28,16 +28,16 @@ int	lex_token_variable(char *str, int *i, t_list **l_token)
 	int		v_len;
 
 	v_len = variable_len(&str[*i]);
-	if (str[*i] == '$')
+	if (v_len > 0)
 	{
-		str_token = ft_substr(str, *i, 1);
+		str_token = ft_substr(str, *i, v_len);
 		if (!str_token)
 			return (free(str_token), 1);
 		token = create_token(str_token, TOKEN_VARIABLE);
 		if (!token)
 			return (free(token),free(str_token),1);
 		ft_lstadd_back(l_token, token);
-		(*i)++;
+		(*i) += v_len;
 	}
 	return (0);
 }

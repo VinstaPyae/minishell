@@ -1,5 +1,13 @@
 #include "minishell.h"
 
+int	ft_isspace(int c)
+{
+	if (c == ' ' || c == '\n' || c == '\t' || c == '\v' || c == '\f' ||
+		c == '\r')
+		return (1);
+	return (0);
+}
+
 int	variable_len(char *input)
 {
 	int	i;
@@ -7,8 +15,14 @@ int	variable_len(char *input)
 	i = 0;
 	if (input[i] == '$')
 	{
-		while ()
+		i++;
+		/* while (!ft_isspace(input[i]) && input[i] != '$' && input[i] &&
+		(input[i] != '\'' || input[i] != '"')) */
+		while (!ft_isspace(input[i]) && input[i] != '$' && input[i])
+			i++;
+		return (i);
 	}
+	return(0);
 }
 
 int	ot_len(char *input)

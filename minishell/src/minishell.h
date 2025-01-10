@@ -46,7 +46,9 @@ t_list	*create_token(char *str, int type);
 int	quote_len(char *str);
 int	ot_len(char *input);
 int	wd_len(char *input);
+int	variable_len(char *input);
 void	free_token_list(t_list **l_token);
+int		ft_isspace(int c);
 //lex_gram
 int	check_pipe_grammar(t_list *l_token);
 int	lexer_syntax_check(t_list *l_token);
