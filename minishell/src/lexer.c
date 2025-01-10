@@ -11,8 +11,8 @@ t_list *get_token_list(char *input)
 	{
 		if (lex_token_pipe(input, &i, &l_token))
 			break;
-		if (lex_token_bracket(input, &i, &l_token))
-			break;
+		/* if (lex_token_bracket(input, &i, &l_token))
+			break; */
 		if (lex_token_quote(input, &i, &l_token))
 			break;
 		if (lex_token_redirin_hdc(input, &i, &l_token))
@@ -36,5 +36,10 @@ t_list	*lexer(char *input)
 	l_token = get_token_list(input);
 	if (!l_token)
 		return (free_token_list(&l_token), NULL);
+	if (lexer_syntax_check(l_token) == 1)
+	{
+		printf("Invalid grammar for pipe\n");
+		return (NULL);
+	}
 	return (l_token);
 }

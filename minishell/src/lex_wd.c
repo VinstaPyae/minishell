@@ -1,33 +1,5 @@
 #include "minishell.h"
 
-int	ot_len(char *input)
-{
-	if (*input == '\'' || *input == '"' || *input == '(' || *input == ')'
-	|| *input == '|' || *input == '$')
-		return (1);
-	if ((*input == '>' && *(input + 1) != '>') || (*input == '<' && *(input + 1) != '<'))
-		return (1);
-	if ((*input == '>' && *(input + 1) == '>') || (*input == '<' && *(input + 1) == '<'))
-		return (2);
-	return (0);
-}
-
-int	wd_len(char *input)
-{
-	int	i;
-
-	i = 0;
-	while (input[i])
-	{
-		if (input[i] == 32 || (input[i] >= 9 && input[i] <= 13))
-			break;
-		if (ot_len(&input[i]) > 0)
-			break;
-		i++;
-	}
-	return (i);
-}
-
 int	lex_token_wd(char *str, int *i, t_list **l_token)
 {
 	t_list	*token;
@@ -53,7 +25,9 @@ int	lex_token_variable(char *str, int *i, t_list **l_token)
 {
 	t_list	*token;
 	char	*str_token;
+	int		v_len;
 
+	v_len = variable_len(&str[*i]);
 	if (str[*i] == '$')
 	{
 		str_token = ft_substr(str, *i, 1);

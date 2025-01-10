@@ -19,7 +19,7 @@ int	lex_token_pipe(char *str, int *i, t_list **l_token)
 	return (0);
 }
 
-int	lex_token_bracket(char *str, int *i, t_list **l_token)
+/* int	lex_token_bracket(char *str, int *i, t_list **l_token)
 {
 	t_list	*token;
 	char	*str_token;
@@ -39,16 +39,18 @@ int	lex_token_bracket(char *str, int *i, t_list **l_token)
 		(*i)++;
 	}
 	return (0);
-}
+} */
 
 int	lex_token_quote(char *str, int *i, t_list **l_token)
 {
 	t_list	*token;
 	char	*str_token;
+	int	q_len;
 
-	if (str[*i] == '\'' || str[*i] == '"')
+	q_len = quote_len(&str[*i]);
+	if (q_len > 0)
 	{
-		str_token = ft_substr(str, *i, 1);
+		str_token = ft_substr(str, *i, q_len);
 		if (str_token == NULL)
 			return (free(str_token), 1);
 		if (str[*i] == '"')
@@ -58,7 +60,7 @@ int	lex_token_quote(char *str, int *i, t_list **l_token)
 		if (!token)
 			return (free(str_token), free_token_list(&token), 1);
 		ft_lstadd_back(l_token, token);
-		(*i)++;
+		(*i) += q_len;
 	}
 	return (0);
 }

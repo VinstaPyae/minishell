@@ -37,5 +37,8 @@ int	main(int ac, char **av, char **env)
 		//free_token_list(&temp);
 		free(input);
 	}
+	free_token_list(&l_token);
+	//free_token_list(&temp);
+	free(input);
 	return (0);
 }

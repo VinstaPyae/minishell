@@ -6,7 +6,7 @@
 #    By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/01/08 17:16:05 by pzaw              #+#    #+#              #
-#    Updated: 2025/01/08 17:25:14 by pzaw             ###   ########.fr        #
+#    Updated: 2025/01/10 20:40:09 by pzaw             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,7 @@ LIBFT = $(LIBFT_DIR)/libft.a
 INCLUDES = -I$(LIBFT_DIR) -I.
 LDLIBS = -lreadline -lhistory
 RM = rm -rf
-SRCS = main.c lexer.c lex_handle.c lex_wd.c token.c
+SRCS = main.c lexer.c lex_handle.c lex_wd.c token.c utils.c lex_gram_check.c
 SRC = $(addprefix ./src/,$(SRCS))
 OBJ = $(SRC:.c=.o)
 
