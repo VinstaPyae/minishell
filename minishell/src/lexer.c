@@ -37,9 +37,6 @@ t_list	*lexer(char *input)
 	if (!l_token)
 		return (free_token_list(&l_token), NULL);
 	if (lexer_syntax_check(l_token) == 1)
-	{
-		printf("Invalid grammar for pipe\n");
 		return (NULL);
-	}
 	return (l_token);
 }
