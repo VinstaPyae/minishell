@@ -26,6 +26,8 @@ t_list *get_token_list(char *input)
 		while (input[i] == 32 || (input[i] >= 9 && input[i] <= 13))
 			i++;
 	}
+	if (input[i] != '\0')
+		return (NULL);
 	return (l_token);
 }
 

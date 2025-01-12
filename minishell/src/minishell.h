@@ -37,6 +37,8 @@ int	lex_token_redirout_app(char *str, int *i, t_list **l_token);
 int	lex_token_variable(char *str, int *i, t_list **l_token);
 int	lex_token_wd(char *str, int *i, t_list **l_token);
 
+
+
 //lex
 t_list *get_token_list(char *input);
 t_list	*lexer(char *input);

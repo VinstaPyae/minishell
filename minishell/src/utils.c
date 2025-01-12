@@ -52,23 +52,69 @@ int	wd_len(char *input)
 	return (i);
 }
 
-int	quote_len(char *str)
+// int	quote_len(char *str)
+// {
+// 	int		i;
+// 	char	quote_char;
+
+// 	i = 0;
+// 	if (str[i] == '\'' || str[i] == '"')
+// 	{
+// 		quote_char = str[i]; // Store the opening quote type
+// 		i++;
+// 		while (str[i] && str[i] != quote_char) // Look for the matching closing quote
+// 			i++;
+// 		if (str[i] == quote_char) // Ensure a closing quote was found
+// 			return (i + 1);
+// 		else
+// 			return (0); // Return 0 if no matching closing quote is found
+// 	}
+// 	return (0);
+// }
+
+// int	quote_len(char *str)
+// {
+// 	int i = 0;
+// 	char quote_char;
+
+// 	if (str[i] == '\'' || str[i] == '"')
+// 	{
+// 		quote_char = str[i];
+// 		i++;
+// 		while (str[i] && str[i] != quote_char)
+// 			i++;
+// 		if (str[i] == quote_char)
+// 			return (i + 1); // Include the closing quote
+// 		else
+// 			return -1; // Unclosed quote
+// 	}
+// 	return 0;
+// }
+
+int quote_len(char *str)
 {
-	int		i;
-	char	quote_char;
+	int i;
+	char quote_char;
 
 	i = 0;
 	if (str[i] == '\'' || str[i] == '"')
 	{
-		quote_char = str[i]; // Store the opening quote type
+		quote_char = str[i];
 		i++;
-		while (str[i] && str[i] != quote_char) // Look for the matching closing quote
-			i++;
-		if (str[i] == quote_char) // Ensure a closing quote was found
-			return (i + 1); // Include the closing quote in the length
-		else
-			return (0); // Return 0 if no matching closing quote is found
+		while (str[i])
+		{
+			if (str[i] == '\\' && (str[i + 1] == quote_char || str[i + 1] == '\\'))
+			{
+				i += 2; // Skip the escape character and the escaped quote or backslash
+				continue;
+			}
+			if (str[i] == quote_char)
+			{
+				return (i + 1); // Return length including the closing quote
+			}
+		i++;
+		}
+		return (-1); // Unclosed quote
 	}
-	return (0);
+	return (0); // Not a quote
 }
-
