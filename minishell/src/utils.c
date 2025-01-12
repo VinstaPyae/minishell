@@ -72,26 +72,26 @@ int	wd_len(char *input)
 // 	return (0);
 // }
 
-// int	quote_len(char *str)
-// {
-// 	int i = 0;
-// 	char quote_char;
+int	quote_len(char *str)
+{
+	int i = 0;
+	char quote_char;
 
-// 	if (str[i] == '\'' || str[i] == '"')
-// 	{
-// 		quote_char = str[i];
-// 		i++;
-// 		while (str[i] && str[i] != quote_char)
-// 			i++;
-// 		if (str[i] == quote_char)
-// 			return (i + 1); // Include the closing quote
-// 		else
-// 			return -1; // Unclosed quote
-// 	}
-// 	return 0;
-// }
+	if (str[i] == '\'' || str[i] == '"')
+	{
+		quote_char = str[i];
+		i++;
+		while (str[i] && str[i] != quote_char)
+			i++;
+		if (str[i] == quote_char)
+			return (i + 1); // Include the closing quote
+		else
+			return -1; // Unclosed quote
+	}
+	return 0;
+}
 
-int quote_len(char *str)
+/*int quote_len(char *str)
 {
 	int i;
 	char quote_char;
@@ -117,4 +117,4 @@ int quote_len(char *str)
 		return (-1); // Unclosed quote
 	}
 	return (0); // Not a quote
-}
+}*/
