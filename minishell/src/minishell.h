@@ -55,4 +55,9 @@ int		ft_isspace(int c);
 int	check_pipe_grammar(t_list *l_token);
 int	lexer_syntax_check(t_list *l_token);
 
+int check_redirect_in_grammar(t_list *l_token);
+int check_redirect_out_grammar(t_list *l_token);
+int check_append_grammar(t_list *l_token);
+int check_heredoc_grammar(t_list *l_token);
+int check_word_grammar(t_list *l_token);
 #endif
