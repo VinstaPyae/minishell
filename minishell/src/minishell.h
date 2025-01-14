@@ -44,6 +44,9 @@ t_list *get_token_list(char *input);
 t_list	*lexer(char *input);
 //token
 t_list	*create_token(char *str, int type);
+t_token	*token_content(t_list *token);
+void    c_token_destroy(void *c_token);
+void	printer_token(t_list *l_token);
 //utils
 int	quote_len(char *str);
 int	ot_len(char *input);

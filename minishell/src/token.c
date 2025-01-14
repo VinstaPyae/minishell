@@ -16,3 +16,28 @@ t_list	*create_token(char *str, int type)
 	token->next = NULL;
 	return (token);
 }
+
+t_token	*token_content(t_list *token)
+{
+	return ((t_token *)token->content);
+}
+
+void	c_token_destroy(void *c_token)
+{
+	free(((t_token *)c_token)->token);
+	((t_token *)c_token)->token = NULL;
+	free(c_token);
+}
+
+void	printer_token(t_list *l_token)
+{
+	if (l_token != NULL)
+	{
+		while (l_token->next != NULL)
+		{
+			printf("Token: Type = %d, Value = %s \n", token_content(l_token)->type, token_content(l_token)->token);
+			l_token = l_token->next;
+		}
+		printf("Token: Type = %d, Value = %s \n", token_content(l_token)->type, token_content(l_token)->token);
+	}
+}
