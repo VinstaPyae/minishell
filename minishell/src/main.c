@@ -1,5 +1,23 @@
 #include "minishell.h"
 
+void	cleanup(t_list **l_token, char **input)
+{
+	if (*input)
+	{
+		free(*input);
+		*input = NULL;
+	}
+	if (*l_token)
+	{
+		ft_lstclear(l_token, c_token_destroy);
+		*l_token = NULL;
+	}
+	rl_clear_history();
+	rl_free_line_state();
+	rl_cleanup_after_signal();
+	rl_deprep_terminal();
+}
+
 char	*get_input(void)
 {
 	char	*input;
@@ -7,7 +25,8 @@ char	*get_input(void)
 	input = readline("minishell$>");
 	if (!input)
 		return (NULL);
-	add_history(input);
+	if (*input)
+		add_history(input);
 	return (input);
 }
 
@@ -15,7 +34,6 @@ int	main(int ac, char **av, char **env)
 {
 	char	*input;
 	t_list	*l_token;
-	t_token *token;
 
 	(void) ac;
 	(void) av;
@@ -26,16 +44,17 @@ int	main(int ac, char **av, char **env)
 		if (!input)
 			break;
 		l_token = lexer(input);
-		while (l_token != NULL)
+		if (l_token != NULL)
 		{
-			token = l_token->content;
-			printf("Token: Type = %d, Value = %s \n", token->type, token->token);
-			l_token = l_token->next;
-			free(token);
+			printer_token(l_token);
+			if (!(ft_strncmp(token_content(l_token)->token, "exit", 5)))
+			{
+				cleanup(&l_token, &input);
+				exit(0);
+			}
 		}
+		cleanup(&l_token, &input);
 	}
-	free_token_list(&l_token);
-	//free_token_list(&temp);
-	free(input);
+	cleanup(&l_token, &input);
 	return (0);
 }
