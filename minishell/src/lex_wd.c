@@ -11,10 +11,16 @@ int	lex_token_wd(char *str, int *i, t_list **l_token)
 	{
 		str_token = ft_substr(str, *i, len);
 		if (str_token == NULL)
+		{
+			print_error(__func__, __FILE__, __LINE__, "Mem allocate failed for str_token");
 			return (free(str_token), 1);
+		}
 		token = create_token(str_token, TOKEN_WD);
 		if (!token)
-			return (free(str_token),free(token), 1);
+		{
+			print_error(__func__, __FILE__, __LINE__, "Failed to create token for word");
+			return (free(str_token), ft_lstclear(&token, c_token_destroy), 1);
+		}
 		ft_lstadd_back(l_token, token);
 		(*i) += len;
 	}
@@ -35,29 +41,9 @@ int	lex_token_variable(char *str, int *i, t_list **l_token)
 			return (free(str_token), 1);
 		token = create_token(str_token, TOKEN_VARIABLE);
 		if (!token)
-			return (free(token),free(str_token),1);
+			return (free(str_token), ft_lstclear(&token, c_token_destroy), 1);
 		ft_lstadd_back(l_token, token);
 		(*i) += v_len;
 	}
 	return (0);
-}
-
-void	free_token_list(t_list **l_token)
-{
-	t_list *temp;
-	t_token *content;
-
-	while (*l_token)
-	{
-		temp = *l_token;
-		content = (t_token *)temp->content;
-		if (content)
-		{
-			free(content->token); // Free the token string
-			free(content);        // Free the token struct
-		}
-		*l_token = temp->next;
-		free(temp); // Free the list node
-	}
-	*l_token = NULL;
 }

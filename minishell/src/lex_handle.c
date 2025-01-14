@@ -9,10 +9,10 @@ int	lex_token_pipe(char *str, int *i, t_list **l_token)
 	{
 		str_token = ft_substr(str, *i, 1);
 		if (str_token == NULL)
-			return (free(str_token),1);
+			return (print_error(__func__, __FILE__, __LINE__, "Mem failed for str_token"), free(str_token),1);
 		token = create_token(str_token, TOKEN_PIPE);
 		if (!token)
-			return (free(str_token), free_token_list(&token),1);
+			return (print_error(__func__, __FILE__, __LINE__, "Failed to create token for word"), free(str_token), ft_lstclear(&token, c_token_destroy), 1);
 		ft_lstadd_back(l_token, token);
 		(*i)++;
 	}
@@ -54,13 +54,16 @@ int	lex_token_quote(char *str, int *i, t_list **l_token)
 	{
 		str_token = ft_substr(str, *i + 1, q_len - 2);
 		if (str_token == NULL)
-			return (free(str_token), 1);
+			return (print_error(__func__, __FILE__, __LINE__, "Mem failed for str_token"), free(str_token), 1);
 		if (str[*i] == '"')
 			token = create_token(str_token, TOKEN_DQUOTE);
 		else
 			token = create_token(str_token, TOKEN_SQUOTE);
 		if (!token)
-			return (free(str_token), free_token_list(&token), 1);
+		{
+			print_error(__func__, __FILE__, __LINE__, "Failed to create token for quote");
+			return (free(str_token), ft_lstclear(&token, c_token_destroy), 1);
+		}
 		ft_lstadd_back(l_token, token);
 		(*i) += q_len;
 	}
@@ -82,14 +85,14 @@ int	lex_token_redirin_hdc(char *str, int *i, t_list **l_token)
 			r++;
 		str_token = ft_substr(str, *i, r);
 		if (str_token == NULL)
-			return (free(str_token), 1);
+			return (print_error(__func__, __FILE__, __LINE__, "Mem allocate failed for str_token"), free(str_token), 1);
 		if (str[*j + 1] == '<')
 			token = create_token(str_token, TOKEN_HDC);
 		else
 			token = create_token(str_token, TOKEN_REDIRECT_IN);
 		(*i) += r;
 		if (!token)
-			return (free(str_token), free_token_list(&token), 1);
+			return (print_error(__func__, __FILE__, __LINE__, "Failed to create token for word"), free(str_token), ft_lstclear(&token, c_token_destroy), 1);
 		ft_lstadd_back(l_token, token);
 	}
 	return (0);
@@ -110,14 +113,14 @@ int	lex_token_redirout_app(char *str, int *i, t_list **l_token)
 			r++;
 		str_token = ft_substr(str, *i, r);
 		if (str_token == NULL)
-			return (free(str_token), 1);
+			return (print_error(__func__, __FILE__, __LINE__, "Mem failed for str_token"), free(str_token), 1);
 		if (str[*j + 1] == '>')
 			token = create_token(str_token, TOKEN_APPEND);
 		else
 			token = create_token(str_token, TOKEN_REDIRECT_OUT);
 		(*i) += r;
 		if (!token)
-			return (free(str_token), free_token_list(&token), 1);
+			return (print_error(__func__, __FILE__, __LINE__, "Failed to create token for word"), free(str_token), ft_lstclear(&token, c_token_destroy), 1);
 		ft_lstadd_back(l_token, token);
 	}
 	return (0);

@@ -1,7 +1,7 @@
 {
-   readline_leaks
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   obj:/usr/lib/x86_64-linux-gnu/libreadline.so.*
+  readline_leaks
+  Memcheck:Leak
+  match-leak-kinds: reachable
+  fun:malloc
+  obj:/usr/lib/x86_64-linux-gnu/libreadline.so.*
 }

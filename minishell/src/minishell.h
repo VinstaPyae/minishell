@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h> // For va_list
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "libft.h"
@@ -52,7 +53,6 @@ int	quote_len(char *str);
 int	ot_len(char *input);
 int	wd_len(char *input);
 int	variable_len(char *input);
-void	free_token_list(t_list **l_token);
 int		ft_isspace(int c);
 //lex_gram
 int	check_pipe_grammar(t_list *l_token);
@@ -63,4 +63,10 @@ int check_redirect_out_grammar(t_list *l_token);
 int check_append_grammar(t_list *l_token);
 int check_heredoc_grammar(t_list *l_token);
 int check_word_grammar(t_list *l_token);
+//error_handle
+void	cleanup(t_list **l_token, char **input);
+
+
+//debug
+void print_error(const char *func_name, const char *file, int line, const char *format, ...);
 #endif
