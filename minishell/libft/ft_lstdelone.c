@@ -16,11 +16,12 @@
  * Function that deletes the list element 'lst' and frees its content, using
  * the function 'del'.
  */
-void	ft_lstdelone(t_list *lst, void (*del)(void *))
+void	ft_lstdelone(t_list *node, void (*del)(void *))
 {
-	if (lst != NULL && del != NULL)
+	if (node != NULL)
 	{
-		del(lst->content);
-		free(lst);
+		if (del != NULL)
+			del(node->content);
+		free(node);
 	}
 }

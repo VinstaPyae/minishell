@@ -27,7 +27,7 @@ t_list *get_token_list(char *input)
 			i++;
 	}
 	if (input[i] != '\0')
-		return (NULL);
+		return (ft_lstclear(&l_token, c_token_destroy), NULL);
 	return (l_token);
 }
 
