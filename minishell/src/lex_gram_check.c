@@ -157,15 +157,15 @@ int	lexer_syntax_check(t_list *l_token)
 {
 	if (check_pipe_grammar(l_token) == 1)
 		return (printf("Invalid grammar for pipe.\n"), 1);
-    if (check_redirect_in_grammar(l_token) == 1)
+	if (check_redirect_in_grammar(l_token) == 1)
 		return (printf("Invalid grammar for input direction.\n"), 1);
-    if (check_redirect_out_grammar(l_token) == 1)
+	if (check_redirect_out_grammar(l_token) == 1)
 		return (printf("Invalid grammar for output direction.\n"), 1);
-    if (check_append_grammar(l_token) == 1) 
+	if (check_append_grammar(l_token) == 1) 
 		return (printf("Invalid grammar for append.\n"), 1);
-    if (check_heredoc_grammar(l_token) == 1) 
+	if (check_heredoc_grammar(l_token) == 1) 
 		return (printf("Invalid grammar for heredoc.\n"), 1);
-    if (check_word_grammar(l_token) == 1) 
+	if (check_word_grammar(l_token) == 1) 
 		return (printf("Invalid grammar for word.\n"), 1);
 	return (0);
 }

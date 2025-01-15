@@ -14,6 +14,26 @@ typedef struct	s_token
 	char	*token;
 } 		t_token;
 
+//AST type
+typedef enum s_node_type
+{
+    NODE_COMMAND,
+    NODE_PIPE,
+    NODE_REDIRECT_IN,
+    NODE_REDIRECT_OUT,
+    NODE_APPEND,
+    NODE_HEREDOC
+} t_node_type;
+
+//AST struct
+typedef struct s_ast_node
+{
+    t_node_type type;
+    char *data; // command, redirection operator, etc.
+    struct s_ast_node *left;  // Left child (for commands before/after a pipe)
+    struct s_ast_node *right; // Right child (for redirection or the next command)
+} t_ast_node;
+
 typedef enum e_token_type
 {
     TOKEN_WD,         // Regular word (e.g., "ls", "-l")
@@ -63,8 +83,17 @@ int check_redirect_out_grammar(t_list *l_token);
 int check_append_grammar(t_list *l_token);
 int check_heredoc_grammar(t_list *l_token);
 int check_word_grammar(t_list *l_token);
+
+//parser
+t_ast_node *parse(t_list **tokens);
+t_ast_node *create_ast_node(t_node_type type, char *data);
+void free_ast(t_ast_node *node);
+t_ast_node *parse_command(t_list **tokens);
+t_ast_node *parse_pipe(t_list **tokens);
+void print_ast_tree(t_ast_node *root);
+
 //error_handle
-void	cleanup(t_list **l_token, char **input);
+void	cleanup(t_list **tokens, char **input, t_ast_node **ast);
 
 
 //debug

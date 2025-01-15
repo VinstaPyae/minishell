@@ -1,6 +1,6 @@
 #include "minishell.h"
 
-void print_error(const char *func_name, const char *file, int line, const char *format, ...)
+void	print_error(const char *func_name, const char *file, int line, const char *format, ...)
 {
     va_list args;
 

@@ -37,7 +37,7 @@ t_list	*lexer(char *input)
 
 	l_token = get_token_list(input);
 	if (!l_token)
-		return (print_error(__func__, __FILE__, __LINE__, "Failed to get token list"), ft_lstclear(&l_token, c_token_destroy), NULL);
+		return (ft_lstclear(&l_token, c_token_destroy), NULL);
 	if (lexer_syntax_check(l_token) == 1)
 		return (ft_lstclear(&l_token, c_token_destroy),NULL);
 	return (l_token);
