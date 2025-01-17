@@ -14,13 +14,27 @@ typedef struct	s_token
 	char	*token;
 } 		t_token;
 
+typedef	struct s_redir
+{
+	int	type;
+	char	*file;
+}		t_redir;
+
+typedef enum	e_redir_type
+{
+	REDIR_IN,
+	REDIR_OUT,
+	HDC,
+	APPEND
+}		t_redir_type;
+
 //AST type
 typedef enum s_node_type
 {
     NODE_PIPE,
     NODE_COMMAND,
     NODE_REDIRECT,
-} t_node_type;
+}	t_node_type;
 
 //AST struct
 typedef struct s_ast_node
@@ -28,9 +42,9 @@ typedef struct s_ast_node
     t_node_type type;
     t_list  *redir;
     char    *cmd;
-    char    **arg; // command, redirection operator, etc.
-    struct s_ast_node *left;  // Left child (for commands before/after a pipe)
-    struct s_ast_node *right; // Right child (for redirection or the next command)
+    char    **arg;
+    struct s_ast_node *left;
+    struct s_ast_node *right;
 } t_ast_node;
 
 typedef enum e_token_type
@@ -44,8 +58,7 @@ typedef enum e_token_type
     TOKEN_SQUOTE,
     TOKEN_DQUOTE,        // Quotes ("'", "\"")
     TOKEN_COMMENT,
-    TOKEN_VARIABLE,
-    TOKEN_EOF           // End of input
+    TOKEN_VARIABLE
 } t_token_type;
 
 //lex_handle
@@ -83,8 +96,13 @@ int check_append_grammar(t_list *l_token);
 int check_heredoc_grammar(t_list *l_token);
 int check_word_grammar(t_list *l_token);
 
-//parser
+//redir
+t_list	*create_redir(char *file, int type);
 
+//parser
+t_ast_node *create_node(t_node_type type);
+t_ast_node	*parse_cmd(t_list **tokens);
+t_ast_node	*parse_pipe(t_list **tokens);
 
 //error_handle
 void	cleanup(t_list **tokens, char **input);
