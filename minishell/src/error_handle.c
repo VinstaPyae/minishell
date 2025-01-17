@@ -1,6 +1,6 @@
 #include "minishell.h"
 
-/*void	cleanup(t_list **l_token, char **input)
+void	cleanup(t_list **l_token, char **input)
 {
 	if (*input)
 	{
@@ -16,8 +16,9 @@
 	//rl_free_line_state();
 	//rl_cleanup_after_signal();
 	//rl_deprep_terminal();
-}*/
-void	cleanup(t_list **tokens, char **input, t_ast_node **ast)
+}
+
+/*void	cleanup(t_list **tokens, char **input, t_ast_node **ast)
 {
 	if (input && *input)
 	{
@@ -34,4 +35,4 @@ void	cleanup(t_list **tokens, char **input, t_ast_node **ast)
 		free_ast(*ast);  // Assuming free_ast frees the AST
 		*ast = NULL;
 	}
-}
+}*/

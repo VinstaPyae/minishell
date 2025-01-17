@@ -16,12 +16,10 @@ int	main(int ac, char **av, char **env)
 {
 	char		*input;
 	t_list		*l_token;
-	t_ast_node	*ast;
 
 	(void) ac;
 	(void) av;
 	(void) env;
-	ast = NULL;
 	l_token = NULL;
 	while (1)
 	{
@@ -32,27 +30,17 @@ int	main(int ac, char **av, char **env)
 		if (!l_token)
 		{
 			printf("Error: Lexer failed\n");
-			cleanup(&l_token, &input, &ast);
+			cleanup(&l_token, &input);
 			continue;
 		}
 		printer_token(l_token);  // Print tokens for debugging
 		if (!ft_strncmp(token_content(l_token)->token, "exit", 5))
 		{
-			cleanup(&l_token, &input, &ast);
+			cleanup(&l_token, &input);
 			exit(0);
 		}
-		ast = parse(&l_token);
-		if (!ast)
-		{
-			printf("Error: Parsing failed\n");
-			cleanup(&l_token, &input, &ast);
-			continue;
-		}
-		// Print or execute the AST
-		print_ast_tree(ast);  // Assuming print_ast_tree prints the AST
-		// execute_ast(ast);  // Assuming execute_ast executes the AST
-		cleanup(&l_token, &input, &ast);
+		cleanup(&l_token, &input);
 	}
-	cleanup(&l_token, &input, &ast);
+	cleanup(&l_token, &input);
 	return (0);
 }
