@@ -32,9 +32,7 @@ typedef enum	e_redir_type
 typedef enum    s_node_type
 {
     NODE_PIPE,
-    NODE_COMMAND,
-    NODE_ARG,
-    NODE_REDIR
+    NODE_COMMAND
 }           t_node_type;
 
 //AST struct
@@ -44,6 +42,7 @@ typedef struct s_ast_node
     char    *cmd;
     char    **arg;
     t_redir **redir;
+    int		redir_count;
     struct s_ast_node *left;
     struct s_ast_node *right;
 } t_ast_node;

@@ -26,56 +26,45 @@ t_ast_node	*parse_pipe(t_list **tokens)
 t_ast_node	*parse_cmd(t_list **tokens)
 {
 	t_ast_node	*cmd_node;
-	
-	cmd_node = create_node(NODE_COMMAND);
-	while  (((*tokens) != NULL && ((t_token *)(*tokens)->content)->type != TOKEN_PIPE))
-	{
-		if ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
-		{
-			cmd_node->right = parse_arg(tokens);
-		}
-		else if ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
-		{
-			cmd_node->left = parse_redir(tokens);
-		}
-	}
-	return (cmd_node);
-}
-
-char	**get_args(t_list **tokens)
-{
-	char	**args;
 	int		i;
 
 	i = 0;
-	while ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type) && 
-	((t_token *)(*tokens)->content)->type != TOKEN_PIPE)
+	cmd_node = create_node(NODE_COMMAND);
+	while  (((*tokens) != NULL && ((t_token *)(*tokens)->content)->type != TOKEN_PIPE))
 	{
-		args[i++] = ft_strdup(((t_token *)(*tokens)->content)->token);
-		tokens = tokens->next;
+		while ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
+		{
+			if (!(cmd_node->cmd))
+				cmd_node->cmd = ft_strdup(((t_token *)(*tokens)->content)->token);
+			*tokens = (*tokens)->next;
+			cmd_node->arg[i++] = args = ft_strdup(((t_token *)(*tokens)->content)->token);
+		}
+		while ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
+		{
+			cmd_node->redir[cmd_node->redir_count++] = get_redir(tokens);
+		}
 	}
-	args[i] = NULL;
-	return (args);
+	cmd_node->arg[i] = NULL;
+	cmd_node->redir[cmd_node->redir_count] = NULL;
+	return (cmd_node);
 }
 
-t_ast_node	*parse_arg(t_list **tokens)
+t_redir	*get_redir(t_list **tokens)
 {
-	t_ast_node	*arg;
+	t_redir	*redir;
 
-	arg = NULL;
-	while ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type) && 
-	((t_token *)(*tokens)->content)->type != TOKEN_PIPE)
+	redir = malloc(sizeof(t_redir));
+	if (redir == NULL)
+		return NULL;
+	redir->type = ((t_token *)(*tokens)->content)->type;
+	*tokens = (*tokens)->next;
+	if (((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type)))
 	{
-		arg = create_node(NODE_ARG);
-		if (!arg->cmd)
-		{	
-			arg->cmd = ft_strdup(((t_token *)(*tokens)->content)->token);
-			tokens = tokens->next;
-		}
-		if (*tokens)
-			arg->arg = get_args(tokens);
+		redir->file = ft_strdup(((t_token *)(*tokens)->content)->token);
+		if (!(redir->file))
+			return (free(redir), NULL);
 	}
-
+	return (redir);
 }
 
 /*
@@ -121,6 +110,7 @@ t_ast_node *create_node(t_node_type type)
     node->cmd = NULL;       // Command is initially NULL
     node->arg = NULL;       // Arguments list is initially NULL
     node->redir = NULL;     // Redirections list is NULL (no redirections yet)
+    node->redir_count = 0;
     node->left = NULL;      // Left child is NULL
     node->right = NULL;     // Right child is NULL
     return node; // Return the newly created node
