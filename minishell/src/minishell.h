@@ -29,20 +29,21 @@ typedef enum	e_redir_type
 }		t_redir_type;
 
 //AST type
-typedef enum s_node_type
+typedef enum    s_node_type
 {
     NODE_PIPE,
     NODE_COMMAND,
-    NODE_REDIRECT,
-}	t_node_type;
+    NODE_ARG,
+    NODE_REDIR
+}           t_node_type;
 
 //AST struct
 typedef struct s_ast_node
 {
     t_node_type type;
-    t_list  *redir;
     char    *cmd;
     char    **arg;
+    t_redir **redir;
     struct s_ast_node *left;
     struct s_ast_node *right;
 } t_ast_node;
@@ -97,7 +98,9 @@ int check_heredoc_grammar(t_list *l_token);
 int check_word_grammar(t_list *l_token);
 
 //redir
-t_list	*create_redir(char *file, int type);
+t_redir *create_redir(char *file, int type);
+int is_word_token(t_token_type type);
+int is_redirection_token(t_token_type type);
 
 //parser
 t_ast_node *create_node(t_node_type type);
