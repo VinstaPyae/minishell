@@ -1,8 +1,9 @@
 #include "minishell.h"
 
-t_redir *create_redir(char *file, int type)
+t_list *create_redir(char *file, int type)
 {
 	t_redir *c_redir;
+	t_list	*redir;
 
 	// Allocate memory for the redirection structure
 	c_redir = malloc(sizeof(t_redir));
@@ -20,12 +21,16 @@ t_redir *create_redir(char *file, int type)
 		}
 	}
 	c_redir->type = type;
-	return c_redir;
+	redir = ft_lstnew(c_redir);
+	if (redir == NULL)
+		return (free(c_redir),NULL);
+	redir->next = NULL;
+	return (redir);
 }
 
 int is_word_token(t_token_type type)
 {
-    return (type == TOKEN_WD || type == TOKEN_SQUOTE || type == TOKEN_DQUOTE);
+    return (type == TOKEN_WD || type == TOKEN_SQUOTE || type == TOKEN_DQUOTE || type == TOKEN_VARIABLE);
 }
 
 int is_redirection_token(t_token_type type)

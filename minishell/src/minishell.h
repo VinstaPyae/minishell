@@ -39,10 +39,8 @@ typedef enum    s_node_type
 typedef struct s_ast_node
 {
     t_node_type type;
-    char    *cmd;
-    char    **arg;
-    t_redir **redir;
-    int		redir_count;
+    char    **cmd_arg;
+    t_list *redir;
     struct s_ast_node *left;
     struct s_ast_node *right;
 } t_ast_node;
@@ -57,7 +55,6 @@ typedef enum e_token_type
     TOKEN_APPEND,
     TOKEN_SQUOTE,
     TOKEN_DQUOTE,        // Quotes ("'", "\"")
-    TOKEN_COMMENT,
     TOKEN_VARIABLE
 } t_token_type;
 
@@ -69,8 +66,6 @@ int	lex_token_redirin_hdc(char *str, int *i, t_list **l_token);
 int	lex_token_redirout_app(char *str, int *i, t_list **l_token);
 int	lex_token_variable(char *str, int *i, t_list **l_token);
 int	lex_token_wd(char *str, int *i, t_list **l_token);
-
-
 
 //lex
 t_list *get_token_list(char *input);
@@ -97,14 +92,14 @@ int check_heredoc_grammar(t_list *l_token);
 int check_word_grammar(t_list *l_token);
 
 //redir
-t_redir *create_redir(char *file, int type);
+t_list *create_redir(char *file, int type);
 int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
 
 //parser
 t_ast_node *create_node(t_node_type type);
-t_ast_node	*parse_cmd(t_list **tokens);
-t_ast_node	*parse_pipe(t_list **tokens);
+char	**get_cmd(t_list **tokens);
+t_list	**get_redir(t_list **tokens);
 
 //error_handle
 void	cleanup(t_list **tokens, char **input);

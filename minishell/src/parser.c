@@ -1,5 +1,5 @@
 #include "minishell.h"
-
+/*
 t_ast_node	*parse_pipe(t_list **tokens)
 {
 	t_ast_node	*left;
@@ -26,79 +26,104 @@ t_ast_node	*parse_pipe(t_list **tokens)
 t_ast_node	*parse_cmd(t_list **tokens)
 {
 	t_ast_node	*cmd_node;
-	int		i;
 
-	i = 0;
 	cmd_node = create_node(NODE_COMMAND);
 	while  (((*tokens) != NULL && ((t_token *)(*tokens)->content)->type != TOKEN_PIPE))
 	{
-		while ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
-		{
-			if (!(cmd_node->cmd))
-				cmd_node->cmd = ft_strdup(((t_token *)(*tokens)->content)->token);
-			*tokens = (*tokens)->next;
-			cmd_node->arg[i++] = args = ft_strdup(((t_token *)(*tokens)->content)->token);
-		}
-		while ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
+		if ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
+			cmd_node = get_cmd(tokens);
+		if ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
 		{
 			cmd_node->redir[cmd_node->redir_count++] = get_redir(tokens);
 		}
 	}
-	cmd_node->arg[i] = NULL;
-	cmd_node->redir[cmd_node->redir_count] = NULL;
 	return (cmd_node);
 }
-
-t_redir	*get_redir(t_list **tokens)
+*/
+char	**get_cmd(t_list **tokens)
 {
-	t_redir	*redir;
+	t_list	*tmp_list;
+	char	**cmd_arg;
+	int		i;
 
-	redir = malloc(sizeof(t_redir));
-	if (redir == NULL)
-		return NULL;
-	redir->type = ((t_token *)(*tokens)->content)->type;
-	*tokens = (*tokens)->next;
-	if (((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type)))
+	i = 0;
+	tmp_list = (*tokens);
+	while (*tokens != NULL && is_word_token(((t_token *)(*tokens)->content)->type) &&
+	((t_token *)(*tokens)->content)->type != TOKEN_PIPE)
 	{
-		redir->file = ft_strdup(((t_token *)(*tokens)->content)->token);
-		if (!(redir->file))
-			return (free(redir), NULL);
+		*tokens = (*tokens)->next;
+		i++;
 	}
-	return (redir);
+	cmd_arg = malloc((i + 1) * sizeof(char *));
+	if (!cmd_arg)
+		return (NULL);
+	i = 0;
+	while ((tmp_list) != NULL && is_word_token(token_content(tmp_list)->type) &&
+	token_content(tmp_list)->type != TOKEN_PIPE)
+	{
+		cmd_arg[i] = ft_strdup(token_content(tmp_list)->token);
+		tmp_list = tmp_list->next;
+		printf("cmd: %s\n", cmd_arg[i]);
+	}
+	cmd_arg[i] = NULL;
+	return (cmd_arg);
+}
+
+// t_list	**get_redir(t_list **tokens)
+// {
+// 	t_list	**redir;
+// 	t_list	*new_redir;
+// 	t_list	*tmp_list;
+
+// 	redir = NULL;
+// 	tmp_list = (*tokens);
+// 	while (*tokens != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type) &&
+// 	((t_token *)(*tokens)->content)->type != TOKEN_PIPE)
+// 	{
+// 		*tokens = (*tokens)->next;
+// 		if (*tokens != NULL && is_word_token(((t_token *)(*tokens)->content)->type) &&
+// 		((t_token *)(*tokens)->content)->type != TOKEN_PIPE)
+// 			new_redir = create_redir(((t_token *)(*tokens)->content)->token,token_content(tmp_list)->type );
+// 		if (!new_redir)
+// 			return (ft_lstclear(&new_redir, free), NULL);
+// 		ft_lstadd_back(redir, new_redir);
+// 		tmp_list = tmp_list->next;
+// 		printf("Redir Type: %d, File: %s\n", ((t_redir *)(*redir)->content)->type, ((t_redir *)(*redir)->content)->file);
+// 	}
+// 	return (redir);
+// }
+
+t_list **get_redir(t_list **tokens)
+{
+    t_list *tmp_list = *tokens;
+    t_list **redir = NULL; // Initialize the list of redirections
+    t_list *new_redir;
+
+    while (tmp_list != NULL && is_redirection_token(((t_token *)(tmp_list->content))->type))
+    {
+        t_token *redir_token = (t_token *)(tmp_list->content);
+        tmp_list = tmp_list->next; // Move to the next token (file name or invalid token)
+
+        if (tmp_list != NULL && is_word_token(((t_token *)(tmp_list->content))->type))
+        {
+            t_token *file_token = (t_token *)(tmp_list->content);
+            new_redir = create_redir(file_token->token, redir_token->type);
+            if (!new_redir)
+            {
+                // Handle memory allocation failure
+                ft_lstclear(&new_redir, free);
+                return NULL;
+            }
+            ft_lstadd_back(redir, new_redir); // Add the new redirection to the list
+            tmp_list = tmp_list->next; // Move past the file token
+        }
+		printf("Redir Type: %d, File: %s\n", ((t_redir *)(*redir)->content)->type, ((t_redir *)(*redir)->content)->file);
+    }
+    *tokens = tmp_list; // Update the tokens list pointer
+    return redir;
 }
 
 /*
-t_ast_node	*parse_cmd(t_list **tokens)
-{
-	t_ast_node	*cmd_node;
-	int		i;
-
-	if ((*tokens) == NULL)
-		return (NULL);
-	i = 0;
-	while ((*token) != NULL && ((((t_token *)(*tokens)->content)->type == TOKEN_WD) || (((t_token *)(*tokens)->content)->type == TOKEN_DQUOTE) ||
-	 (((t_token *)(*tokens)->content)->type == TOKEN_SQUOTE)))
-	{
-		cmd_node = create_node(NODE_COMMAND)**redir;;
-		if (!(cmd_node->cmd))
-			cmd_node->cmd = ((t_token *)(*tokens)->content)->token;
-		else
-			cmd_node->arg[i++] = ((t_token *)(*tokens)->content)->token;
-		*tokens = (*tokens)->next;
-	}
-	if ((*token) != NULL && ((((t_token *)(*tokens)->content)->type == TOKEN_REDIRECT_IN) ||
-	(((t_token *)(*tokens)->content)->type == TOKENint is_redirection_token(t_token_type type)_REDIRECT_OUT) || (((t_token *)(*tokens)->content)->type == TOKEN_APPEND)
-	|| (((t_token *)(*tokens)->content)->type == TOKEN_HDC)))
-	{
-		cmd_node->redir = create_redir(NULL, ((t_token *)(*tokens)->content)->type);
-		*tokens = (*tokens)->next;
-		if ((*token) != NULL && ((((t_token *)(*tokens)->content)->type == TOKEN_WD) || (((t_token *)(*tokens)->content)->type == TOKEN_DQUOTE) ||
-	 	(((t_token *)(*tokens)->content)->type == TOKEN_SQUOTE)))
-			((t_redir *)(cmd_node)->redir)->file = ((t_token *)(*tokens)->content)->token;
-	}
-	return (cmd_node);**redir;
-}*/
-
 t_ast_node *create_node(t_node_type type)
 {
     t_ast_node *node = malloc(sizeof(t_ast_node));
@@ -107,11 +132,10 @@ t_ast_node *create_node(t_node_type type)
         exit(EXIT_FAILURE); // Exit the program
     }
     node->type = type;
-    node->cmd = NULL;       // Command is initially NULL
-    node->arg = NULL;       // Arguments list is initially NULL
-    node->redir = NULL;     // Redirections list is NULL (no redirections yet)
-    node->redir_count = 0;
+    node->cmd_arg = NULL;      // Arguments list is initially NULL
+    node->redir = NULL;
     node->left = NULL;      // Left child is NULL
     node->right = NULL;     // Right child is NULL
     return node; // Return the newly created node
 }
+*/
