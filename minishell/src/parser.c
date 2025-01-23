@@ -93,14 +93,23 @@ char	**get_cmd(t_list **tokens)
 // 	return (redir);
 // }
 
-t_list **get_redir(t_list **tokens)
+/* t_list **get_redir(t_list **tokens)
 {
     t_list *tmp_list = *tokens;
     t_list **redir = NULL; // Initialize the list of redirections
     t_list *new_redir;
 
     while (tmp_list != NULL && is_redirection_token(((t_token *)(tmp_list->content))->type))
+    {void print_redir(t_list *redir)
+{
+    t_list *current = redir;
+    while (current != NULL)
     {
+        t_redir *r = (t_redir *)current->content;
+        printf("Redir Type: %d, File: %s\n", r->type, r->file);
+        current = current->next;
+    }
+}
         t_token *redir_token = (t_token *)(tmp_list->content);
         tmp_list = tmp_list->next; // Move to the next token (file name or invalid token)
 
@@ -121,7 +130,7 @@ t_list **get_redir(t_list **tokens)
     }
     *tokens = tmp_list; // Update the tokens list pointer
     return redir;
-}
+} */
 
 /*
 t_ast_node *create_node(t_node_type type)
@@ -139,3 +148,39 @@ t_ast_node *create_node(t_node_type type)
     return node; // Return the newly created node
 }
 */
+
+t_list **get_redir(t_list **tokens)
+{
+    t_list **redir;
+    t_list *new_redir;
+    t_list *tmp_list;
+
+    // Allocate memory for the redir list
+    redir = malloc(sizeof(t_list *));
+    if (redir == NULL)
+        return NULL;
+    *redir = NULL;
+
+    tmp_list = *tokens;
+    while (tmp_list != NULL && is_redirection_token(((t_token *)tmp_list->content)->type) &&
+           ((t_token *)tmp_list->content)->type != TOKEN_PIPE)
+    {
+        t_token *current_token = (t_token *)tmp_list->content;
+        tmp_list = tmp_list->next;
+
+        if (tmp_list != NULL && is_word_token(((t_token *)tmp_list->content)->type) &&
+            ((t_token *)tmp_list->content)->type != TOKEN_PIPE)
+        {
+            new_redir = create_redir(((t_token *)tmp_list->content)->token, current_token->type);
+            if (!new_redir)
+            {
+                ft_lstclear(redir, free);
+                free(redir);
+                return NULL;
+            }
+            ft_lstadd_back(redir, new_redir);
+        }
+        tmp_list = tmp_list->next;
+    }
+    return redir;
+}
