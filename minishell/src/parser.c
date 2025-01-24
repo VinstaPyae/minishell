@@ -13,6 +13,7 @@ t_ast_node	*parse_pipe(t_list **tokens)
 	p_node = NULL;
 	if ((*tokens) != NULL && (((t_token *)(*tokens)->content)->type == TOKEN_PIPE))
 	{
+        printf("PIPE : %s\n", ((t_token *)(*tokens)->content)->token);
 		*tokens = (*tokens)->next;
 		p_node = create_node(NODE_PIPE);
 		p_node->left = left;
@@ -32,8 +33,6 @@ t_ast_node	*parse_cmd(t_list **tokens)
 	{
 		if ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
 			cmd_node->cmd_arg = get_cmd(tokens);
-        if ((*tokens) != NULL)
-        printf("token after cmd : %s\n", ((t_token *)(*tokens)->content)->token);
 		if ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
         {
             cmd_node->redir = get_redir(tokens);
