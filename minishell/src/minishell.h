@@ -95,11 +95,14 @@ int check_word_grammar(t_list *l_token);
 t_list *create_redir(char *file, int type);
 int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
+void print_redir(t_list *redir);
 
 //parser
 t_ast_node *create_node(t_node_type type);
 char	**get_cmd(t_list **tokens);
-t_list	**get_redir(t_list **tokens);
+t_list	*get_redir(t_list **tokens);
+t_ast_node	*parse_pipe(t_list **tokens);
+t_ast_node	*parse_cmd(t_list **tokens);
 
 //error_handle
 void	cleanup(t_list **tokens, char **input);

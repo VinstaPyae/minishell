@@ -12,17 +12,6 @@ char	*get_input(void)
 	return (input);
 }
 
-void print_redir(t_list *redir)
-{
-    t_list *current = redir;
-    while (current != NULL)
-    {
-        t_redir *r = (t_redir *)current->content;
-        printf("Redir Type: %d, File: %s\n", r->type, r->file);
-        current = current->next;
-    }
-}
-
 int	main(int ac, char **av, char **env)
 {
 	char		*input;
@@ -45,15 +34,16 @@ int	main(int ac, char **av, char **env)
 			continue;
 		}
 		printer_token(l_token);  // Print tokens for debugging
-		char **cmd = get_cmd(&l_token);
-		t_list **redir_list = get_redir(&l_token);
-		if (redir_list != NULL)
-		{
-			print_redir(*redir_list);
-			// Free the redir list after use
-			ft_lstclear(redir_list, free);
-			free(redir_list);
-		}
+		t_ast_node *ast= parse_pipe(&l_token);
+		// char **cmd = get_cmd(&l_token);
+		// t_list **redir_list = get_redir(&l_token);
+		// if (redir_list != NULL)
+		// {
+		// 	print_redir(*redir_list);
+		// 	// Free the redir list after use
+		// 	ft_lstclear(redir_list, free);
+		// 	free(redir_list);
+		// }
 		// int i = 0;
 		// while (cmd[i])
 		// 	printf("%s\n", cmd[i++]); 

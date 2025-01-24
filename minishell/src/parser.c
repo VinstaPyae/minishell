@@ -1,5 +1,5 @@
 #include "minishell.h"
-/*
+
 t_ast_node	*parse_pipe(t_list **tokens)
 {
 	t_ast_node	*left;
@@ -28,18 +28,27 @@ t_ast_node	*parse_cmd(t_list **tokens)
 	t_ast_node	*cmd_node;
 
 	cmd_node = create_node(NODE_COMMAND);
-	while  (((*tokens) != NULL && ((t_token *)(*tokens)->content)->type != TOKEN_PIPE))
+	while (((*tokens) != NULL && ((t_token *)(*tokens)->content)->type != TOKEN_PIPE))
 	{
 		if ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
-			cmd_node = get_cmd(tokens);
+			cmd_node->cmd_arg = get_cmd(tokens);
+        if ((*tokens) != NULL)
+        printf("token after cmd : %s\n", ((t_token *)(*tokens)->content)->token);
 		if ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
-		{
-			cmd_node->redir[cmd_node->redir_count++] = get_redir(tokens);
-		}
+        {
+            cmd_node->redir = get_redir(tokens);
+            t_list *redir_list = cmd_node->redir;
+            if (redir_list != NULL)
+            {
+                print_redir(redir_list);
+                // Free the redir list after use
+                ft_lstclear(&redir_list, free);
+            }
+        }
 	}
 	return (cmd_node);
 }
-*/
+
 char	**get_cmd(t_list **tokens)
 {
 	t_list	*tmp_list;
@@ -66,6 +75,7 @@ char	**get_cmd(t_list **tokens)
 		printf("cmd: %s\n", cmd_arg[i]);
 	}
 	cmd_arg[i] = NULL;
+    (*tokens) = tmp_list;
 	return (cmd_arg);
 }
 
@@ -82,9 +92,9 @@ char	**get_cmd(t_list **tokens)
 // 	{
 // 		*tokens = (*tokens)->next;
 // 		if (*tokens != NULL && is_word_token(((t_token *)(*tokens)->content)->type) &&
-// 		((t_token *)(*tokens)->content)->type != TOKEN_PIPE)
+// 		((t_token *)(*tokens)->content)->type != TOKEN_PIPE)(*tokens) != NULL
 // 			new_redir = create_redir(((t_token *)(*tokens)->content)->token,token_content(tmp_list)->type );
-// 		if (!new_redir)
+// 		if (!new_redir)printf("token after cmd: %s\n", ((t_token *)(*tokens)->content)->token);
 // 			return (ft_lstclear(&new_redir, free), NULL);
 // 		ft_lstadd_back(redir, new_redir);
 // 		tmp_list = tmp_list->next;
@@ -100,17 +110,15 @@ char	**get_cmd(t_list **tokens)
     t_list *new_redir;
 
     while (tmp_list != NULL && is_redirection_token(((t_token *)(tmp_list->content))->type))
-    {void print_redir(t_list *redir)
-{
-    t_list *current = redir;
-    while (current != NULL)
+    {void print_redir(t_list *redir)if ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
+			cmd_node->redir = get_redir(tokens);
     {
         t_redir *r = (t_redir *)current->content;
         printf("Redir Type: %d, File: %s\n", r->type, r->file);
         current = current->next;
     }
 }
-        t_token *redir_token = (t_token *)(tmp_list->content);
+        t_token *redir_token = (t_token *)(tmp_list->content);(*tokens) != NULL
         tmp_list = tmp_list->next; // Move to the next token (file name or invalid token)
 
         if (tmp_list != NULL && is_word_token(((t_token *)(tmp_list->content))->type))
@@ -126,13 +134,13 @@ char	**get_cmd(t_list **tokens)
             ft_lstadd_back(redir, new_redir); // Add the new redirection to the list
             tmp_list = tmp_list->next; // Move past the file token
         }
-		printf("Redir Type: %d, File: %s\n", ((t_redir *)(*redir)->content)->type, ((t_redir *)(*redir)->content)->file);
+		printf("Redir Type: %d, File: %s\n", ((t_redir *)(*redir)->(*tokens) != NULLcontent)->type, ((t_redir *)(*redir)->content)->file);
     }
     *tokens = tmp_list; // Update the tokens list pointer
     return redir;
 } */
 
-/*
+
 t_ast_node *create_node(t_node_type type)
 {
     t_ast_node *node = malloc(sizeof(t_ast_node));
@@ -147,9 +155,8 @@ t_ast_node *create_node(t_node_type type)
     node->right = NULL;     // Right child is NULL
     return node; // Return the newly created node
 }
-*/
 
-t_list **get_redir(t_list **tokens)
+/* t_list **get_redir(t_list **tokens)
 {
     t_list **redir;
     t_list *new_redir;
@@ -182,5 +189,47 @@ t_list **get_redir(t_list **tokens)
         }
         tmp_list = tmp_list->next;
     }
+    (*tokens) = tmp_list;
+    return redir;
+}
+ */
+
+t_list *get_redir(t_list **tokens)
+{
+    t_list *redir = NULL; // Use a single pointer for the redirection list
+    t_list *new_redir;
+    t_list *tmp_list;
+
+    tmp_list = *tokens;
+    while (tmp_list != NULL && is_redirection_token(((t_token *)tmp_list->content)->type) &&
+           ((t_token *)tmp_list->content)->type != TOKEN_PIPE)
+    {
+        t_token *current_token = (t_token *)tmp_list->content;
+        tmp_list = tmp_list->next; // Advance to the next token (file name)
+
+        // Ensure the next token is a word token (file name)
+        if (tmp_list != NULL && is_word_token(((t_token *)tmp_list->content)->type) &&
+            ((t_token *)tmp_list->content)->type != TOKEN_PIPE)
+        {
+            new_redir = create_redir(((t_token *)tmp_list->content)->token, current_token->type);
+            if (!new_redir)
+            {
+                ft_lstclear(&redir, free); // Clear the redirection list on failure
+                return NULL;
+            }
+            ft_lstadd_back(&redir, new_redir); // Add the new redirection to the list
+        }
+        else
+        {
+            // Invalid redirection (missing file name), handle error
+            ft_lstclear(&redir, free);
+            return NULL;
+        }
+
+        tmp_list = tmp_list->next; // Advance to the next token after processing the redirection
+    }
+
+    // Update the tokens pointer to the new position
+    *tokens = tmp_list;
     return redir;
 }

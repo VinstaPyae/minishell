@@ -38,3 +38,14 @@ int is_redirection_token(t_token_type type)
     return (type == TOKEN_REDIRECT_IN || type == TOKEN_REDIRECT_OUT ||
             type == TOKEN_APPEND || type == TOKEN_HDC);
 }
+
+void print_redir(t_list *redir)
+{
+    t_list *current = redir;
+    while (current != NULL)
+    {
+        t_redir *r = (t_redir *)current->content;
+        printf("Redir Type: %d, File: %s\n", r->type, r->file);
+        current = current->next;
+    }
+}
