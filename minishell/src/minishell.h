@@ -105,7 +105,8 @@ t_ast_node	*parse_pipe(t_list **tokens);
 t_ast_node	*parse_cmd(t_list **tokens);
 
 //error_handle
-void	cleanup(t_list **tokens, char **input);
+void	cleanup(t_list **l_token, char **input, t_ast_node **ast);
+void free_ast(t_ast_node *node);
 
 
 //debug
