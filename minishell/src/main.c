@@ -44,10 +44,12 @@ int	main(int ac, char **av, char **env)
 		ast= parse_pipe(&l_token);
 		if (!ast)
 		{
-			printf("Error: Lexer failed\n");
+			printf("Error: ast failed\n");
 			cleanup(&l_token, &input, &ast);
 			continue;
 		}
+		else
+			execute_ast(&ast);
 		cleanup(&l_token, &input, &ast);
 	}
 	cleanup(&l_token, &input, &ast);

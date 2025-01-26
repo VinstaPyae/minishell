@@ -24,7 +24,10 @@ t_ast_node	*parse_pipe(t_list **tokens)
 			return (free_ast(p_node), NULL);
 	}
 	else
+	{
+		printf("Return ONLY CMD\n");
 		return (left);
+	}
 	return (p_node);
 }
 
@@ -40,6 +43,7 @@ t_ast_node	*parse_cmd(t_list **tokens)
 		if ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
 		{
 			cmd_node->cmd_arg = get_cmd(tokens);
+			printf("cmd: %s\n", cmd_node->cmd_arg[0]);
 			if (!cmd_node->cmd_arg)
                			return (free_ast(cmd_node), NULL);
 		}
@@ -48,7 +52,7 @@ t_ast_node	*parse_cmd(t_list **tokens)
 			cmd_node->redir = get_redir(tokens);
 			if (!cmd_node->redir)
 				return (free_ast(cmd_node), NULL);
-			print_redir(cmd_node->redir);
+			//print_redir(cmd_node->redir);
 		}
 	}
 	return (cmd_node);
@@ -78,14 +82,15 @@ char	**get_cmd(t_list **tokens)
 		cmd_arg[i] = ft_strdup(token_content(tmp_list)->token);
 		if (!cmd_arg[i])
 		{
-		// Free previously allocated strings if allocation fails
-		while (i > 0)
-			free(cmd_arg[--i]);
-		free(cmd_arg);
-		return NULL;
+			// Free previously allocated strings if allocation fails
+			while (i > 0)
+				free(cmd_arg[--i]);
+			free(cmd_arg);
+			return NULL;
 		}
+		i++;
 		tmp_list = tmp_list->next;
-		printf("cmd: %s\n", cmd_arg[i]);
+		//printf("cmd: %s\n", cmd_arg[i]);
 	}
 	cmd_arg[i] = NULL;
 	(*tokens) = tmp_list;
