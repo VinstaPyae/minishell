@@ -42,8 +42,6 @@ int exe_cmd(t_ast_node **node)
     return builtin_cmd_check(node);
 }
 
-
-
 ////all execution 
 int	execute_ast(t_ast_node **node)
 {
