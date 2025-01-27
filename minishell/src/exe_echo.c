@@ -3,13 +3,13 @@
 int	n_option_checked(const char *str)
 {
 	int	i;
-
+	
 	if (str[0] != '-')
 		return (0);
 	i = 1;
 	while (str[i] == 'n')
 		i++;
-	return (i > 1 && str[i] == '\0');
+	return (i > 1);
 }
 
 //echo builtin
@@ -18,24 +18,31 @@ int	exe_echo(t_ast_node **node)
 	int	i;
 	int	newline;
 
-	i = 1;
+	i = 0;
 	newline = 1;
-	if (!(*node) || !(*node)->cmd_arg)
+	// Check if node or cmd_arg is NULL
+	if (!(*node) || !(*node)->cmd)
 		return 1;
-    printf("Executing echo with arguments:\n");
-	if ((*node)->cmd_arg[i] && n_option_checked((*node)->cmd_arg[i]))
+
+	// If cmd_arg exists and has the -n option
+	if ((*node)->cmd_arg && (*node)->cmd_arg[0] && n_option_checked((*node)->cmd_arg[0]))
 	{
 		newline = 0;
 		i++;
 	}
-	while ((*node)->cmd_arg[i])
+	// Print arguments if they exist
+	if ((*node)->cmd_arg)
 	{
-		printf("%s", (*node)->cmd_arg[i]);
-		// if ((*node)->cmd_arg[i + 1])
-		// 	printf(" ");
-		i++;
+		while ((*node)->cmd_arg[i])
+		{
+			printf("%s", (*node)->cmd_arg[i]);
+			i++;
+		}
 	}
+
+	
 	if (newline)
 		printf("\n");
+	printf("Executing echo with arguments:\n");
 	return (0);
 }

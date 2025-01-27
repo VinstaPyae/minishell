@@ -35,7 +35,7 @@ int	main(int ac, char **av, char **env)
 			cleanup(&l_token, &input, &ast);
 			continue;
 		}
-		printer_token(l_token);  // Print tokens for debugging
+		//printer_token(l_token);  // Print tokens for debugging
 		if (!ft_strncmp(token_content(l_token)->token, "exit", 5))
 		{
 			cleanup(&l_token, &input, &ast);
@@ -50,7 +50,7 @@ int	main(int ac, char **av, char **env)
 		}
 		else
 			execute_ast(&ast);
-		cleanup(&l_token, &input, &ast);
+		//cleanup(&l_token, &input, &ast);
 	}
 	cleanup(&l_token, &input, &ast);
 	return (0);

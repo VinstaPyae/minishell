@@ -6,12 +6,12 @@ int	builtin_cmd_check(t_ast_node **node)
 	int	r;
 
 	r = 0;
-	if (!node || !(*node)->cmd_arg[0])
+	if (!node || !(*node)->cmd)
 	{
 		printf("builin check here???");
 			return (1);
 	}
-	if (ft_strncmp((*node)->cmd_arg[0], "echo", 5) == 0)
+	if (ft_strncmp((*node)->cmd, "echo", 5) == 0)
 		r = exe_echo(node);
 	// else if (ft_strcmp(node->cmd_arg[0], "cd") == 0)
     //     	r = exe_cd(node);
@@ -38,7 +38,7 @@ int exe_cmd(t_ast_node **node)
         printf("Error: No command node provided\n");
         return 1;
     }
-    printf("Executing command: %s\n", (*node)->cmd_arg[0]);
+    // printf("Executing command: %s\n", (*node)->cmd);
     return builtin_cmd_check(node);
 }
 
@@ -52,8 +52,8 @@ int	execute_ast(t_ast_node **node)
 		return (1);
 	if ((*node)->type == NODE_COMMAND)
 	{
-		printf("Executing command TYPE: %d\n", (*node)->type);
-		printf("Executing command CMD: %s\n", (*node)->cmd_arg[0]);
+		// printf("Executing command TYPE: %d\n", (*node)->type);
+		// printf("Executing command CMD: %s\n", (*node)->cmd);
 		r = exe_cmd(node);
 	}
 	return (r);
