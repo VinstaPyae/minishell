@@ -31,8 +31,8 @@ int	exe_echo(t_ast_node **node)
 	while ((*node)->cmd_arg[i])
 	{
 		printf("%s", (*node)->cmd_arg[i]);
-		if ((*node)->cmd_arg[i + 1])
-			printf(" ");
+		// if ((*node)->cmd_arg[i + 1])
+		// 	printf(" ");
 		i++;
 	}
 	if (newline)

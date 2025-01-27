@@ -5,37 +5,37 @@ int	lex_token_wd(char *str, int *i, t_list **l_token)
 	t_list	*token;
 	char	*str_token;
 	int	len;
-	//int	space;
+	int	space;
 
 	len = wd_len(&str[*i]);
-	//space = 0;
+	space = 0;
 	if (len > 0)
 	{
-	// 	if (ft_isspace(str[*i + len]))
-	// 		space = 1;
-	// 	if (space)
-        // {
-        //     // Include one space after the word
-        //     str_token = malloc(len + 2); // +1 for space, +1 for null terminator
-        //     if (str_token == NULL)
-        //     {
-        //         print_error(__func__, __FILE__, __LINE__, "Mem allocate failed for str_token");
-        //         return (1);
-        //     }
-        //     ft_strlcpy(str_token, &str[*i], len + 1); // Copy the word
-        //     str_token[len] = ' '; // Add the space
-        //     str_token[len + 1] = '\0'; // Null-terminate
-        // }
-        // else
-        //{
-            // No space after the word
+		if (ft_isspace(str[*i + len]))
+			space = 1;
+		if (space)
+        {
+            // Include one space after the word
+            str_token = malloc(len + 2); // +1 for space, +1 for null terminator
+            if (str_token == NULL)
+            {
+                print_error(__func__, __FILE__, __LINE__, "Mem allocate failed for str_token");
+                return (1);
+            }
+            ft_strlcpy(str_token, &str[*i], len + 1); // Copy the word
+            str_token[len] = ' '; // Add the space
+            str_token[len + 1] = '\0'; // Null-terminate
+        }
+        else
+        {
+            //No space after the word
             str_token = ft_substr(str, *i, len);
             if (str_token == NULL)
             {
                 print_error(__func__, __FILE__, __LINE__, "Mem allocate failed for str_token");
                 return (1);
             }
-        //}
+        }
 		token = create_token(str_token, TOKEN_WD);
 		if (!token)
 		{
