@@ -1,6 +1,6 @@
 #include "minishell.h"
 
-t_list	*create_token(char *str, int type)
+t_list	*create_token(char *str, int type, int s)
 {
 	t_token	*c_token;
 	t_list	*token;
@@ -10,6 +10,7 @@ t_list	*create_token(char *str, int type)
 		return (NULL);
 	c_token->token = str;
 	c_token->type = type;
+	c_token->space = s;
 	token = ft_lstnew(c_token);
 	if (token == NULL)
 		return (free(c_token),NULL);

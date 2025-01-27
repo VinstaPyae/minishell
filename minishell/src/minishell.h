@@ -11,6 +11,7 @@
 typedef struct	s_token
 {
 	int	type;
+    int space;
 	char	*token;
 } 		t_token;
 
@@ -41,6 +42,7 @@ typedef struct s_ast_node
     t_node_type type;
     char    *cmd;
     char    **cmd_arg;
+    int     space;
     t_list *redir;
     struct s_ast_node *left;
     struct s_ast_node *right;
@@ -72,7 +74,7 @@ int	lex_token_wd(char *str, int *i, t_list **l_token);
 t_list *get_token_list(char *input);
 t_list	*lexer(char *input);
 //token
-t_list	*create_token(char *str, int type);
+t_list	*create_token(char *str, int type, int s);
 t_token	*token_content(t_list *token);
 void    c_token_destroy(void *c_token);
 void	printer_token(t_list *l_token);
@@ -102,7 +104,7 @@ void print_redir(t_list *redir);
 //parser
 t_ast_node *create_node(t_node_type type);
 char	**get_cmd_args(t_list **tokens);
-char	*get_cmd(t_list **tokens);
+//char	*get_cmd(t_list **tokens);
 t_list	*get_redir(t_list **tokens);
 t_ast_node	*parse_pipe(t_list **tokens);
 t_ast_node	*parse_cmd(t_list **tokens);

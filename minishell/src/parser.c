@@ -44,8 +44,11 @@ t_ast_node	*parse_cmd(t_list **tokens)
 		{
 			if (!cmd_node->cmd)
 			{
-				cmd_node->cmd = get_cmd(tokens);
-				// printf("Lee cmd: %s\n", cmd_node->cmd);
+				cmd_node->cmd = ft_strdup(((t_token *)(*tokens)->content)->token);
+				if (!cmd_node->cmd)
+					return (free(cmd_node->cmd), NULL);
+				*tokens = (*tokens)->next;
+				//printf("Lee cmd: %s\n", cmd_node->cmd);
 			}
 			else
 			{
@@ -66,7 +69,7 @@ t_ast_node	*parse_cmd(t_list **tokens)
 	return (cmd_node);
 }
 
-char	*get_cmd(t_list **tokens)
+/* char	*get_cmd(t_list **tokens)
 {
 	char	*c_cmd;
 	char	*cmd;
@@ -93,12 +96,13 @@ char	*get_cmd(t_list **tokens)
 	cmd[i] = '\0';
 	*tokens = (*tokens)->next;
 	return (cmd);
-}
+} */
 
 char	**get_cmd_args(t_list **tokens)
 {
 	t_list	*tmp_list;
 	char	**cmd_arg;
+	//char	**arg;
 	int		i;
 
 	i = 0;
@@ -116,7 +120,7 @@ char	**get_cmd_args(t_list **tokens)
 	while ((tmp_list) != NULL && is_word_token(token_content(tmp_list)->type) &&
 	token_content(tmp_list)->type != TOKEN_PIPE)
 	{
-		cmd_arg[i] = ft_strdup(token_content(tmp_list)->token);
+		/* arg[i] = ft_strdup(token_content(tmp_list)->token);
 		if (!cmd_arg[i])
 		{
 			// Free previously allocated strings if allocation fails
@@ -124,6 +128,15 @@ char	**get_cmd_args(t_list **tokens)
 				free(cmd_arg[--i]);
 			free(cmd_arg);
 			return NULL;
+		} */
+		//printf("lee space: %d\n", token_content(tmp_list)->space);
+		if (token_content(tmp_list)->space > 0)
+		{
+			cmd_arg[i] = ft_strjoin(token_content(tmp_list)->token, " ");
+		}
+		else
+		{
+			cmd_arg[i] = ft_strdup(token_content(tmp_list)->token);
 		}
 		i++;
 		tmp_list = tmp_list->next;

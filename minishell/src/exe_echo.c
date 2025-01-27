@@ -43,6 +43,6 @@ int	exe_echo(t_ast_node **node)
 	
 	if (newline)
 		printf("\n");
-	printf("Executing echo with arguments:\n");
+	//printf("Executing echo with arguments:\n");
 	return (0);
 }
