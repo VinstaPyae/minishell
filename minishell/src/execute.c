@@ -11,7 +11,7 @@ int	builtin_cmd_check(t_ast_node **node)
 		printf("builin check here???");
 			return (1);
 	}
-	if (ft_strncmp((*node)->cmd_arg[0], "echo", 4) == 0)
+	if (ft_strncmp((*node)->cmd_arg[0], "echo", 5) == 0)
 		r = exe_echo(node);
 	// else if (ft_strcmp(node->cmd_arg[0], "cd") == 0)
     //     	r = exe_cd(node);

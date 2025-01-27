@@ -42,8 +42,12 @@ t_ast_node	*parse_cmd(t_list **tokens)
 	{
 		if ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
 		{
-			cmd_node->cmd_arg = get_cmd(tokens);
-			printf("cmd: %s\n", cmd_node->cmd_arg[0]);
+			if (!cmd_node->cmd)
+				cmd_node->cmd = get_cmd(tokens);
+			if (cmd_node->cmd)
+				printf("Lee cmd: %s\n", cmd_node->cmd);
+			cmd_node->cmd_arg = get_cmd_args(tokens);
+			//printf("cmd: %s\n", cmd_node->cmd_arg[0]);
 			if (!cmd_node->cmd_arg)
                			return (free_ast(cmd_node), NULL);
 		}
@@ -58,7 +62,35 @@ t_ast_node	*parse_cmd(t_list **tokens)
 	return (cmd_node);
 }
 
-char	**get_cmd(t_list **tokens)
+char	*get_cmd(t_list **tokens)
+{
+	char	*c_cmd;
+	char	*cmd;
+	int		i;
+	int		j;
+
+	if (!(*tokens))
+		return (NULL);
+	i = 0;
+	j = 0;
+	c_cmd = (((t_token *)(*tokens)->content)->token);
+	if (!c_cmd)
+		return (NULL);
+	while (c_cmd[i] && !isspace(c_cmd[i]))
+		i++;
+	cmd = malloc((i + 1) * sizeof(char));
+	if (!cmd)
+		return (NULL);
+	while (j < i)
+	{
+		cmd[j] = c_cmd[j];
+		j++;
+	}
+	cmd[i] = '\0';
+	return (cmd);
+}
+
+char	**get_cmd_args(t_list **tokens)
 {
 	t_list	*tmp_list;
 	char	**cmd_arg;
@@ -105,6 +137,7 @@ t_ast_node *create_node(t_node_type type)
 		exit(EXIT_FAILURE); // Exit the program
 	}
 	node->type = type;
+	node->cmd = NULL;
 	node->cmd_arg = NULL;      // Arguments list is initially NULL
 	node->redir = NULL;
 	node->left = NULL;      // Left child is NULL
