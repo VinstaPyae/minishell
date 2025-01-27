@@ -46,3 +46,14 @@ int	exe_echo(t_ast_node **node)
 	//printf("Executing echo with arguments:\n");
 	return (0);
 }
+
+int	exe_exit(t_ast_node **node)
+{
+	if (*node)
+	{
+		free_ast(*node); // Free the AST tree
+		*node = NULL;
+	}
+	rl_clear_history();
+	exit(0);
+}

@@ -115,6 +115,7 @@ int	exe_cmd(t_ast_node **node);
 int	execute_ast(t_ast_node **node);
 int	n_option_checked(const char *str);
 int	exe_echo(t_ast_node **node);
+int	exe_exit(t_ast_node **node);
 
 //error_handle
 void	cleanup(t_list **l_token, char **input, t_ast_node **ast);

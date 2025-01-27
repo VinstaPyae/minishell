@@ -36,11 +36,6 @@ int	main(int ac, char **av, char **env)
 			continue;
 		}
 		//printer_token(l_token);  // Print tokens for debugging
-		if (!ft_strncmp(token_content(l_token)->token, "exit", 5))
-		{
-			cleanup(&l_token, &input, &ast);
-			exit(0);
-		}
 		ast= parse_pipe(&l_token);
 		if (!ast)
 		{
@@ -48,8 +43,17 @@ int	main(int ac, char **av, char **env)
 			cleanup(&l_token, &input, &ast);
 			continue;
 		}
-		else
-			execute_ast(&ast);
+		if (input)
+		{
+			free(input);
+			input = NULL;
+		}
+		if (l_token)
+		{
+			ft_lstclear(&l_token, c_token_destroy);
+			l_token = NULL;
+		}
+		execute_ast(&ast);
 		//cleanup(&l_token, &input, &ast);
 	}
 	cleanup(&l_token, &input, &ast);

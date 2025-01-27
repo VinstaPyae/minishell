@@ -13,6 +13,8 @@ int	builtin_cmd_check(t_ast_node **node)
 	}
 	if (ft_strncmp((*node)->cmd, "echo", 5) == 0)
 		r = exe_echo(node);
+	else if (ft_strncmp((*node)->cmd, "exit", 5) == 0)
+		r = exe_exit(node);
 	// else if (ft_strcmp(node->cmd_arg[0], "cd") == 0)
     //     	r = exe_cd(node);
 	// else if (ft_strcmp(node->cmd_arg[0], "pwd") == 0)
