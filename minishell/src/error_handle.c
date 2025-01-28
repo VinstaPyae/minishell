@@ -29,19 +29,10 @@
 
 void cleanup(t_minishell **shell)
 {
-    if (!shell)
+    if (!shell || !*shell)
     {
-        printf("cleanup: shell is NULL\n");
         return;
     }
-    if (!*shell)
-    {
-        printf("cleanup: *shell is NULL\n");
-        return;
-    }
-
-    printf("cleanup: cleaning up shell structure at address %p\n", (void*)*shell);
-
     if ((*shell)->input)
     {
         free((*shell)->input);
@@ -59,11 +50,13 @@ void cleanup(t_minishell **shell)
         free_ast((*shell)->ast);
         (*shell)->ast = NULL;
     }
-
-    printf("cleanup: freeing shell at address %p\n", (void*)*shell);
+	if ((*shell)->envp)
+	{
+		free_env((*shell)->envp);
+		(*shell)->envp = NULL;
+	}
     free(*shell);
     *shell = NULL;
-    printf("cleanup: shell set to NULL\n");
 }
 
 void free_ast(t_ast_node *node)

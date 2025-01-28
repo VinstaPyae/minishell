@@ -61,12 +61,20 @@ typedef enum e_token_type
     TOKEN_VARIABLE
 } t_token_type;
 
+typedef struct s_env
+{
+    char    *key;
+    char    *value;
+    struct s_env    *next;
+}   t_env;
+
 //minshell struct
 typedef struct s_minishell
 {
     char    *input;
     t_list  *l_token;
     t_ast_node  *ast;
+    t_env   *envp;
 }               t_minishell;
 
 //lex_handle
@@ -124,6 +132,13 @@ int	execute_ast(t_minishell **shell);
 int	n_option_checked(const char *str);
 int	exe_echo(t_minishell **shell);
 int	exe_exit(t_minishell **shell);
+void free_env(t_env *env);
+void split_key_value(char *str, char **key, char **value);
+t_env *init_env(char **envp);
+t_env *init_env(char **envp);
+void print_env(t_env *env);
+int exe_env(t_minishell **shell);
+char *ft_strndup(const char *s, size_t n);
 
 //error_handle
 void	cleanup(t_minishell **shell);

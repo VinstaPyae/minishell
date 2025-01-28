@@ -12,7 +12,7 @@ char	*get_input(void)
 	return (input);
 }
 
-t_minishell	*create_minshell(void)
+t_minishell	*create_minshell(char **env)
 {
 	t_minishell	*shell;
 
@@ -22,6 +22,12 @@ t_minishell	*create_minshell(void)
 	shell->ast = NULL;
 	shell->input = NULL;
 	shell->l_token = NULL;
+	shell->envp = init_env(env);
+	if (!shell->envp)
+	{
+		free(shell);
+		return (NULL);
+	}
 	return (shell);
 }
 
@@ -31,13 +37,15 @@ int main(int ac, char **av, char **env)
 
     (void)ac;
     (void)av;
-    (void)env;
-
-    if (!shell)
-        return (0);
+	shell = NULL;
     while (1)
     {
-		shell = create_minshell();
+		shell = create_minshell(env);
+		if (!shell)
+		{
+			printf("Error: Failed to initialize minishell\n");
+			return (1);
+		}
         shell->input = get_input();
         if (!shell->input)
             break;
