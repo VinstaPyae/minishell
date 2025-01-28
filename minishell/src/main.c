@@ -12,51 +12,63 @@ char	*get_input(void)
 	return (input);
 }
 
+t_minishell	*create_minshell(void)
+{
+	t_minishell	*shell;
+
+	shell = malloc(sizeof(t_minishell));
+	if (!shell)
+		return (NULL);
+	shell->ast = NULL;
+	shell->input = NULL;
+	shell->l_token = NULL;
+	return (shell);
+}
+
 int	main(int ac, char **av, char **env)
 {
-	char		*input;
-	t_list		*l_token;
-	t_ast_node	*ast;
+	t_minishell	*shell;
 
 	(void) ac;
 	(void) av;
 	(void) env;
-	l_token = NULL;
-	ast = NULL;
+	shell = create_minshell();
 	while (1)
 	{
-		input = get_input();
-		if (!input)
+		shell->input = get_input();
+		if (!shell->input)
 			break;
-		l_token = lexer(input);
-		if (!l_token)
+		shell->l_token = lexer(shell->input);
+		if (!shell->l_token)
 		{
 			printf("Error: Lexer failed\n");
-			cleanup(&l_token, &input, &ast);
+			cleanup(&shell);
 			continue;
 		}
-		//printer_token(l_token);  // Print tokens for debugging
-		ast= parse_pipe(&l_token);
-		if (!ast)
+		// cleanup(&shell);
+		// printer_token(l_token);  // Print tokens for debugging
+		shell->ast= parse_pipe(&shell->l_token);
+		if (!shell->ast)
 		{
 			printf("Error: ast failed\n");
-			cleanup(&l_token, &input, &ast);
+			cleanup(&shell);
 			continue;
 		}
-		if (input)
-		{
-			free(input);
-			input = NULL;
-		}
-		if (l_token)
-		{
-			ft_lstclear(&l_token, c_token_destroy);
-			l_token = NULL;
-		}
-		execute_ast(&ast);
-		//cleanup(&l_token, &input, &ast);
+		// if (input)
+		// {
+		// 	free(input);
+		// 	input = NULL;
+		// }
+		// if (l_token)
+		// {
+		// 	ft_lstclear(&l_token, c_token_destroy);
+		// 	l_token = NULL;
+		// }
+		execute_ast(&shell);
+		cleanup(&shell);
 	}
-	cleanup(&l_token, &input, &ast);
+	cleanup(&shell);
+	rl_clear_history();
 	return (0);
 }
 

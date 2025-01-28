@@ -1,23 +1,22 @@
 #include "minishell.h"
 
-void	cleanup(t_list **l_token, char **input, t_ast_node **ast)
+void	cleanup(t_minishell **shell)
 {
-	if (*input)
+	if ((*shell)->input)
 	{
-		free(*input);
-		*input = NULL;
+		free((*shell)->input);
+		(*shell)->input = NULL;
 	}
-	if (*l_token)
+	if ((*shell)->l_token)
 	{
-		ft_lstclear(l_token, c_token_destroy);
-		*l_token = NULL;
+		ft_lstclear(&(*shell)->l_token, c_token_destroy);
+		(*shell)->l_token = NULL;
 	}
-	if (*ast)
+	if ((*shell)->ast)
 	{
-		free_ast(*ast); // Free the AST tree
-		*ast = NULL;
+		free_ast((*shell)->ast); // Free the AST tree
+		(*shell)->ast = NULL;
 	}
-	rl_clear_history();
 }
 
 void free_ast(t_ast_node *node)

@@ -61,6 +61,14 @@ typedef enum e_token_type
     TOKEN_VARIABLE
 } t_token_type;
 
+//minshell struct
+typedef struct s_minishell
+{
+    char    *input;
+    t_list  *l_token;
+    t_ast_node  *ast;
+}               t_minishell;
+
 //lex_handle
 int	lex_token_pipe(char *str, int *i, t_list **l_token);
 //int	lex_token_bracket(char *str, int *i, t_list **l_token);
@@ -110,15 +118,15 @@ t_ast_node	*parse_pipe(t_list **tokens);
 t_ast_node	*parse_cmd(t_list **tokens);
 
 //execute_builtin
-int	builtin_cmd_check(t_ast_node **node);
-int	exe_cmd(t_ast_node **node);
-int	execute_ast(t_ast_node **node);
+int	builtin_cmd_check(t_minishell **shell);
+int	exe_cmd(t_minishell **shell);
+int	execute_ast(t_minishell **shell);
 int	n_option_checked(const char *str);
-int	exe_echo(t_ast_node **node);
-int	exe_exit(t_ast_node **node);
+int	exe_echo(t_minishell **shell);
+int	exe_exit(t_minishell **shell);
 
 //error_handle
-void	cleanup(t_list **l_token, char **input, t_ast_node **ast);
+void	cleanup(t_minishell **shell);
 void free_ast(t_ast_node *node);
 
 

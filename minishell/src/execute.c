@@ -1,20 +1,20 @@
 #include "minishell.h"
 
 //builtin check and execute
-int	builtin_cmd_check(t_ast_node **node)
+int	builtin_cmd_check(t_minishell **shell)
 {
 	int	r;
 
 	r = 0;
-	if (!node || !(*node)->cmd)
+	if (!(*shell)->ast || !(*shell)->ast->cmd)
 	{
 		printf("builin check here???");
 			return (1);
 	}
-	if (ft_strncmp((*node)->cmd, "echo", 5) == 0)
-		r = exe_echo(node);
-	else if (ft_strncmp((*node)->cmd, "exit", 5) == 0)
-		r = exe_exit(node);
+	if (ft_strncmp((*shell)->ast->cmd, "echo", 5) == 0)
+		r = exe_echo(shell);
+	else if (ft_strncmp((*shell)->ast->cmd, "exit", 5) == 0)
+		r = exe_exit(shell);
 	// else if (ft_strcmp(node->cmd_arg[0], "cd") == 0)
     //     	r = exe_cd(node);
 	// else if (ft_strcmp(node->cmd_arg[0], "pwd") == 0)
@@ -33,30 +33,30 @@ int	builtin_cmd_check(t_ast_node **node)
 }
 
 //all command check and execute
-int exe_cmd(t_ast_node **node)
+int exe_cmd(t_minishell **shell)
 {
-    if (!(*node))
+    if (!(*shell)->ast)
     {
         printf("Error: No command node provided\n");
         return 1;
     }
     // printf("Executing command: %s\n", (*node)->cmd);
-    return builtin_cmd_check(node);
+    return builtin_cmd_check(shell);
 }
 
 ////all execution 
-int	execute_ast(t_ast_node **node)
+int	execute_ast(t_minishell **shell)
 {
 	int	r;
 
 	r = 0;
-	if (!(*node))
+	if (!(*shell)->ast)
 		return (1);
-	if ((*node)->type == NODE_COMMAND)
+	if ((*shell)->ast->type == NODE_COMMAND)
 	{
 		// printf("Executing command TYPE: %d\n", (*node)->type);
 		// printf("Executing command CMD: %s\n", (*node)->cmd);
-		r = exe_cmd(node);
+		r = exe_cmd(shell);
 	}
 	return (r);
 }

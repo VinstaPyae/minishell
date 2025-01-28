@@ -13,7 +13,7 @@ int	n_option_checked(const char *str)
 }
 
 //echo builtin
-int	exe_echo(t_ast_node **node)
+int	exe_echo(t_minishell **shell)
 {
 	int	i;
 	int	newline;
@@ -21,21 +21,21 @@ int	exe_echo(t_ast_node **node)
 	i = 0;
 	newline = 1;
 	// Check if node or cmd_arg is NULL
-	if (!(*node) || !(*node)->cmd)
+	if (!(*shell)->ast || !(*shell)->ast->cmd)
 		return 1;
 
 	// If cmd_arg exists and has the -n option
-	if ((*node)->cmd_arg && (*node)->cmd_arg[0] && n_option_checked((*node)->cmd_arg[0]))
+	if ((*shell)->ast->cmd_arg && (*shell)->ast->cmd_arg[0] && n_option_checked((*shell)->ast->cmd_arg[0]))
 	{
 		newline = 0;
 		i++;
 	}
 	// Print arguments if they exist
-	if ((*node)->cmd_arg)
+	if ((*shell)->ast->cmd_arg)
 	{
-		while ((*node)->cmd_arg[i])
+		while ((*shell)->ast->cmd_arg[i])
 		{
-			printf("%s", (*node)->cmd_arg[i]);
+			printf("%s", (*shell)->ast->cmd_arg[i]);
 			i++;
 		}
 	}
@@ -47,12 +47,11 @@ int	exe_echo(t_ast_node **node)
 	return (0);
 }
 
-int	exe_exit(t_ast_node **node)
+int	exe_exit(t_minishell **shell)
 {
-	if (*node)
+	if ((*shell))
 	{
-		free_ast(*node); // Free the AST tree
-		*node = NULL;
+		cleanup(shell);
 	}
 	rl_clear_history();
 	exit(0);
