@@ -1,22 +1,69 @@
 #include "minishell.h"
 
-void	cleanup(t_minishell **shell)
+/* void cleanup(t_minishell **shell)
 {
-	if ((*shell)->input)
-	{
-		free((*shell)->input);
-		(*shell)->input = NULL;
-	}
-	if ((*shell)->l_token)
-	{
-		ft_lstclear(&(*shell)->l_token, c_token_destroy);
-		(*shell)->l_token = NULL;
-	}
-	if ((*shell)->ast)
-	{
-		free_ast((*shell)->ast); // Free the AST tree
-		(*shell)->ast = NULL;
-	}
+    if (!shell || !*shell) // Check if shell or *shell is NULL
+        return;
+
+    if ((*shell)->input)
+    {
+        free((*shell)->input);
+        (*shell)->input = NULL;
+    }
+
+    if ((*shell)->l_token)
+    {
+        ft_lstclear(&(*shell)->l_token, c_token_destroy);
+        (*shell)->l_token = NULL;
+    }
+
+    if ((*shell)->ast)
+    {
+        free_ast((*shell)->ast); // Free the AST tree
+        (*shell)->ast = NULL;
+    }
+
+    free(*shell); // Free the shell structure
+    *shell = NULL; // Set the pointer to NULL to avoid dangling references
+} */
+
+void cleanup(t_minishell **shell)
+{
+    if (!shell)
+    {
+        printf("cleanup: shell is NULL\n");
+        return;
+    }
+    if (!*shell)
+    {
+        printf("cleanup: *shell is NULL\n");
+        return;
+    }
+
+    printf("cleanup: cleaning up shell structure at address %p\n", (void*)*shell);
+
+    if ((*shell)->input)
+    {
+        free((*shell)->input);
+        (*shell)->input = NULL;
+    }
+
+    if ((*shell)->l_token)
+    {
+        ft_lstclear(&(*shell)->l_token, c_token_destroy);
+        (*shell)->l_token = NULL;
+    }
+
+    if ((*shell)->ast)
+    {
+        free_ast((*shell)->ast);
+        (*shell)->ast = NULL;
+    }
+
+    printf("cleanup: freeing shell at address %p\n", (void*)*shell);
+    free(*shell);
+    *shell = NULL;
+    printf("cleanup: shell set to NULL\n");
 }
 
 void free_ast(t_ast_node *node)
@@ -28,6 +75,11 @@ void free_ast(t_ast_node *node)
 		return;
 
 	// Free command arguments
+	if (node->cmd)
+	{
+		free(node->cmd);
+		node->cmd = NULL;
+	}
 	if (node->cmd_arg)
 	{
 		while (node->cmd_arg[i])

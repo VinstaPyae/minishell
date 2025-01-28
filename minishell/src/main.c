@@ -25,51 +25,46 @@ t_minishell	*create_minshell(void)
 	return (shell);
 }
 
-int	main(int ac, char **av, char **env)
+int main(int ac, char **av, char **env)
 {
-	t_minishell	*shell;
+    t_minishell *shell;
 
-	(void) ac;
-	(void) av;
-	(void) env;
-	shell = create_minshell();
-	while (1)
-	{
-		shell->input = get_input();
-		if (!shell->input)
-			break;
-		shell->l_token = lexer(shell->input);
-		if (!shell->l_token)
-		{
-			printf("Error: Lexer failed\n");
-			cleanup(&shell);
-			continue;
-		}
-		// cleanup(&shell);
-		// printer_token(l_token);  // Print tokens for debugging
-		shell->ast= parse_pipe(&shell->l_token);
-		if (!shell->ast)
-		{
-			printf("Error: ast failed\n");
-			cleanup(&shell);
-			continue;
-		}
-		// if (input)
-		// {
-		// 	free(input);
-		// 	input = NULL;
-		// }
-		// if (l_token)
-		// {
-		// 	ft_lstclear(&l_token, c_token_destroy);
-		// 	l_token = NULL;
-		// }
-		execute_ast(&shell);
-		cleanup(&shell);
-	}
-	cleanup(&shell);
-	rl_clear_history();
-	return (0);
+    (void)ac;
+    (void)av;
+    (void)env;
+
+    if (!shell)
+        return (0);
+    while (1)
+    {
+		shell = create_minshell();
+        shell->input = get_input();
+        if (!shell->input)
+            break;
+
+        shell->l_token = lexer(shell->input);
+        if (!shell->l_token)
+        {
+            printf("Error: Lexer failed\n");
+            cleanup(&shell);
+            continue;
+        }
+
+        shell->ast = parse_pipe(&shell->l_token);
+        if (!shell->ast)
+        {
+            printf("Error: ast failed\n");
+            cleanup(&shell);
+            continue;
+        }
+
+        execute_ast(&shell); // This should call exe_exit for the "exit" command
+        cleanup(&shell);     // Clean up after each iteration
+    }
+
+    cleanup(&shell);         // Final cleanup
+    rl_clear_history();      // Clear readline history
+    return (0);
 }
 
 // int main(int ac, char **av, char **env)

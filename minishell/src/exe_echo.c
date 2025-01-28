@@ -49,10 +49,10 @@ int	exe_echo(t_minishell **shell)
 
 int	exe_exit(t_minishell **shell)
 {
-	if ((*shell))
+	if (shell && *shell) // Check if shell and *shell are not NULL
 	{
 		cleanup(shell);
 	}
-	rl_clear_history();
-	exit(0);
+	rl_clear_history(); // Clear the readline history
+	exit(0); // Exit with status 0
 }

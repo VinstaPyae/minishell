@@ -6,11 +6,9 @@ int	builtin_cmd_check(t_minishell **shell)
 	int	r;
 
 	r = 0;
-	if (!(*shell)->ast || !(*shell)->ast->cmd)
-	{
-		printf("builin check here???");
-			return (1);
-	}
+	//printf("execute_ast: executing command: %s\n", (*shell)->ast->cmd); // Debug print
+	if (!shell || !*shell || !(*shell)->ast)
+        return (1);
 	if (ft_strncmp((*shell)->ast->cmd, "echo", 5) == 0)
 		r = exe_echo(shell);
 	else if (ft_strncmp((*shell)->ast->cmd, "exit", 5) == 0)
