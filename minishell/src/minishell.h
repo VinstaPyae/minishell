@@ -140,6 +140,8 @@ void print_env(t_env *env);
 int exe_env(t_minishell **shell);
 char *ft_strndup(const char *s, size_t n);
 int exe_unset(t_minishell **shell);
+int exe_pwd(t_minishell **shell);
+int exe_cd(t_minishell **shell);
 
 //error_handle
 void	cleanup(t_minishell **shell);
