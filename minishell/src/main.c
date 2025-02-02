@@ -12,7 +12,7 @@ char	*get_input(void)
 	return (input);
 }
 
-t_minishell	*create_minshell(char **env)
+t_minishell	*create_minshell(t_env *envp)
 {
 	t_minishell	*shell;
 
@@ -22,7 +22,7 @@ t_minishell	*create_minshell(char **env)
 	shell->ast = NULL;
 	shell->input = NULL;
 	shell->l_token = NULL;
-	shell->envp = init_env(env);
+	shell->envp = envp;
 	if (!shell->envp)
 	{
 		free(shell);
@@ -34,16 +34,24 @@ t_minishell	*create_minshell(char **env)
 int main(int ac, char **av, char **env)
 {
     t_minishell *shell;
+    t_env   *envp;
 
     (void)ac;
     (void)av;
 	shell = NULL;
+    envp = init_env(env);
+    if (!envp)
+    {
+        printf("Error: Failed to initialize environment\n");
+        return (1);
+    }
     while (1)
     {
-		shell = create_minshell(env);
+		shell = create_minshell(envp);
 		if (!shell)
 		{
 			printf("Error: Failed to initialize minishell\n");
+            free_env(envp);
 			return (1);
 		}
         shell->input = get_input();
@@ -71,6 +79,7 @@ int main(int ac, char **av, char **env)
     }
 
     cleanup(&shell);         // Final cleanup
+    free_env(envp);
     rl_clear_history();      // Clear readline history
     return (0);
 }

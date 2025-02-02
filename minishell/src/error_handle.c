@@ -30,33 +30,30 @@
 void cleanup(t_minishell **shell)
 {
     if (!shell || !*shell)
-    {
         return;
-    }
+
+    // Free input
     if ((*shell)->input)
     {
         free((*shell)->input);
         (*shell)->input = NULL;
     }
 
+    // Free tokens
     if ((*shell)->l_token)
     {
         ft_lstclear(&(*shell)->l_token, c_token_destroy);
         (*shell)->l_token = NULL;
     }
 
+    // Free AST
     if ((*shell)->ast)
     {
         free_ast((*shell)->ast);
         (*shell)->ast = NULL;
     }
-	if ((*shell)->envp)
-	{
-		free_env((*shell)->envp);
-		(*shell)->envp = NULL;
-	}
-    free(*shell);
-    *shell = NULL;
+
+    // Do not free envp here, as it is shared across iterations
 }
 
 void free_ast(t_ast_node *node)

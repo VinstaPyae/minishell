@@ -139,6 +139,7 @@ t_env *init_env(char **envp);
 void print_env(t_env *env);
 int exe_env(t_minishell **shell);
 char *ft_strndup(const char *s, size_t n);
+int exe_unset(t_minishell **shell);
 
 //error_handle
 void	cleanup(t_minishell **shell);
@@ -148,3 +149,4 @@ void free_ast(t_ast_node *node);
 //debug
 void print_error(const char *func_name, const char *file, int line, const char *format, ...);
 #endif
+

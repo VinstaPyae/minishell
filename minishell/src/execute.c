@@ -13,6 +13,8 @@ int	builtin_cmd_check(t_minishell **shell)
 		r = exe_echo(shell);
 	else if (ft_strncmp((*shell)->ast->cmd, "env", 4) == 0)
 		r = exe_env(shell);
+	else if (ft_strncmp((*shell)->ast->cmd, "unset", 6) == 0)
+    	r = exe_unset(shell);
 	else if (ft_strncmp((*shell)->ast->cmd, "exit", 5) == 0)
 		r = exe_exit(shell);
 	// else if (ft_strcmp(node->cmd_arg[0], "cd") == 0)
