@@ -17,11 +17,23 @@
  * after it and setting the list pointer to NULL. For the deleting, the
  * function 'del' is used.
  */
-void	ft_lstclear(t_list **lst, void (*del)(void *))
+/* void	ft_lstclear(t_list **lst, void (*del)(void *))
 {
 	t_list	*tmp;
 
 	while (*lst != NULL)
+	{
+		tmp = (*lst)->next;
+		ft_lstdelone(*lst, del);
+		*lst = tmp;
+	}
+	*lst = NULL;
+} */
+void ft_lstclear(t_list **lst, void (*del)(void *))
+{
+	t_list *tmp;
+
+	while (*lst)
 	{
 		tmp = (*lst)->next;
 		ft_lstdelone(*lst, del);

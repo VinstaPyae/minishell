@@ -51,13 +51,13 @@ int main(int ac, char **av, char **env)
 		if (!shell)
 		{
 			printf("Error: Failed to initialize minishell\n");
+            cleanup(&shell);
             free_env(envp);
 			return (1);
 		}
         shell->input = get_input();
         if (!shell->input)
             break;
-
         shell->l_token = lexer(shell->input);
         if (!shell->l_token)
         {
@@ -65,7 +65,6 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-
         shell->ast = parse_pipe(&shell->l_token);
         if (!shell->ast)
         {
@@ -73,7 +72,6 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-
         execute_ast(&shell); // This should call exe_exit for the "exit" command
         cleanup(&shell);     // Clean up after each iteration
     }

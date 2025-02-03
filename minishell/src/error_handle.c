@@ -52,7 +52,8 @@ void cleanup(t_minishell **shell)
         free_ast((*shell)->ast);
         (*shell)->ast = NULL;
     }
-
+	free(*shell);
+    *shell = NULL;
     // Do not free envp here, as it is shared across iterations
 }
 

@@ -51,6 +51,7 @@ int	exe_exit(t_minishell **shell)
 {
 	if (shell && *shell) // Check if shell and *shell are not NULL
 	{
+		free_env((*shell)->envp);
 		cleanup(shell);
 	}
 	rl_clear_history(); // Clear the readline history

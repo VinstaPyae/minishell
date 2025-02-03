@@ -30,6 +30,7 @@ void	c_token_destroy(void *c_token)
 	free(c_token);
 }
 
+
 void	printer_token(t_list *l_token)
 {
 	if (l_token != NULL)
