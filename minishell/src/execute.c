@@ -21,11 +21,8 @@ int	builtin_cmd_check(t_minishell **shell)
 		r = exe_pwd(shell);
 	else if (ft_strncmp((*shell)->ast->cmd, "cd", 3) == 0)
 		r = exe_cd(shell);
-	// else if (ft_strcmp(node->cmd_arg[0], "cd") == 0)
-    //     	r = exe_cd(node);
-	// else if (ft_strcmp(node->cmd_arg[0], "export") == 0)
-	// 	r = exe_export(node);
-
+	else if (ft_strncmp((*shell)->ast->cmd, "export", 7) == 0)
+		r = exe_export(shell);
 	else
 		r = -1;
 	return (r);

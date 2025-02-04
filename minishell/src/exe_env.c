@@ -34,6 +34,12 @@ void split_key_value(char *str, char **key, char **value)
 {
     char *equal_sign;
 
+    if (!str) // Check if input string is NULL
+    {
+        *key = NULL;
+        *value = NULL;
+        return;
+    }
     equal_sign = ft_strchr(str, '='); // Find the first '=' in the string
     if (!equal_sign)
     {

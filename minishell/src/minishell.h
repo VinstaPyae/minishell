@@ -142,6 +142,12 @@ char *ft_strndup(const char *s, size_t n);
 int exe_unset(t_minishell **shell);
 int exe_pwd(t_minishell **shell);
 int exe_cd(t_minishell **shell);
+void split_value(char *str, char **key, char **value);
+static void add_or_update_env_var(const char *key, const char *value, t_minishell *shell);
+static int is_valid_env_name(const char *name);
+static int process_export_args(t_minishell *shell);
+static int process_export_no_args(t_minishell *shell);
+int exe_export(t_minishell **shell);
 
 //error_handle
 void	cleanup(t_minishell **shell);

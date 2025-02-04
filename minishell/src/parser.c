@@ -53,7 +53,7 @@ t_ast_node	*parse_cmd(t_list **tokens)
 			else
 			{
 				cmd_node->cmd_arg = get_cmd_args(tokens);
-				//printf("cmd: %s\n", cmd_node->cmd_arg[0]);
+				// printf("cmd: %s\n", cmd_node->cmd_arg[0]);
 				if (!cmd_node->cmd_arg)
 							return (free_ast(cmd_node), NULL);
 			}
@@ -104,45 +104,68 @@ char	**get_cmd_args(t_list **tokens)
 	char	**cmd_arg;
 	//char	**arg;
 	int		i;
+	int		j;
 
 	i = 0;
 	tmp_list = (*tokens);
 	while (*tokens != NULL && is_word_token(((t_token *)(*tokens)->content)->type) &&
 	((t_token *)(*tokens)->content)->type != TOKEN_PIPE)
 	{
+		if (((t_token *)(*tokens)->content)->space > 0 && (*tokens)->next != NULL)
+		{
+			i++;
+			//printf("lee space count: %d\n", ((t_token *)(*tokens)->content)->space);
+		}
 		*tokens = (*tokens)->next;
-		i++;
 	}
+	//printf("Arg: %d\n", i);
 	cmd_arg = malloc((i + 1) * sizeof(char *));
 	if (!cmd_arg)
 		return (NULL);
-	i = 0;
+	j = 0;
 	while ((tmp_list) != NULL && is_word_token(token_content(tmp_list)->type) &&
 	token_content(tmp_list)->type != TOKEN_PIPE)
 	{
-		/* arg[i] = ft_strdup(token_content(tmp_list)->token);
-		if (!cmd_arg[i])
+		/* arg[j] = ft_strdup(token_content(tmp_list)->token);
+		if (!cmd_arg[j])
 		{
 			// Free previously allocated strings if allocation fails
-			while (i > 0)
-				free(cmd_arg[--i]);
+			while (j > 0)
+				free(cmd_arg[--j]);
 			free(cmd_arg);
 			return NULL;
 		} */
-		//printf("lee space: %d\n", token_content(tmp_list)->space);
-		if (token_content(tmp_list)->space > 0)
+		// printf("token type: %d\n", token_content(tmp_list)->type);
+		// printf("token vale: %s\n", token_content(tmp_list)->token);
+		// printf("token space: %d\n", token_content(tmp_list)->space);
+		if (token_content(tmp_list)->space > 0 && tmp_list->next != NULL)
 		{
-			cmd_arg[i] = ft_strjoin(token_content(tmp_list)->token, " ");
+			cmd_arg[j] = ft_strjoin(token_content(tmp_list)->token, " ");
+			// printf("arg%d: %s\n", j, cmd_arg[j]);
 		}
 		else
 		{
-			cmd_arg[i] = ft_strdup(token_content(tmp_list)->token);
+			if (tmp_list->next == NULL)
+			{
+				cmd_arg[j] = ft_strdup(token_content(tmp_list)->token);
+				// printf("arg%d: %s\n", j, cmd_arg[j]);
+			}
+			else
+			{
+				cmd_arg[j] = ft_strjoin(token_content(tmp_list)->token, token_content(tmp_list->next)->token);
+				tmp_list = tmp_list->next;
+				while (token_content(tmp_list)->space == 0 && tmp_list->next != NULL)
+				{
+					cmd_arg[j] = ft_strjoin(cmd_arg[j], token_content(tmp_list->next)->token);
+					tmp_list = tmp_list->next;
+				}
+			}
 		}
-		i++;
+		j++;
 		tmp_list = tmp_list->next;
-		//printf("cmd: %s\n", cmd_arg[i]);
+		//printf("cmd: %s\n", cmd_arg[j]);
 	}
-	cmd_arg[i] = NULL;
+	cmd_arg[j] = NULL;
 	(*tokens) = tmp_list;
 	return (cmd_arg);
 }

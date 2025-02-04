@@ -40,6 +40,7 @@ int	lex_token_variable(char *str, int *i, t_list **l_token)
 	int		space;
 
 	v_len = variable_len(&str[*i]);
+	// printf("$len: %d\n\n", v_len);
 	space = 0;
 	if (v_len > 0)
 	{

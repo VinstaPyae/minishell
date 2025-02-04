@@ -12,17 +12,16 @@ int	variable_len(char *input)
 {
 	int	i;
 
-	i = 0;
-	if (input[i] == '$')
+	if (!input || input[0] != '$') // Check if input is valid and starts with '$'
+        	return (0);
+	i = 1;
+	while (input[i])
 	{
+		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"'))
+			break;
 		i++;
-		/* while (!ft_isspace(input[i]) && input[i] != '$' && input[i] &&
-		(input[i] != '\'' || input[i] != '"')) */
-		while (!ft_isspace(input[i]) && input[i] && (input[i] == '\'' || input[i] == '"'))
-			i++;
-		return (i);
 	}
-	return(0);
+	return (i);
 }
 
 int	ot_len(char *input)
