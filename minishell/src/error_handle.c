@@ -56,6 +56,21 @@ void cleanup(t_minishell **shell)
     *shell = NULL;
     // Do not free envp here, as it is shared across iterations
 }
+void c_token_destroy(void *c_token)
+{
+	t_token *token = (t_token *)c_token;
+	if (!token)
+		return;
+	
+	if (token->token)
+	{
+		free(token->token);
+		token->token = NULL; // Avoid dangling pointer
+	}
+
+	free(token);
+}
+
 
 void free_ast(t_ast_node *node)
 {
@@ -69,23 +84,16 @@ void free_ast(t_ast_node *node)
 	if (node->cmd)
 	{
 		free(node->cmd);
-		node->cmd = NULL;
 	}
 	if (node->cmd_arg)
 	{
-		while (node->cmd_arg[i])
-		{
-			free(node->cmd_arg[i]); // Free each string in the array
-			node->cmd_arg[i++] = NULL; // Avoid dangling pointers
-		}
-		free(node->cmd_arg); // Free the array itself
-		node->cmd_arg = NULL; // Avoid dangling pointers
+		free_arg(node->cmd_arg);
 	}
 
 	// Free redirections
 	if (node->redir)
 	{
-		ft_lstclear(&node->redir, free); // Free the redirection list
+		ft_lstclear(&node->redir, free_redir); // Free the redirection list
 		node->redir = NULL; // Avoid dangling pointers
 	}
 
@@ -96,6 +104,35 @@ void free_ast(t_ast_node *node)
 	// Free the node itself
 	free(node);
 }
+
+void free_redir(void *redir)
+{
+	t_redir *r = (t_redir *)redir;
+	if (r)
+	{
+		if (r->file)
+			free(r->file);  // Free filename if dynamically allocated
+		free(r);
+	}
+}
+
+
+void	free_arg(char **str)
+{
+	int	i;
+
+	if (!str) // Check if str is NULL before accessing it
+		return;
+	
+	i = 0;
+	while (str[i])
+	{
+		free(str[i]);
+		i++;
+	}
+	free(str);
+}
+
 
 /*void	cleanup(t_list **tokens, char **input, t_ast_node **ast)
 {

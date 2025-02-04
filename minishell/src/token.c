@@ -23,13 +23,6 @@ t_token	*token_content(t_list *token)
 	return ((t_token *)token->content);
 }
 
-void	c_token_destroy(void *c_token)
-{
-	free(((t_token *)c_token)->token);
-	((t_token *)c_token)->token = NULL;
-	free(c_token);
-}
-
 
 void	printer_token(t_list *l_token)
 {

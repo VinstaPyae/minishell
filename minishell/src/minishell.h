@@ -151,8 +151,9 @@ int exe_export(t_minishell **shell);
 
 //error_handle
 void	cleanup(t_minishell **shell);
-void free_ast(t_ast_node *node);
-
+void	free_ast(t_ast_node *node);
+void	free_arg(char **str);
+void	free_redir(void *redir);
 
 //debug
 void print_error(const char *func_name, const char *file, int line, const char *format, ...);

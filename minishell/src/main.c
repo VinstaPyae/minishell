@@ -47,14 +47,14 @@ int main(int ac, char **av, char **env)
     }
     while (1)
     {
-		shell = create_minshell(envp);
-		if (!shell)
-		{
-			printf("Error: Failed to initialize minishell\n");
-            cleanup(&shell);
-            free_env(envp);
-			return (1);
-		}
+	shell = create_minshell(envp);
+	if (!shell)
+	{
+		printf("Error: Failed to initialize minishell\n");
+        	cleanup(&shell);
+		free_env(envp);
+		return (1);
+	}
         shell->input = get_input();
         if (!shell->input)
             break;
@@ -65,6 +65,7 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
+	// printer_token(shell->l_token);
         shell->ast = parse_pipe(&shell->l_token);
         if (!shell->ast)
         {
@@ -75,7 +76,6 @@ int main(int ac, char **av, char **env)
         execute_ast(&shell); // This should call exe_exit for the "exit" command
         cleanup(&shell);     // Clean up after each iteration
     }
-
     cleanup(&shell);         // Final cleanup
     free_env(envp);
     rl_clear_history();      // Clear readline history
