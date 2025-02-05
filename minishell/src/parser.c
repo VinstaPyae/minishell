@@ -1,20 +1,20 @@
 #include "minishell.h"
 
-t_ast_node	*parse_pipe(t_list **tokens)
+t_ast_node	*parse_pipe(t_list *tokens)
 {
 	t_ast_node	*left;
 	t_ast_node	*p_node;
 
-	if (!(*tokens))
+	if (!(tokens))
 		return (NULL);
-	left = parse_cmd(tokens);
+	left = parse_cmd(&tokens);
 	if (!left)
 		return (NULL);
 	p_node = NULL;
-	if ((*tokens) != NULL && (((t_token *)(*tokens)->content)->type == TOKEN_PIPE))
+	if ((tokens) != NULL && (token_content(tokens)->type == TOKEN_PIPE))
 	{
-        	printf("PIPE : %s\n", ((t_token *)(*tokens)->content)->token);
-		*tokens = (*tokens)->next;
+        	printf("PIPE : %s\n", (token_content(tokens)->token));
+		tokens = tokens->next;
 		p_node = create_node(NODE_PIPE);
 		if (!p_node)
 			return (free_ast(left), NULL);

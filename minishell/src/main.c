@@ -66,7 +66,7 @@ int main(int ac, char **av, char **env)
             continue;
         }
 	// printer_token(shell->l_token);
-        shell->ast = parse_pipe(&shell->l_token);
+        shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {
             printf("Error: ast failed\n");

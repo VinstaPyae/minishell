@@ -122,7 +122,7 @@ t_ast_node *create_node(t_node_type type);
 char	**get_cmd_args(t_list **tokens);
 //char	*get_cmd(t_list **tokens);
 t_list	*get_redir(t_list **tokens);
-t_ast_node	*parse_pipe(t_list **tokens);
+t_ast_node	*parse_pipe(t_list *tokens);
 t_ast_node	*parse_cmd(t_list **tokens);
 
 //execute_builtin
