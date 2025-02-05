@@ -75,6 +75,7 @@ typedef struct s_minishell
     t_list  *l_token;
     t_ast_node  *ast;
     t_env   *envp;
+    int	exit_status;
 }               t_minishell;
 
 //lex_handle
@@ -117,6 +118,9 @@ int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
 void print_redir(t_list *redir);
 
+//expansion
+void	expand_tokens(t_minishell *shell);
+
 //parser
 t_ast_node *create_node(t_node_type type);
 char	**get_cmd_args(t_list **tokens);
@@ -154,6 +158,7 @@ void	cleanup(t_minishell **shell);
 void	free_ast(t_ast_node *node);
 void	free_arg(char **str);
 void	free_redir(void *redir);
+void	remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
 
 //debug
 void print_error(const char *func_name, const char *file, int line, const char *format, ...);

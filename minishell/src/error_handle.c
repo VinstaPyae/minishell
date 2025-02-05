@@ -133,6 +133,27 @@ void	free_arg(char **str)
 	free(str);
 }
 
+void	remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *))
+{
+    t_list *current = *head;
+    t_list *prev = NULL;
+
+    while (current)
+    {
+        if (current == node_to_remove)
+        {
+            if (prev)
+                prev->next = current->next;
+            else
+                *head = current->next;
+            ft_lstdelone(current, del);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+}
+
 
 /*void	cleanup(t_list **tokens, char **input, t_ast_node **ast)
 {

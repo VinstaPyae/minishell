@@ -28,6 +28,7 @@ t_minishell	*create_minshell(t_env *envp)
 		free(shell);
 		return (NULL);
 	}
+	shell->exit_status = 0;
 	return (shell);
 }
 
@@ -65,7 +66,8 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-	// printer_token(shell->l_token);
+	expand_tokens(shell);
+	printer_token(shell->l_token);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {
