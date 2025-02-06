@@ -27,6 +27,53 @@ char *expand_variable(char *var, t_minishell *shell)
     return (ft_strdup(""));
 }
 
+char *expand_double_quotes(char *input, t_minishell *shell)
+{
+    char *result = ft_strdup(""); // Start with an empty string
+    char *temp;
+    int i = 0;
+
+    while (input[i])
+    {
+        if (input[i] == '$') // Found variable expansion
+        {
+            int j = i + 1;
+            
+            // Handle special case: "$?"
+            if (input[j] == '?')
+                j++;
+
+            // Extract variable name
+            while (ft_isalnum(input[j]) || input[j] == '_')
+                j++;
+
+            char *var_name = ft_substr(input, i, j - i); // Extract "$VAR"
+            char *expanded = expand_variable(var_name, shell); // Expand it
+            free(var_name);
+
+            // Append the expanded variable to the result
+            temp = ft_strjoin(result, expanded);
+            free(result);
+            free(expanded);
+            result = temp;
+
+            i = j; // Move past the variable
+        }
+        else
+        {
+            // Append normal character
+            char char_str[2] = {input[i], '\0'}; // Convert char to string
+            temp = ft_strjoin(result, char_str);
+            free(result);
+            result = temp;
+
+            i++;
+        }
+    }
+    return result;
+}
+
+
 
 void expand_tokens(t_minishell *shell)
 {
@@ -63,6 +110,12 @@ void expand_tokens(t_minishell *shell)
 		// continue;
 		// }
         }
+	if (token->type == TOKEN_DQUOTE)
+	{
+		char *d_qvalue = expand_double_quotes(token->token, shell);
+		free(token->token);
+		token->token = d_qvalue;
+	}
         current = current->next;
     }
 }

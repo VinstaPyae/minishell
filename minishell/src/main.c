@@ -66,8 +66,8 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-	expand_tokens(shell);
 	printer_token(shell->l_token);
+	expand_tokens(shell);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {

@@ -17,7 +17,7 @@ int	variable_len(char *input)
 	i = 1;
 	while (input[i])
 	{
-		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"'))
+		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"' || input[i] == '$'))
 			break;
 		i++;
 	}
