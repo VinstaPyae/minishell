@@ -97,7 +97,7 @@ t_ast_node	*parse_cmd(t_list **tokens)
 	*tokens = (*tokens)->next;
 	return (cmd);
 } */
-
+/*
 char	**get_cmd_args(t_list **tokens)
 {
 	t_list	*tmp_list;
@@ -154,76 +154,77 @@ char	**get_cmd_args(t_list **tokens)
 	cmd_arg[i] = NULL;
 	(*tokens) = tmp_list;
 	return (cmd_arg);
-}
+}*/
 ///////////////////// Workingggggggggggggg ///////////////////////
 
-// char	**get_cmd_args(t_list **tokens)
-// {
-// 	t_list	*tmp_list;
-// 	char	**cmd_arg;
-// 	char	*arg;
-// 	char	*tmp;
-// 	int		i;
+char	**get_cmd_args(t_list **tokens)
+{
+	t_list	*tmp_list;
+	char	**cmd_arg;
+	char	*arg;
+	char	*tmp;
+	int		i;
 
-// 	if (!tokens || !(*tokens))
-// 		return (NULL);
+	if (!tokens || !(*tokens))
+		return (NULL);
 
-// 	i = 1; // Start at 1 for the first argument
-// 	tmp_list = (*tokens);
+	i = 1; // Start at 1 for the first argument
+	tmp_list = (*tokens);
 
-// 	// First, count how many arguments we need
-// 	while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
-// 		token_content(tmp_list)->type != TOKEN_PIPE)
-// 	{
-// 		if (token_content(tmp_list)->space > 0 && tmp_list->next != NULL)
-// 			i++; // Count separate arguments
-// 		tmp_list = tmp_list->next;
-// 	}
-// 	printf("How many separate argguments??: %d\n", i);
-// 	cmd_arg = malloc((i + 1) * sizeof(char *));
-// 	if (!cmd_arg)
-// 		return (NULL);
+	// First, count how many arguments we need
+	while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
+		token_content(tmp_list)->type != TOKEN_PIPE)
+	{
+		if (token_content(tmp_list)->space > 0 && tmp_list->next != NULL)
+			i++; // Count separate arguments
+		tmp_list = tmp_list->next;
+	}
+	printf("How many separate argguments??: %d\n", i);
+	cmd_arg = malloc((i + 1) * sizeof(char *));
+	if (!cmd_arg)
+		return (NULL);
 
-// 	i = 0;
-// 	tmp_list = (*tokens);
+	i = 0;
+	tmp_list = (*tokens);
 
-// 	// Now, populate the cmd_arg array
-// 	while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
-// 		token_content(tmp_list)->type != TOKEN_PIPE)
-// 	{
-// 		if (token_content(tmp_list)->space > 0 && tmp_list->next != NULL)
-// 			arg = ft_strjoin(token_content(tmp_list)->token, " ");
-// 		else
-// 			arg = ft_strdup(token_content(tmp_list)->token);
-// 		if (!arg)
-// 			return (free_arg(cmd_arg),NULL); // Handle allocation failure properly
+	// Now, populate the cmd_arg array
+	while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
+		token_content(tmp_list)->type != TOKEN_PIPE)
+	{
+		if (token_content(tmp_list)->space > 0 && tmp_list->next != NULL)
+			arg = ft_strjoin(token_content(tmp_list)->token, " ");
+		else
+			arg = ft_strdup(token_content(tmp_list)->token);
+		if (!arg)
+			return (free_arg(cmd_arg),NULL); // Handle allocation failure properly
 
-// 		while (tmp_list->next != NULL && token_content(tmp_list)->space == 0 &&
-// 			is_word_token(token_content(tmp_list->next)->type) && token_content(tmp_list->next)->space == 0 && 
-// 			token_content(tmp_list)->type != TOKEN_PIPE)
-// 		{
-// 			tmp = ft_strjoin(arg, token_content(tmp_list->next)->token);
-// 			if (!tmp)
-// 				return (free(arg), free_arg(cmd_arg), NULL);
-// 			free(arg);
-// 			arg = tmp;
-// 			tmp_list = tmp_list->next;
-// 		}
-// 		cmd_arg[i++] = arg;
-// 		tmp_list = tmp_list->next;
-// 	}
-
-// 	cmd_arg[i] = NULL;
+		// while (tmp_list->next != NULL && token_content(tmp_list)->space == 0 &&
+		// 	is_word_token(token_content(tmp_list->next)->type) && token_content(tmp_list->next)->space == 0 && 
+		// 	token_content(tmp_list)->type != TOKEN_PIPE)
+		while (tmp_list->next != NULL && token_content(tmp_list)->space == 0 && 
+		is_word_token(token_content(tmp_list->next)->type))
+		{
+			tmp = ft_strjoin(arg, token_content(tmp_list->next)->token);
+			if (!tmp)
+				return (free(arg), free_arg(cmd_arg), NULL);
+			free(arg);
+			arg = tmp;
+			tmp_list = tmp_list->next;
+		}
+		cmd_arg[i++] = arg;
+		tmp_list = tmp_list->next;
+	}
+	cmd_arg[i] = NULL;
 	
-// 	printf("Command Arguments:\n");
-//     for (int j = 0; cmd_arg[j] != NULL; j++)
-//     {
-//         printf("cmd_arg[%d] = %s\n", j, cmd_arg[j]);
-//     }
+	printf("Command Arguments:\n");
+    for (int j = 0; cmd_arg[j] != NULL; j++)
+    {
+        printf("cmd_arg[%d] = %s\n", j, cmd_arg[j]);
+    }
 
-// 	(*tokens) = tmp_list;
-// 	return (cmd_arg);
-// }
+	(*tokens) = tmp_list;
+	return (cmd_arg);
+}
 
 
 t_ast_node *create_node(t_node_type type)
