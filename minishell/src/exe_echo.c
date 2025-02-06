@@ -35,6 +35,7 @@ int	exe_echo(t_minishell **shell)
 	{
 		while ((*shell)->ast->cmd_arg[i])
 		{
+			//printf("Printing at  cmd_arg[%d]: Word: %s\n", i, (*shell)->ast->cmd_arg[i]);
 			printf("%s", (*shell)->ast->cmd_arg[i]);
 			i++;
 		}

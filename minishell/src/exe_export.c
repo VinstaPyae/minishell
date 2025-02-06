@@ -3,6 +3,8 @@
 void split_value(char *str, char **key, char **value)
 {
     char *equal_sign;
+    char *quote_start;
+    char *quote_end;
 
     if (!str) // Check if input string is NULL
     {
@@ -10,13 +12,13 @@ void split_value(char *str, char **key, char **value)
         *value = NULL;
         return;
     }
-     printf("cmd_arg : %s\n", str);
+    printf("cmd_arg : %s\n", str);
     equal_sign = ft_strchr(str, '='); // Find the first '=' in the string
     if (!equal_sign)
     {
         *key = ft_strdup(str);  // If no '=', the whole string is the key
-        *value = ft_strdup(""); // Empty value
-        if (!*key || !*value)
+        *value = NULL;          // Set value to NULL
+        if (!*key)
         {
             perror("malloc failed");
             return;
@@ -41,11 +43,30 @@ void split_value(char *str, char **key, char **value)
         return;
     }
 
-    // Trim quotes from value using ft_strtrim
-    char *trimmed_value = ft_strtrim(*value, "\"'");
-    free(*value);  // Free original value as we no longer need it
-    *value = trimmed_value;
+    // Handle quoted values
+    quote_start = *value;
+    if (*quote_start == '"' || *quote_start == '\'')
+    {
+        quote_end = ft_strchr(quote_start + 1, *quote_start);
+        if (quote_end)
+        {
+            // Remove the quotes by copying the substring between them
+            char *unquoted_value = ft_strndup(quote_start + 1, quote_end - (quote_start + 1));
+            if (unquoted_value)
+            {
+                free(*value);
+                *value = unquoted_value;
+            }
+        }
+    }
+
+    /* 
+     * Do NOT free the value if it's an empty string.
+     * If the original token contained an '=', we want to preserve the empty value.
+     * (Thus, "c=" produces key "c" with value "" while "c" produces key "c" with value NULL.)
+     */
 }
+
 
 // Function to add or update an environment variable in the envp linked list
 static void add_or_update_env_var(const char *key, const char *value, t_minishell *shell)
@@ -57,9 +78,12 @@ static void add_or_update_env_var(const char *key, const char *value, t_minishel
     {
         if (ft_strcmp(tmp->key, key) == 0)
         {
-            free(tmp->value);
-            tmp->value = ft_strdup(value);
-            if (!tmp->value) {
+            free(tmp->value); // Free the old value
+            if (value)
+                tmp->value = ft_strdup(value); // Set new value if provided
+            else
+                tmp->value = NULL; // Set value to NULL if not provided
+            if (value && !tmp->value) {
                 perror("malloc failed for value");
                 return;
             }
@@ -83,8 +107,12 @@ static void add_or_update_env_var(const char *key, const char *value, t_minishel
         return;
     }
 
-    new_var->value = ft_strdup(value);
-    if (!new_var->value) {
+    if (value)
+        new_var->value = ft_strdup(value); // Set value if provided
+    else
+        new_var->value = NULL; // Set value to NULL if not provided
+
+    if (value && !new_var->value) {
         perror("malloc failed for value");
         free(new_var->key);
         free(new_var);
