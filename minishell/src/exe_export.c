@@ -166,7 +166,13 @@ static int process_export_args(t_minishell *shell)
             i++;
             continue;
         }
-
+        if (shell->ast->cmd_arg[i + 1])
+        {
+            int j = ft_strlen(value);
+            printf("last space or not: '%c'\n",value[j-1]);
+            if (j > 0 && value[j - 1] == ' ')
+                value[j - 1] = '\0';
+        }
         // Add or update the environment variable
         add_or_update_env_var(key, value, shell);
 
