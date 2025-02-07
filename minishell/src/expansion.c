@@ -78,24 +78,18 @@ char *expand_double_quotes(char *input, t_minishell *shell)
 void expand_tokens(t_minishell *shell)
 {
     t_list *current = shell->l_token;
+    t_list *before_c = shell->l_token;
     while (current)
     {
         t_token *token = (t_token *)current->content;
-
-        // Skip expansion inside single quotes
-        if (token->type == TOKEN_SQUOTE)
-        {
-            current = current->next;
-            continue;
-        }
-
         // Handle variables inside double quotes or standalone
         if (token->type == TOKEN_VARIABLE)
         {
+		printf("before token: %s\n", ((t_token *)before_c->content)->token);
             char *expanded_value = expand_variable(token->token, shell);
             free(token->token);
             token->token = expanded_value;
-	    if (!expanded_value[0])
+	    if ((!expanded_value[0]) && ((t_token *)before_c->content)->space > 0)
 	    	token->space = 0;
             // Convert TOKEN_VARIABLE → TOKEN_WD after expansion
             if (token->type == TOKEN_VARIABLE)
@@ -116,6 +110,8 @@ void expand_tokens(t_minishell *shell)
 		free(token->token);
 		token->token = d_qvalue;
 	}
+	if (current != before_c)
+		before_c = before_c->next;
         current = current->next;
     }
 }

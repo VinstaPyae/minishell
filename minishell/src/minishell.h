@@ -15,12 +15,6 @@ typedef struct	s_token
 	char	*token;
 } 		t_token;
 
-typedef	struct s_redir
-{
-	int	type;
-	char	*file;
-}		t_redir;
-
 typedef enum	e_redir_type
 {
 	REDIR_IN,
@@ -28,6 +22,12 @@ typedef enum	e_redir_type
 	HDC,
 	APPEND
 }		t_redir_type;
+
+typedef	struct s_redir
+{
+	t_redir_type	type;
+	char	*file;
+}		t_redir;
 
 //AST type
 typedef enum    s_node_type
