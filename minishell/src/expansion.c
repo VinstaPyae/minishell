@@ -14,17 +14,21 @@ char *get_env_value(t_env *env, char *key)
 
 char *expand_variable(char *var, t_minishell *shell)
 {
-    if (!var)
-        return (NULL);
+	char *value;
 
-    if (var[1] == '?' && var[2] == '\0') // Handle $?
-        return (ft_itoa(shell->exit_status));
+	if (!var)
+		return (NULL);
+	if (var[1] == '\0')
+		return (ft_strdup("$"));
 
-    char *value = get_env_value(shell->envp, &var[1]);
-    if (value)
-        return (ft_strdup(value));
-    
-    return (ft_strdup(""));
+	if (var[1] == '?' && var[2] == '\0') // Handle $?
+		return (ft_itoa(shell->exit_status));
+
+	value = get_env_value(shell->envp, &var[1]);
+	if (value)
+		return (ft_strdup(value));
+	
+	return (ft_strdup(""));
 }
 
 char *expand_double_quotes(char *input, t_minishell *shell)
@@ -85,15 +89,15 @@ void expand_tokens(t_minishell *shell)
         // Handle variables inside double quotes or standalone
         if (token->type == TOKEN_VARIABLE)
         {
-		printf("before token: %s\n", ((t_token *)before_c->content)->token);
-            char *expanded_value = expand_variable(token->token, shell);
-            free(token->token);
-            token->token = expanded_value;
-	    if ((!expanded_value[0]) && ((t_token *)before_c->content)->space > 0)
-	    	token->space = 0;
-            // Convert TOKEN_VARIABLE → TOKEN_WD after expansion
-            if (token->type == TOKEN_VARIABLE)
-                token->type = TOKEN_WD;
+		//printf("before token: %s\n", ((t_token *)before_c->content)->token);
+		char *expanded_value = expand_variable(token->token, shell);
+		free(token->token);
+		token->token = expanded_value;
+		if ((!expanded_value[0]) && ((t_token *)before_c->content)->space > 0)
+			token->space = 0;
+		// Convert TOKEN_VARIABLE → TOKEN_WD after expansion
+		if (token->type == TOKEN_VARIABLE)
+			token->type = TOKEN_WD;
             // If expansion results in an empty string, remove token
         	// if (!expanded_value[0])
 		// {

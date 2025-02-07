@@ -15,7 +15,9 @@ int	variable_len(char *input)
 	if (!input || input[0] != '$') // Check if input is valid and starts with '$'
         	return (0);
 	i = 1;
-	while (input[i])
+	if (input[i] >= '0' && input[i] <= '9')
+		return (2);
+	while (input[i] && (ft_isalnum(input[i]) || ft_isalpha(input[i]) || input[i] == '_'))
 	{
 		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"' || input[i] == '$'))
 			break;
