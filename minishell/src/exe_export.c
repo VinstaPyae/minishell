@@ -149,7 +149,7 @@ static int process_export_args(t_minishell *shell)
     char *key;
     char *value;
 
-    i = 0;
+    i = 1;
     if (!shell || !shell->ast || !shell->ast->cmd_arg)
         return (1);
 
@@ -207,7 +207,7 @@ int exe_export(t_minishell **shell)
     if (!shell || !*shell || !(*shell)->ast)
         return (1);  // Early exit if shell or AST is invalid
 
-    if (!(*shell)->ast->cmd_arg || !(*shell)->ast->cmd_arg[0])
+    if (!(*shell)->ast->cmd_arg[1])
         return process_export_no_args(*shell);
 
     return process_export_args(*shell);

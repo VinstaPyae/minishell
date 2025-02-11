@@ -47,16 +47,16 @@ t_ast_node	*parse_cmd(t_list **tokens)
 				cmd_node->cmd = ft_strdup(((t_token *)(*tokens)->content)->token);
 				if (!cmd_node->cmd)
 					return (free(cmd_node), NULL);
-				*tokens = (*tokens)->next;
+				//*tokens = (*tokens)->next;
 				//printf("Lee cmd: %s\n", cmd_node->cmd);
 			}
-			else
-			{
+			// else
+			// {
 				cmd_node->cmd_arg = get_cmd_args(tokens);
 				// printf("cmd: %s\n", cmd_node->cmd_arg[0]);
 				if (!cmd_node->cmd_arg)
 					return (free_ast(cmd_node), NULL);
-			}
+			// }
 		}
 		if ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
 		{
@@ -220,11 +220,11 @@ char	**get_cmd_args(t_list **tokens)
 		tmp_list = tmp_list->next;
 	}
 	cmd_arg[i] = NULL;
-	printf("Command Arguments:\n");
-    for (int j = 0; cmd_arg[j] != NULL; j++)
-    {
-        printf("cmd_arg[%d] = %s\n", j, cmd_arg[j]);
-    }
+// 	printf("Command Arguments:\n");
+//     for (int j = 0; cmd_arg[j] != NULL; j++)
+//     {
+//         printf("cmd_arg[%d] = %s\n", j, cmd_arg[j]);
+//     }
 
 	(*tokens) = tmp_list;
 	return (cmd_arg);

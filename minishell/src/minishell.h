@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h> // For va_list
+#include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "libft.h"
@@ -25,7 +26,7 @@ typedef enum	e_redir_type
 
 typedef	struct s_redir
 {
-	t_redir_type	type;
+	int	type;
 	char	*file;
 }		t_redir;
 
@@ -117,6 +118,7 @@ t_list *create_redir(char *file, int type);
 int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
 void print_redir(t_list *redir);
+int handle_redirections(t_list *redir_list);
 
 //expansion
 void	expand_tokens(t_minishell *shell);

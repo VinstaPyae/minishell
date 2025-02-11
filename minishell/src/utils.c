@@ -15,7 +15,7 @@ int	variable_len(char *input)
 	if (!input || input[0] != '$') // Check if input is valid and starts with '$'
         	return (0);
 	i = 1;
-	if (input[i] >= '0' && input[i] <= '9')
+	if ((input[i] >= '0' && input[i] <= '9') || input[i] == '?')
 		return (i + 1);
 	while (input[i] && (ft_isalnum(input[i]) || ft_isalpha(input[i]) || input[i] == '_'))
 	{
@@ -51,6 +51,17 @@ int	wd_len(char *input)
 		i++;
 	}
 	return (i);
+}
+
+int is_word_token(t_token_type type)
+{
+    return (type == TOKEN_WD || type == TOKEN_SQUOTE || type == TOKEN_DQUOTE || type == TOKEN_VARIABLE);
+}
+
+int is_redirection_token(t_token_type type)
+{
+    return (type == TOKEN_REDIRECT_IN || type == TOKEN_REDIRECT_OUT ||
+            type == TOKEN_APPEND || type == TOKEN_HDC);
 }
 
 // int	quote_len(char *str)

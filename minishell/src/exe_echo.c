@@ -18,14 +18,14 @@ int	exe_echo(t_minishell **shell)
 	int	i;
 	int	newline;
 
-	i = 0;
+	i = 1;
 	newline = 1;
 	// Check if node or cmd_arg is NULL
 	if (!(*shell)->ast || !(*shell)->ast->cmd)
 		return 1;
 
 	// If cmd_arg exists and has the -n option
-	if ((*shell)->ast->cmd_arg && (*shell)->ast->cmd_arg[0] && n_option_checked((*shell)->ast->cmd_arg[0]))
+	if ((*shell)->ast->cmd_arg && (*shell)->ast->cmd_arg[1] && n_option_checked((*shell)->ast->cmd_arg[1]))
 	{
 		newline = 0;
 		i++;

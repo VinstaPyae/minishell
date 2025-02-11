@@ -47,13 +47,13 @@ int exe_unset(t_minishell **shell)
 {
     int i;
 
-    if (!shell || !*shell || !(*shell)->ast || !(*shell)->ast->cmd_arg)
+    if (!shell || !*shell || !(*shell)->ast || !(*shell)->ast->cmd_arg[1])
     {
         print_error("exe_unset", __FILE__, __LINE__, "invalid arguments");
         return (1);
     }
 
-    i = 0; // Start from the first argument (cmd_arg[0] is the first argument, not the command name)
+    i = 1; // Start from the first argument (cmd_arg[0] is the first argument, not the command name)
     while ((*shell)->ast->cmd_arg[i])
     {
         update_env_var(&(*shell)->envp, (*shell)->ast->cmd_arg[i]);
