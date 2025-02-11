@@ -64,7 +64,7 @@ int handle_heredoc(char *delimiter)
 	}
 	close(pipefd[1]); // Close the write end after writing
 	return pipefd[0]; // Return the read end to be used as STDIN
-	}
+}
 
 
 int handle_redirections(t_list *redir_list)
