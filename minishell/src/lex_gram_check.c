@@ -46,8 +46,11 @@ int check_redirect_in_grammar(t_list *l_token)
         {
             if (!next)
                 return (printf("Syntax error: Input redirection '<' cannot appear at the end of the input\n"), 1);
-            if (next->type != TOKEN_WD)
+            if (next->type != TOKEN_WD && next->type != TOKEN_DQUOTE && next->type != TOKEN_SQUOTE)
+	    {
+		printf("lee pl");
                 return (printf("Syntax error: Invalid token '%s' after input redirection '<'\n", next->token), 1);
+	    }
         }
         l_token = l_token->next;
     }
@@ -71,7 +74,7 @@ int check_redirect_out_grammar(t_list *l_token)
         {
             if (!next)
                 return (printf("Syntax error: Output redirection '>' cannot appear at the end of the input\n"), 1);
-            if (next->type != TOKEN_WD)
+            if (next->type != TOKEN_WD && next->type != TOKEN_DQUOTE && next->type != TOKEN_SQUOTE)
                 return (printf("Syntax error: Invalid token '%s' after output redirection '<'\n", next->token), 1);
         }
         l_token = l_token->next;
@@ -96,7 +99,7 @@ int check_append_grammar(t_list *l_token)
         {
             if (!next)
                 return (printf("Syntax error: Append '>>' cannot appear at the end of the input\n"), 1);
-            if (next->type != TOKEN_WD)
+            if (next->type != TOKEN_WD && next->type != TOKEN_DQUOTE && next->type != TOKEN_SQUOTE && next->type != TOKEN_VARIABLE)
                 return (printf("Syntax error: Invalid token '%s' after Append '>>'\n", next->token), 1);
         }
         l_token = l_token->next;
@@ -106,27 +109,29 @@ int check_append_grammar(t_list *l_token)
 
 int check_heredoc_grammar(t_list *l_token)
 {
-    t_token *current;
-    t_token *next;
+	t_token *current;
+	t_token *next;
 
-    if (!l_token)
-        return (1); 
-    while (l_token)
-    {
-        current = l_token->content;
-        next = NULL;
-        if (l_token->next)
-            next = l_token->next->content;
-        if (current->type == TOKEN_HDC)
-        {
-            if (!next)
-                return (printf("Syntax error: Heredoc '<<' cannot appear at the end of the input\n"), 1);
-            if (next->type != TOKEN_WD)
-                return (printf("Syntax error: Invalid token '%s' after Heredoc '<<'\n", next->token), 1);
-        }
-        l_token = l_token->next;
-    }
-    return (0);
+	if (!l_token)
+		return (1); 
+	while (l_token)
+	{
+		current = l_token->content;
+		next = NULL;
+		if (l_token->next)
+		next = l_token->next->content;
+		if (current->type == TOKEN_HDC)
+		{
+			if (!next)
+				return (printf("Syntax error: Heredoc '<<' cannot appear at the end of the input\n"), 1);
+			if (next->type != TOKEN_WD && next->type != TOKEN_DQUOTE && next->type != TOKEN_SQUOTE && next->type != TOKEN_VARIABLE)
+				return (printf("Syntax error: Invalid token '%s' after Heredoc '<<'\n", next->token), 1);
+			if (next->type == TOKEN_VARIABLE || next->type == TOKEN_DQUOTE)
+				next->type = TOKEN_WD;
+		}
+		l_token = l_token->next;
+	}
+	return (0);
 }
 
 // int check_word_grammar(t_list *l_token)
