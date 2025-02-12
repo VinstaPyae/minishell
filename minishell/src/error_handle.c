@@ -81,10 +81,10 @@ void free_ast(t_ast_node *node)
 		return;
 
 	// Free command arguments
-	if (node->cmd)
-	{
-		free(node->cmd);
-	}
+	// if (node->cmd)
+	// {
+	// 	free(node->cmd);
+	// }
 	if (node->cmd_arg)
 	{
 		free_arg(node->cmd_arg);

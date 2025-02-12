@@ -41,7 +41,7 @@ typedef enum    s_node_type
 typedef struct s_ast_node
 {
     t_node_type type;
-    char    *cmd;
+    //char    *cmd;
     char    **cmd_arg;
     int     space;
     t_list *redir;

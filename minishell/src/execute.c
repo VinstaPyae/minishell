@@ -120,8 +120,8 @@ int execute_pipeline(t_ast_node *ast, t_minishell *shell)
         if (ast->left->redir && handle_redirections(ast->left->redir) == -1)
             exit(1);
 
-        printf("Executing piped command (left): %s\n", ast->left->cmd);
-        execvp(ast->left->cmd, ast->left->cmd_arg);
+        printf("Executing piped command (left): %s\n", ast->left->cmd_arg[0]);
+        execvp(ast->left->cmd_arg[0], ast->left->cmd_arg);
         perror("execvp (left)");
         exit(127);
     }
@@ -143,8 +143,8 @@ int execute_pipeline(t_ast_node *ast, t_minishell *shell)
         if (ast->right->redir && handle_redirections(ast->right->redir) == -1)
             exit(1);
 
-        printf("Executing piped command (right): %s\n", ast->right->cmd);
-        execvp(ast->right->cmd, ast->right->cmd_arg);
+        printf("Executing piped command (right): %s\n", ast->right->cmd_arg[0]);
+        execvp(ast->right->cmd_arg[0], ast->right->cmd_arg);
         perror("execvp (right)");
         exit(127);
     }

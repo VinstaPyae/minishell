@@ -237,7 +237,7 @@ t_ast_node *create_node(t_node_type type)
 	if (!node)
 		return (NULL);
 	node->type = type;
-	node->cmd = NULL;
+	//node->cmd = NULL;
 	node->cmd_arg = NULL;      // Arguments list is initially NULL
 	node->redir = NULL;
 	node->left = NULL;      // Left child is NULL
