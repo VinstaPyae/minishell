@@ -2,6 +2,7 @@
 
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
+    char    *cmd;
     pid_t pid;
     int status;
 
@@ -21,10 +22,11 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
             exit(1);
 
         /* Debug print (optional) */
-        printf("Executing external command: %s\n", ast_cmd->cmd);
+        printf("Executing external command: %s\n", ast_cmd->cmd_arg[0]);
 
         /* Execute the command. execvp() will use PATH to locate the command */
-        execvp(ast_cmd->cmd, ast_cmd->cmd_arg);
+        cmd = ft_strtrim(ast_cmd->cmd_arg[0], " ");
+        execvp(cmd , ast_cmd->cmd_arg);
         perror("execvp");
         exit(127);
     }
@@ -39,13 +41,16 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 //builtin check and execute
 int builtin_cmd_check(t_minishell **shell)
 {
-    if (!shell || !(*shell) || !(*shell)->ast || !(*shell)->ast->cmd)
+    if (!shell || !(*shell) || !(*shell)->ast || !(*shell)->ast->cmd_arg)
         return -1;
 
-    char *cmd = (*shell)->ast->cmd;
+    char *cmd = ft_strtrim((*shell)->ast->cmd_arg[0], " ");
 
-    if (strcmp(cmd, "echo") == 0)
+    printf("cmd: %s\n", cmd);
+    if (ft_strcmp(cmd, "echo") == 0)
+    {
         return exe_echo(shell);
+    }
     else if (strcmp(cmd, "env") == 0)
         return exe_env(shell);
     else if (strcmp(cmd, "unset") == 0)
@@ -66,7 +71,7 @@ int builtin_cmd_check(t_minishell **shell)
 //all command check and execute
 int exe_cmd(t_minishell **shell)
 {
-    if (!(*shell)->ast || !(*shell)->ast->cmd)
+    if (!(*shell)->ast || !(*shell)->ast->cmd_arg)
     {
         fprintf(stderr, "Error: No command provided\n");
         return 1;

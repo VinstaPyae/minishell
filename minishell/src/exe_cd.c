@@ -69,7 +69,7 @@ static void update_env_vars(t_minishell *shell)
 static char *path_handle(t_minishell **shell)
 {
     char *dir;
-    if (!(*shell)->ast->cmd_arg || !(*shell)->ast->cmd_arg[0] || ft_strncmp((*shell)->ast->cmd_arg[0], "~", 2) == 0)
+    if (!(*shell)->ast->cmd_arg[1] || ft_strncmp((*shell)->ast->cmd_arg[1], "~", 2) == 0)
     {
         dir = getenv("HOME");
         if (!dir)
@@ -79,7 +79,7 @@ static char *path_handle(t_minishell **shell)
         }
         printf("You are in Home directory\n");
     }
-    else if (ft_strncmp((*shell)->ast->cmd_arg[0], "-", 2) == 0)
+    else if (ft_strncmp((*shell)->ast->cmd_arg[1], "-", 2) == 0)
     {
         dir = getenv("OLDPWD");
         if (!dir)
@@ -91,7 +91,7 @@ static char *path_handle(t_minishell **shell)
     }
     else
     {
-        dir = (*shell)->ast->cmd_arg[0];
+        dir = (*shell)->ast->cmd_arg[1];
         printf("You are in Other directory\n");
     }
     return (dir);
@@ -103,7 +103,7 @@ int exe_cd(t_minishell **shell)
     char *curr_dir;
     if (!shell || !*shell || !(*shell)->ast)
         return (1);
-    if ((*shell)->ast->cmd_arg && (*shell)->ast->cmd_arg[0] && (*shell)->ast->cmd_arg[1])
+    if ((*shell)->ast->cmd_arg[0] && (*shell)->ast->cmd_arg[1] && (*shell)->ast->cmd_arg[2])
         return (printf("cd: Too many arguments\n"), 1);
     path = path_handle(shell);
     if (!path)
