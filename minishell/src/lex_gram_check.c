@@ -20,9 +20,9 @@ int check_pipe_grammar(t_list *l_token)
         {
             if (!next)
                 return (printf("Syntax error: Pipe '|' cannot appear at the end of the input\n"),1);
-            if (next->type == TOKEN_PIPE || next->type == TOKEN_APPEND || next->type == TOKEN_REDIRECT_IN ||
-                next->type == TOKEN_REDIRECT_OUT || next->type == TOKEN_HDC)
-                return (printf("Syntax error: Invalid token '%s' after pipe '|'\n", next->token), 1);
+        //     if (next->type == TOKEN_PIPE || next->type == TOKEN_APPEND || next->type == TOKEN_REDIRECT_IN ||
+        //         next->type == TOKEN_REDIRECT_OUT || next->type == TOKEN_HDC)
+        //         return (printf("Syntax error: Invalid token '%s' after pipe '|'\n", next->token), 1);
         }
         l_token = l_token->next;
     }
@@ -48,7 +48,6 @@ int check_redirect_in_grammar(t_list *l_token)
                 return (printf("Syntax error: Input redirection '<' cannot appear at the end of the input\n"), 1);
             if (next->type != TOKEN_WD && next->type != TOKEN_DQUOTE && next->type != TOKEN_SQUOTE)
 	    {
-		printf("lee pl");
                 return (printf("Syntax error: Invalid token '%s' after input redirection '<'\n", next->token), 1);
 	    }
         }

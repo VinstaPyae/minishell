@@ -135,8 +135,9 @@ t_ast_node	*parse_pipe(t_list *tokens);
 t_ast_node	*parse_cmd(t_list **tokens);
 
 //execute_builtin
-int	builtin_cmd_check(t_minishell **shell);
-int	exe_cmd(t_minishell **shell);
+int builtin_cmd_check(t_minishell **shell);
+int exe_cmd(t_minishell **shell);
+int	execute_ast_command(t_ast_node *cmd_node, t_minishell *shell);
 int	execute_ast(t_minishell **shell);
 int	n_option_checked(const char *str);
 int	exe_echo(t_minishell **shell);

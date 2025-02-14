@@ -13,7 +13,7 @@ t_ast_node	*parse_pipe(t_list *tokens)
 	p_node = NULL;
 	if ((tokens) != NULL && (token_content(tokens)->type == TOKEN_PIPE))
 	{
-        printf("PIPE : %s\n", (token_content(tokens)->token));
+        // printf("PIPE : %s\n", (token_content(tokens)->token));
 		tokens = tokens->next;
 		p_node = create_node(NODE_PIPE);
 		if (!p_node)
@@ -192,7 +192,7 @@ char	**get_cmd_args(t_list **tokens)
 	while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
 		token_content(tmp_list)->type != TOKEN_PIPE)
 	{
-		if (token_content(tmp_list)->space > 0 && tmp_list->next != NULL)
+		if (token_content(tmp_list)->space > 0 && tmp_list->next != NULL && is_word_token(token_content(tmp_list->next)->type))
 			arg = ft_strjoin(token_content(tmp_list)->token, " ");
 		else
 			arg = ft_strdup(token_content(tmp_list)->token);
@@ -204,7 +204,7 @@ char	**get_cmd_args(t_list **tokens)
 			tmp = ft_strjoin(arg, token_content(tmp_list->next)->token);
 			if (!tmp)
 				return (free(arg), free_arg(cmd_arg), NULL);
-			if (token_content(tmp_list->next)->space > 0 && tmp_list->next->next != NULL)
+			if (token_content(tmp_list->next)->space > 0 && tmp_list->next->next != NULL && is_word_token(token_content(tmp_list->next->next)->type))
 			{
 				tmp2 = ft_strjoin(tmp, " ");
 				if (!tmp2)
