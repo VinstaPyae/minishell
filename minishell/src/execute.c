@@ -2,40 +2,41 @@
 
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
-    char    *cmd;
-    pid_t pid;
-    int status;
+	char    **cmd;
+	pid_t pid;
+	int status;
+	
+	cmd = trim_cmd(ast_cmd->cmd_arg);
+	if (!cmd)
+		return (-1);
+	pid = fork();
+	if (pid < 0)
+	{
+		perror("fork");
+		return -1;
+	}
+	if (pid == 0)  // Child process
+	{
+		/* 
+		* Setup any redirections for this command.
+		* If redirection fails, exit immediately.
+		*/
+		// if (ast_cmd->redir && handle_redirections(ast_cmd->redir) == -1)
+		//     exit(1);
 
-    pid = fork();
-    if (pid < 0)
-    {
-        perror("fork");
-        return -1;
-    }
-    if (pid == 0)  // Child process
-    {
-        /* 
-         * Setup any redirections for this command.
-         * If redirection fails, exit immediately.
-         */
-        if (ast_cmd->redir && handle_redirections(ast_cmd->redir) == -1)
-            exit(1);
-
-        /* Debug print (optional) */
-        printf("Executing external command: %s\n", ast_cmd->cmd_arg[0]);
-
-        /* Execute the command. execvp() will use PATH to locate the command */
-        cmd = ft_strtrim(ast_cmd->cmd_arg[0], " ");
-        execvp(cmd , ast_cmd->cmd_arg);
-        perror("execvp");
-        exit(127);
-    }
-    else  // Parent process
-    {
-        waitpid(pid, &status, 0);
-        shell->exit_status = WEXITSTATUS(status);
-        return shell->exit_status;
-    }
+		/* Debug print (optional) */
+		printf("Executing external command: %s\n", cmd[0]);
+		/* Execute the command. execvp() will use PATH to locate the command */
+		execvp(cmd[0] , cmd);
+		perror("execvp");
+		exit(127);
+	}
+	else  // Parent process
+	{
+		waitpid(pid, &status, 0);
+		shell->exit_status = WEXITSTATUS(status);
+		return shell->exit_status;
+	}
 }
 
 //builtin check and execute
@@ -177,20 +178,25 @@ int execute_ast(t_minishell **shell)
 
     if ((*shell)->ast->type == NODE_COMMAND)
     {
+	if ((*shell)->ast->redir)
+        {
+            if (handle_redirections((*shell)->ast->redir) == -1)
+                return (1);
+        }
         result = exe_cmd(shell);
     }
-    else if ((*shell)->ast->type == NODE_PIPE)
-    {
-        if (!(*shell)->ast->left || !(*shell)->ast->right)
-        {
-            fprintf(stderr, "Error: Invalid pipeline syntax\n");
-            result = 1;
-        }
-        else
-        {
-            result = execute_pipeline((*shell)->ast, *shell);
-        }
-    }
+//     else if ((*shell)->ast->type == NODE_PIPE)
+//     {
+//         if (!(*shell)->ast->left || !(*shell)->ast->right)
+//         {
+//             fprintf(stderr, "Error: Invalid pipeline syntax\n");
+//             result = 1;
+//         }
+//         else
+//         {
+//             result = execute_pipeline((*shell)->ast, *shell);
+//         }
+//     }
     else
     {
         fprintf(stderr, "Error: Unsupported AST node type\n");

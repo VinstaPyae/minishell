@@ -148,30 +148,26 @@ static int process_export_args(t_minishell *shell)
     int i;
     char *key;
     char *value;
+    char **cmd;
 
-    i = 1;
     if (!shell || !shell->ast || !shell->ast->cmd_arg)
         return (1);
-
-    while (shell->ast->cmd_arg[i])
+    cmd = trim_cmd(shell->ast->cmd_arg);
+    if (!cmd)
+	return (1);
+    i = 1;
+    while (cmd[i])
     {
         // Split the string into key and value
-        split_value(shell->ast->cmd_arg[i], &key, &value);
+        split_value(cmd[i], &key, &value);
 
         if (!key || !is_valid_env_name(key))
         {
-            printf("export: `%s`: not a valid identifier\n", shell->ast->cmd_arg[i]);
+            printf("export: `%s`: not a valid identifier\n", cmd[i]);
             free(key);
             free(value);
             i++;
             continue;
-        }
-        if (shell->ast->cmd_arg[i + 1])
-        {
-            int j = ft_strlen(value);
-            printf("last space or not: '%c'\n",value[j-1]);
-            if (j > 0 && value[j - 1] == ' ')
-                value[j - 1] = '\0';
         }
         // Add or update the environment variable
         add_or_update_env_var(key, value, shell);
