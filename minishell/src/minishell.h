@@ -43,7 +43,6 @@ typedef struct s_ast_node
     t_node_type type;
     //char    *cmd;
     char    **cmd_arg;
-    int     space;
     t_list *redir;
     struct s_ast_node *left;
     struct s_ast_node *right;

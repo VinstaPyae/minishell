@@ -72,95 +72,100 @@ int builtin_cmd_check(t_minishell **shell)
 //all command check and execute
 int exe_cmd(t_minishell **shell)
 {
-    if (!(*shell)->ast || !(*shell)->ast->cmd_arg)
-    {
-        fprintf(stderr, "Error: No command provided\n");
-        return 1;
-    }
+	if (!(*shell)->ast || !(*shell)->ast->cmd_arg)
+	{
+		fprintf(stderr, "Error: No command provided\n");
+		return 1;
+	}
 
-    /* Check for built-in commands first */
-    int ret = builtin_cmd_check(shell);
-    if (ret != -1)
-    {
-        /* Built-in command executed successfully */
-        return ret;
-    }
+	if ((*shell)->ast->redir)
+	{
+		if (handle_redirections((*shell)->ast->redir) == -1)
+			return (1);
+	}
+	/* Check for built-in commands first */
+	int ret = builtin_cmd_check(shell);
+	if (ret != -1)
+	{
+		/* Built-in command executed successfully */
+		return ret;
+	}
 
-    /* Otherwise, execute as an external command */
-    return execute_external_command((*shell)->ast, *shell);
+	/* Otherwise, execute as an external command */
+	return execute_external_command((*shell)->ast, *shell);
 }
 
 
-//execute pipe
-int execute_pipeline(t_ast_node *ast, t_minishell *shell)
-{
-    int pipefd[2];
-    pid_t pid1, pid2;
-    int status;
+// //execute pipe
+// int execute_pipeline(t_ast_node *ast, t_minishell *shell)
+// {
+//     int pipefd[2];
+//     pid_t pid1, pid2;
+//     int status;
 
-    if (pipe(pipefd) < 0)
-    {
-        perror("pipe");
-        return -1;
-    }
+//     if (pipe(pipefd) < 0)
+//     {
+//         perror("pipe");
+//         return -1;
+//     }
 
-    /* Fork the first child for the left command */
-    pid1 = fork();
-    if (pid1 < 0)
-    {
-        perror("fork");
-        return -1;
-    }
-    if (pid1 == 0)
-    {
-        /* Redirect STDOUT to the pipe's write end */
-        dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[0]);
-        close(pipefd[1]);
+//     /* Fork the first child for the left command */
+//     pid1 = fork();
+//     if (pid1 < 0)
+//     {
+//         perror("fork");
+//         return -1;
+//     }
+//     if (pid1 == 0)
+//     {
+//         /* Redirect STDOUT to the pipe's write end */
+//         dup2(pipefd[1], STDOUT_FILENO);
+//         close(pipefd[0]);
+//         close(pipefd[1]);
 
-        if (ast->left->redir && handle_redirections(ast->left->redir) == -1)
-            exit(1);
+//         if (ast->left->redir && handle_redirections(ast->left->redir) == -1)
+//             exit(1);
 
-        printf("Executing piped command (left): %s\n", ast->left->cmd_arg[0]);
-        execvp(ast->left->cmd_arg[0], ast->left->cmd_arg);
-        perror("execvp (left)");
-        exit(127);
-    }
+//         printf("Executing piped command (left): %s\n", ast->left->cmd_arg[0]);
+//         execvp(ast->left->cmd_arg[0], ast->left->cmd_arg);
+//         perror("execvp (left)");
+//         exit(127);
+//     }
 
-    /* Fork the second child for the right command */
-    pid2 = fork();
-    if (pid2 < 0)
-    {
-        perror("fork");
-        return -1;
-    }
-    if (pid2 == 0)
-    {
-        /* Redirect STDIN to the pipe's read end */
-        dup2(pipefd[0], STDIN_FILENO);
-        close(pipefd[0]);
-        close(pipefd[1]);
+//     /* Fork the second child for the right command */
+//     pid2 = fork();
+//     if (pid2 < 0)
+//     {
+//         perror("fork");
+//         return -1;
+//     }
+//     if (pid2 == 0)
+//     {
+//         /* Redirect STDIN to the pipe's read end */
+//         dup2(pipefd[0], STDIN_FILENO);
+//         close(pipefd[0]);
+//         close(pipefd[1]);
 
-        if (ast->right->redir && handle_redirections(ast->right->redir) == -1)
-            exit(1);
+//         if (ast->right->redir && handle_redirections(ast->right->redir) == -1)
+//             exit(1);
 
-        printf("Executing piped command (right): %s\n", ast->right->cmd_arg[0]);
-        execvp(ast->right->cmd_arg[0], ast->right->cmd_arg);
-        perror("execvp (right)");
-        exit(127);
-    }
+//         printf("Executing piped command (right): %s\n", ast->right->cmd_arg[0]);
+//         execvp(ast->right->cmd_arg[0], ast->right->cmd_arg);
+//         perror("execvp (right)");
+//         exit(127);
+//     }
 
-    /* Parent: close pipe file descriptors and wait for children */
-    close(pipefd[0]);
-    close(pipefd[1]);
+//     /* Parent: close pipe file descriptors and wait for children */
+//     close(pipefd[0]);
+//     close(pipefd[1]);
 
-    waitpid(pid1, &status, 0);
-    shell->exit_status = WEXITSTATUS(status);
-    waitpid(pid2, &status, 0);
-    shell->exit_status = WEXITSTATUS(status);
+//     waitpid(pid1, &status, 0);
+//     shell->exit_status = WEXITSTATUS(status);
+//     waitpid(pid2, &status, 0);
+//     shell->exit_status = WEXITSTATUS(status);
 
-    return shell->exit_status;
-}
+//     return shell->exit_status;
+// }
 
 
 ////all execution 
@@ -178,25 +183,12 @@ int execute_ast(t_minishell **shell)
 
     if ((*shell)->ast->type == NODE_COMMAND)
     {
-	if ((*shell)->ast->redir)
-        {
-            if (handle_redirections((*shell)->ast->redir) == -1)
-                return (1);
-        }
         result = exe_cmd(shell);
     }
-//     else if ((*shell)->ast->type == NODE_PIPE)
-//     {
-//         if (!(*shell)->ast->left || !(*shell)->ast->right)
-//         {
-//             fprintf(stderr, "Error: Invalid pipeline syntax\n");
-//             result = 1;
-//         }
-//         else
-//         {
-//             result = execute_pipeline((*shell)->ast, *shell);
-//         }
-//     }
+    else if ((*shell)->ast->type == NODE_PIPE)
+    {
+            result = execute_pipeline((*shell)->ast, *shell);
+    }
     else
     {
         fprintf(stderr, "Error: Unsupported AST node type\n");
