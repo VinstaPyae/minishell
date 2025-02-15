@@ -1,5 +1,38 @@
 #include "minishell.h"
 
+// char    *get_olden(char *key, t_minishell **shell)
+// {
+//     t_env *env = (*shell)->envp;
+
+//     while (env)
+//     {
+//         if (ft_strcmp(env->key, key) == 0)
+//             return (ft_strdup(env->value));
+//         env = env->next;
+//     }
+//     return (NULL);
+// }
+
+// void update_shlvl(t_env *envp)
+// {
+//     char *shlvl_str = getenv("SHLVL");
+//     int shlvl;
+    
+//     if (shlvl_str == NULL)
+//         shlvl = 1;
+//     else
+//         shlvl = atoi(shlvl_str) + 1;
+
+//     char *new_shlvl = ft_itoa(shlvl);
+//     if (new_shlvl == NULL)
+//     {
+//         perror("ft_itoa");
+//         return;
+//     }
+//     replace_or_add_env_var("SHELVL", new_shlvl, envp);
+//     free(new_shlvl);
+// }
+
 char	*get_input(void)
 {
 	char	*input;
@@ -46,16 +79,17 @@ int main(int ac, char **av, char **env)
         printf("Error: Failed to initialize environment\n");
         return (1);
     }
+    // update_shlvl(envp);
     while (1)
     {
-	shell = create_minshell(envp);
-	if (!shell)
-	{
-		printf("Error: Failed to initialize minishell\n");
-        	cleanup(&shell);
-		free_env(envp);
-		return (1);
-	}
+        shell = create_minshell(envp);
+        if (!shell)
+        {
+            printf("Error: Failed to initialize minishell\n");
+                cleanup(&shell);
+            free_env(envp);
+            return (1);
+        }
         shell->input = get_input();
         if (!shell->input)
             break;

@@ -2,20 +2,23 @@
 
 
 // Helper function to replace or add an environment variable
-static void replace_or_add_env_var(const char *name, const char *value, t_minishell *shell)
+void replace_or_add_env_var(const char *name, const char *value, t_env *envp)
 {
-    t_env *env = shell->envp;
+    t_env *env = envp;
     int found = 0;
 
     // Iterate through the environment linked list
     while (env)
     {
+        // printf("update pwd in env : %s\n", env->key);
         if (ft_strcmp(env->key, name) == 0)
         {
+            // printf("found pwd in env : %s\n", name);
             // Replace the value if the key matches
             free(env->value);  // Free the old value
             env->value = ft_strdup(value);  // Assign the new value
             found = 1;
+            // printf("found pwd in env : %s\n", env->value);
             break;
         }
         env = env->next;
@@ -30,16 +33,32 @@ static void replace_or_add_env_var(const char *name, const char *value, t_minish
 
         new_env->key = ft_strdup(name);
         new_env->value = ft_strdup(value);
-        new_env->next = shell->envp;
-        shell->envp = new_env;
+        new_env->next = envp;
+        envp = new_env;
     }
 }
 
+char    *get_oldpwd(char *key, t_minishell **shell)
+{
+    t_env *env = (*shell)->envp;
 
-static void update_env_vars(t_minishell *shell)
+    while (env)
+    {
+        if (ft_strcmp(env->key, key) == 0)
+            return (ft_strdup(env->value));
+        env = env->next;
+    }
+    return (NULL);
+}
+
+
+static void update_env_vars(t_minishell **shell)
 {
     char cwd[1024];
-    char *oldpwd = getenv("PWD");
+    char *oldpwd = get_oldpwd("PWD", shell);
+    if (!oldpwd)
+        return ;
+    // printf("OldPWD: %s\n", oldpwd);
     char *new_oldpwd;
 
     // Update OLDPWD
@@ -49,7 +68,7 @@ static void update_env_vars(t_minishell *shell)
         if (new_oldpwd)
         {
             // Update the custom environment list
-            replace_or_add_env_var("OLDPWD", new_oldpwd, shell);
+            replace_or_add_env_var("OLDPWD", new_oldpwd, (*shell)->envp);
             free(new_oldpwd);
         }
     }
@@ -57,7 +76,7 @@ static void update_env_vars(t_minishell *shell)
     // Update PWD
     if (getcwd(cwd, sizeof(cwd)))
     {
-        replace_or_add_env_var("PWD", cwd, shell);
+        replace_or_add_env_var("PWD", cwd, (*shell)->envp);
     }
     else
     {
@@ -117,7 +136,7 @@ int exe_cd(t_minishell **shell)
         return (printf("cd: chdir Failed\n"), 1);
     }
     free(curr_dir);
-    update_env_vars(*shell);
+    update_env_vars(shell);
     return (0);
 }
 

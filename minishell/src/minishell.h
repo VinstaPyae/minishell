@@ -158,7 +158,7 @@ static int is_valid_env_name(const char *name);
 static int process_export_args(t_minishell *shell);
 static int process_export_no_args(t_minishell *shell);
 int exe_export(t_minishell **shell);
-
+void replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 //error_handle
 void	cleanup(t_minishell **shell);
 void	free_ast(t_ast_node *node);
@@ -168,5 +168,6 @@ void	remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
 
 //debug
 void print_error(const char *func_name, const char *file, int line, const char *format, ...);
+
 #endif
 
