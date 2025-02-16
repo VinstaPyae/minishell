@@ -9,23 +9,39 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	cmd = trim_cmd(ast_cmd->cmd_arg);
 	if (!cmd)
 		return (-1);
+
 	pid = fork();
 	if (pid < 0)
 	{
 		perror("fork");
 		return -1;
 	}
-	if (pid == 0)
+
+	if (pid == 0) // Child process
 	{
-		// printf("Executing external command: %s\n", cmd[0]);
+		struct sigaction sa;
+
+		// Restore default signal handling in child
+		sa.sa_handler = SIG_DFL;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		sigaction(SIGINT, &sa, NULL);
+		sigaction(SIGQUIT, &sa, NULL);
+		sigaction(SIGTSTP, &sa, NULL);
+
 		execvp(cmd[0], cmd);
 		perror("execvp");
 		exit(127);
 	}
 	else
 	{
-		waitpid(pid, &status, 0);
-		shell->exit_status = WEXITSTATUS(status);
+		// Ensure parent waits correctly for Ctrl-C behavior
+		waitpid(pid, &status, WUNTRACED);
+		if (WIFSIGNALED(status))
+			shell->exit_status = 128 + WTERMSIG(status);
+		else
+			shell->exit_status = WEXITSTATUS(status);
+
 		return shell->exit_status;
 	}
 }
@@ -191,3 +207,4 @@ int execute_ast(t_minishell **shell)
 
 	return result;
 }
+

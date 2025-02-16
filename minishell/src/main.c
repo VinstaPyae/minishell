@@ -17,7 +17,7 @@
 // {
 //     char *shlvl_str = getenv("SHLVL");
 //     int shlvl;
-    
+
 //     if (shlvl_str == NULL)
 //         shlvl = 1;
 //     else
@@ -33,46 +33,50 @@
 //     free(new_shlvl);
 // }
 
-char	*get_input(void)
+char *get_input(void)
 {
-	char	*input;
+    char *input;
 
-	input = readline("minishell$>");
-	if (!input)
-		return (NULL);
-	if (*input)
-		add_history(input);
-	return (input);
+    input = readline("minishell$>");
+    if (!input)
+    {
+        printf("exit\n");
+        exit(0);
+    }
+    if (*input)
+        add_history(input);
+    return (input);
 }
 
-t_minishell	*create_minshell(t_env *envp)
+t_minishell *create_minshell(t_env *envp)
 {
-	t_minishell	*shell;
+    t_minishell *shell;
 
-	shell = malloc(sizeof(t_minishell));
-	if (!shell)
-		return (NULL);
-	shell->ast = NULL;
-	shell->input = NULL;
-	shell->l_token = NULL;
-	shell->envp = envp;
-	if (!shell->envp)
-	{
-		free(shell);
-		return (NULL);
-	}
-	shell->exit_status = 0;
-	return (shell);
+    shell = malloc(sizeof(t_minishell));
+    if (!shell)
+        return (NULL);
+    shell->ast = NULL;
+    shell->input = NULL;
+    shell->l_token = NULL;
+    shell->envp = envp;
+    if (!shell->envp)
+    {
+        free(shell);
+        return (NULL);
+    }
+    shell->exit_status = 0;
+    return (shell);
 }
 
 int main(int ac, char **av, char **env)
 {
     t_minishell *shell;
-    t_env   *envp;
+    t_env *envp;
 
     (void)ac;
     (void)av;
-	shell = NULL;
+    setup_signal_handlers(); // Add this line
+    shell = NULL;
     envp = init_env(env);
     if (!envp)
     {
@@ -86,7 +90,7 @@ int main(int ac, char **av, char **env)
         if (!shell)
         {
             printf("Error: Failed to initialize minishell\n");
-                cleanup(&shell);
+            cleanup(&shell);
             free_env(envp);
             return (1);
         }
@@ -100,8 +104,8 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-	//printer_token(shell->l_token);
-	expand_tokens(shell);
+        // printer_token(shell->l_token);
+        expand_tokens(shell);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {
@@ -112,9 +116,9 @@ int main(int ac, char **av, char **env)
         execute_ast(&shell); // This should call exe_exit for the "exit" command
         cleanup(&shell);     // Clean up after each iteration
     }
-    cleanup(&shell);         // Final cleanup
+    cleanup(&shell); // Final cleanup
     free_env(envp);
-    rl_clear_history();      // Clear readline history
+    rl_clear_history(); // Clear readline history
     return (0);
 }
 
@@ -166,3 +170,4 @@ int main(int ac, char **av, char **env)
 //     cleanup(&l_token, &input, &ast);
 //     return 0;
 // }
+
