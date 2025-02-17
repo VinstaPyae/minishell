@@ -5,10 +5,13 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	char **cmd;
 	pid_t pid;
 	int status;
+	int sigint_received = 0;
 
 	cmd = trim_cmd(ast_cmd->cmd_arg);
 	if (!cmd)
 		return (-1);
+
+	g_signal_status = 2; // Mark that a child process is running
 
 	pid = fork();
 	if (pid < 0)
@@ -20,9 +23,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	if (pid == 0) // Child process
 	{
 		struct sigaction sa;
-
-		// Restore default signal handling in child
-		sa.sa_handler = SIG_DFL;
+		sa.sa_handler = SIG_DFL; // Reset to default signal handling
 		sigemptyset(&sa.sa_mask);
 		sa.sa_flags = 0;
 		sigaction(SIGINT, &sa, NULL);
@@ -35,8 +36,13 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	}
 	else
 	{
-		// Ensure parent waits correctly for Ctrl-C behavior
 		waitpid(pid, &status, WUNTRACED);
+		sigint_received = (g_signal_status == 1);
+		g_signal_status = 0; // Reset global state after child exits
+
+		if (sigint_received)
+			write(STDOUT_FILENO, "\n", 1);
+
 		if (WIFSIGNALED(status))
 			shell->exit_status = 128 + WTERMSIG(status);
 		else

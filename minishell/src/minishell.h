@@ -11,6 +11,8 @@
 #include <readline/history.h>
 #include "libft.h"
 
+extern volatile sig_atomic_t g_signal_status;
+
 typedef struct s_token
 {
     int type;

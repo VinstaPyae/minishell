@@ -24,18 +24,23 @@ char **trim_cmd(char **cmd_arg)
 	cmd[i] = NULL;
 	return (cmd);
 }
-
-// signal.c
-volatile sig_atomic_t g_signal_received = 0;
+volatile sig_atomic_t g_signal_status = 0;
 
 void handle_sigint(int signo)
 {
 	(void)signo;
-	g_signal_received = 1;
-	rl_replace_line("", 0); // Clear the current line in readline
-	rl_crlf();				// Output a newline (in a readline-friendly way)
-	rl_on_new_line();		// Tell readline we're starting a new line
-	rl_redisplay();			// Redisplay the prompt
+
+	if (g_signal_status == 2) // Child is running, mark the signal
+	{
+		g_signal_status = 1;
+		return;
+	}
+
+	// Refresh the prompt when shell is waiting for input
+	rl_replace_line("", 0);
+	rl_crlf();
+	rl_on_new_line();
+	rl_redisplay();
 }
 
 void handle_sigquit(int signo)
