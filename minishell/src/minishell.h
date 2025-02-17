@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <termios.h> // For tcsetattr and terminal control
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "libft.h"

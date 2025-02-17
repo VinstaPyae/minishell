@@ -1,47 +1,195 @@
 #include "minishell.h"
 
+char **split_path(char *path_env)
+{
+	int count = 1; // at least one directory in PATH
+	for (int i = 0; path_env[i]; i++)
+	{
+		if (path_env[i] == ':')
+		{
+			count++;
+		}
+	}
+
+	char **path_dirs = malloc((count + 1) * sizeof(char *));
+	if (!path_dirs)
+		return NULL;
+
+	int index = 0;
+	char *start = path_env;
+	for (int i = 0; path_env[i]; i++)
+	{
+		if (path_env[i] == ':' || path_env[i + 1] == '\0')
+		{
+			int length = &path_env[i] - start + (path_env[i + 1] == '\0' ? 1 : 0);
+			path_dirs[index] = malloc(length + 1);
+			if (!path_dirs[index])
+			{
+				// Free already allocated memory
+				for (int j = 0; j < index; j++)
+				{
+					free(path_dirs[j]);
+				}
+				free(path_dirs);
+				return NULL;
+			}
+			strncpy(path_dirs[index], start, length);
+			path_dirs[index][length] = '\0';
+			index++;
+			start = &path_env[i + 1];
+		}
+	}
+
+	path_dirs[index] = NULL;
+	return path_dirs;
+}
+
+char *find_executable(char *cmd)
+{
+	char *path_env = getenv("PATH");
+	if (!path_env)
+		return NULL;
+
+	char *paths = ft_strdup(path_env);
+	if (!paths)
+		return NULL;
+
+	char *saveptr;
+	char *dir = strtok_r(paths, ":", &saveptr);
+	char full_path[PATH_MAX];
+	struct stat sb;
+
+	while (dir)
+	{
+		snprintf(full_path, sizeof(full_path), "%s/%s", dir, cmd);
+		if (stat(full_path, &sb) == 0 && (sb.st_mode & S_IXUSR))
+		{
+			free(paths);
+			return ft_strdup(full_path);
+		}
+		dir = strtok_r(NULL, ":", &saveptr);
+	}
+	free(paths);
+	return NULL;
+}
+
+char **env_list_to_array(t_env *env)
+{
+	int count = 0;
+	t_env *tmp = env;
+	while (tmp)
+	{
+		count++;
+		tmp = tmp->next;
+	}
+
+	char **env_array = malloc((count + 1) * sizeof(char *));
+	if (!env_array)
+		return NULL;
+
+	tmp = env;
+	int i = 0;
+	while (tmp)
+	{
+		char *env_entry = malloc(ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2);
+		if (!env_entry)
+		{
+			// Free previously allocated memory
+			for (int j = 0; j < i; j++)
+				free(env_array[j]);
+			free(env_array);
+			return NULL;
+		}
+		sprintf(env_entry, "%s=%s", tmp->key, tmp->value);
+		env_array[i++] = env_entry;
+		tmp = tmp->next;
+	}
+	env_array[i] = NULL; // Null-terminate the array
+
+	return env_array;
+}
+
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
-	char **cmd;
-	pid_t pid;
-	int status;
-	int sigint_received = 0;
-
-	cmd = trim_cmd(ast_cmd->cmd_arg);
+	char **cmd = trim_cmd(ast_cmd->cmd_arg);
 	if (!cmd)
-		return (-1);
+		return -1;
 
-	g_signal_status = 2; // Mark that a child process is running
+	g_signal_status = 2;
 
-	pid = fork();
+	pid_t pid = fork();
 	if (pid < 0)
 	{
 		perror("fork");
 		return -1;
 	}
 
-	if (pid == 0) // Child process
+	if (pid == 0)
 	{
 		struct sigaction sa;
-		sa.sa_handler = SIG_DFL; // Reset to default signal handling
+		sa.sa_handler = SIG_DFL;
 		sigemptyset(&sa.sa_mask);
 		sa.sa_flags = 0;
 		sigaction(SIGINT, &sa, NULL);
 		sigaction(SIGQUIT, &sa, NULL);
 		sigaction(SIGTSTP, &sa, NULL);
 
-		execvp(cmd[0], cmd);
-		perror("execvp");
+		// Convert environment list to array
+		char **env_array = env_list_to_array(shell->envp);
+		if (!env_array)
+		{
+			perror("env_list_to_array");
+			exit(127);
+		}
+
+		// Check if the command is an absolute or relative path
+		if (cmd[0][0] == '/' || cmd[0][0] == '.')
+		{
+			execve(cmd[0], cmd, env_array);
+			perror("execve");
+			exit(127);
+		}
+
+		// If it's not, search for the command in PATH
+		char *path_env = getenv("PATH");
+		if (path_env)
+		{
+			char **path_dirs = split_path(path_env);
+			if (path_dirs)
+			{
+				for (int i = 0; path_dirs[i]; i++)
+				{
+					char *full_path = malloc(strlen(path_dirs[i]) + strlen(cmd[0]) + 2);
+					if (!full_path)
+					{
+						perror("malloc");
+						exit(127);
+					}
+					sprintf(full_path, "%s/%s", path_dirs[i], cmd[0]);
+
+					// Check if the file exists and is executable
+					if (access(full_path, X_OK) == 0)
+					{
+						execve(full_path, cmd, env_array);
+						free(full_path);
+						break;
+					}
+					free(full_path);
+				}
+
+				// If no valid command was found
+				perror("execve");
+				exit(127);
+			}
+		}
+
+		perror("execve");
 		exit(127);
 	}
 	else
 	{
+		int status;
 		waitpid(pid, &status, WUNTRACED);
-		sigint_received = (g_signal_status == 1);
-		g_signal_status = 0; // Reset global state after child exits
-
-		if (sigint_received)
-			write(STDOUT_FILENO, "\n", 1);
 
 		if (WIFSIGNALED(status))
 			shell->exit_status = 128 + WTERMSIG(status);
