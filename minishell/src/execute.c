@@ -112,10 +112,10 @@ char **env_list_to_array(t_env *env)
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
 	char **cmd = trim_cmd(ast_cmd->cmd_arg);
-	if (!cmd)
+	if (!cmd || !cmd[0])
 		return -1;
 
-	g_signal_status = 2;
+	g_signal_status = 2; // Mark that a child process is running
 
 	pid_t pid = fork();
 	if (pid < 0)
@@ -124,17 +124,17 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		return -1;
 	}
 
-	if (pid == 0)
+	if (pid == 0) // Child process
 	{
 		struct sigaction sa;
-		sa.sa_handler = SIG_DFL;
+		sa.sa_handler = SIG_DFL; // Restore default signal handling
 		sigemptyset(&sa.sa_mask);
 		sa.sa_flags = 0;
 		sigaction(SIGINT, &sa, NULL);
 		sigaction(SIGQUIT, &sa, NULL);
 		sigaction(SIGTSTP, &sa, NULL);
 
-		// Convert environment list to array
+		/* Convert environment list to array */
 		char **env_array = env_list_to_array(shell->envp);
 		if (!env_array)
 		{
@@ -142,15 +142,18 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			exit(127);
 		}
 
-		// Check if the command is an absolute or relative path
+		/* If the command is an absolute or relative path, use it directly */
 		if (cmd[0][0] == '/' || cmd[0][0] == '.')
 		{
 			execve(cmd[0], cmd, env_array);
 			perror("execve");
+			for (int i = 0; env_array[i]; i++)
+				free(env_array[i]);
+			free(env_array);
 			exit(127);
 		}
 
-		// If it's not, search for the command in PATH
+		/* Otherwise, search for the command in the directories listed in PATH */
 		char *path_env = getenv("PATH");
 		if (path_env)
 		{
@@ -159,37 +162,49 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			{
 				for (int i = 0; path_dirs[i]; i++)
 				{
-					char *full_path = malloc(strlen(path_dirs[i]) + strlen(cmd[0]) + 2);
+					int len = strlen(path_dirs[i]) + strlen(cmd[0]) + 2;
+					char *full_path = malloc(len);
 					if (!full_path)
 					{
 						perror("malloc");
 						exit(127);
 					}
 					sprintf(full_path, "%s/%s", path_dirs[i], cmd[0]);
-
-					// Check if the file exists and is executable
 					if (access(full_path, X_OK) == 0)
 					{
 						execve(full_path, cmd, env_array);
+						/* If execve returns, an error occurred. */
+						perror("execve");
 						free(full_path);
 						break;
 					}
 					free(full_path);
 				}
-
-				// If no valid command was found
-				perror("execve");
-				exit(127);
+				/* Free the split PATH array */
+				for (int i = 0; path_dirs[i]; i++)
+					free(path_dirs[i]);
+				free(path_dirs);
 			}
 		}
 
-		perror("execve");
+		/* If no valid command was found, print an error and exit */
+		fprintf(stderr, "Command not found: %s\n", cmd[0]);
+		for (int i = 0; env_array[i]; i++)
+			free(env_array[i]);
+		free(env_array);
 		exit(127);
 	}
-	else
+	else // Parent process
 	{
 		int status;
 		waitpid(pid, &status, WUNTRACED);
+
+		/* Check if a SIGINT was received during child execution */
+		int sigint_received = (g_signal_status == 1);
+		g_signal_status = 0; // Reset global state
+
+		if (sigint_received)
+			write(STDOUT_FILENO, "\n", 1);
 
 		if (WIFSIGNALED(status))
 			shell->exit_status = 128 + WTERMSIG(status);
@@ -361,4 +376,3 @@ int execute_ast(t_minishell **shell)
 
 	return result;
 }
-

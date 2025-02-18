@@ -163,13 +163,18 @@ static int is_valid_env_name(const char *name);
 static int process_export_args(t_minishell *shell);
 static int process_export_no_args(t_minishell *shell);
 int exe_export(t_minishell **shell);
-void replace_or_add_env_var(const char *name, const char *value, t_env *envp);
+t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
+
+//env
+void update_shlvl(t_env **env_list);
+
 // error_handle
 void cleanup(t_minishell **shell);
 void free_ast(t_ast_node *node);
 void free_arg(char **str);
 void free_redir(void *redir);
 void remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
+
 
 void handle_sigquit(int signo);
 void handle_sigint(int signo);

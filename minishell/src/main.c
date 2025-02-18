@@ -83,7 +83,7 @@ int main(int ac, char **av, char **env)
         printf("Error: Failed to initialize environment\n");
         return (1);
     }
-    // update_shlvl(envp);
+    printf("Calling minishell!\n");
     while (1)
     {
         shell = create_minshell(envp);

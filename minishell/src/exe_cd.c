@@ -2,7 +2,7 @@
 
 
 // Helper function to replace or add an environment variable
-void replace_or_add_env_var(const char *name, const char *value, t_env *envp)
+t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp)
 {
     t_env *env = envp;
     int found = 0;
@@ -29,13 +29,14 @@ void replace_or_add_env_var(const char *name, const char *value, t_env *envp)
         // If the variable is not found, add a new one
         t_env *new_env = malloc(sizeof(t_env));
         if (!new_env)
-            return;  // Handle allocation failure
+            return envp;  // Handle allocation failure
 
         new_env->key = ft_strdup(name);
         new_env->value = ft_strdup(value);
         new_env->next = envp;
         envp = new_env;
     }
+    return (envp);
 }
 
 char    *get_oldpwd(char *key, t_minishell **shell)

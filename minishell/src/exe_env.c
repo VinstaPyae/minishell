@@ -53,35 +53,6 @@ void split_key_value(char *str, char **key, char **value)
     *value = ft_strdup(equal_sign + 1);       // Copy everything after '='
 }
 
-t_env *init_env(char **envp)
-{
-    t_env *env = NULL;
-    t_env *new_node = NULL;
-    char *key;
-    char *value;
-    int i = 0;
-
-    while (envp[i])
-    {
-        split_key_value(envp[i], &key, &value);
-        if (!key || !value)
-        {
-            i++;
-            continue; // Skip invalid entries
-        }
-
-        new_node = (t_env *)malloc(sizeof(t_env));
-        if (!new_node)
-            return (NULL);
-        new_node->key = key;
-        new_node->value = value;
-        new_node->next = env;
-        env = new_node;
-        i++;
-    }
-    return (env);
-}
-
 void print_env(t_env *env)
 {
     t_env *tmp = env;
