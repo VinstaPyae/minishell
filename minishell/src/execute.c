@@ -108,7 +108,6 @@ char **env_list_to_array(t_env *env)
 
 	return env_array;
 }
-
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
 	char **cmd = trim_cmd(ast_cmd->cmd_arg);
@@ -155,36 +154,39 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 
 		/* Otherwise, search for the command in the directories listed in PATH */
 		char *path_env = getenv("PATH");
-		if (path_env)
+		if (!path_env)
 		{
-			char **path_dirs = split_path(path_env);
-			if (path_dirs)
+			// If PATH is unset, use the default PATH
+			path_env = "/bin:/usr/bin:/usr/local/bin";
+		}
+
+		char **path_dirs = split_path(path_env);
+		if (path_dirs)
+		{
+			for (int i = 0; path_dirs[i]; i++)
 			{
-				for (int i = 0; path_dirs[i]; i++)
+				int len = strlen(path_dirs[i]) + strlen(cmd[0]) + 2;
+				char *full_path = malloc(len);
+				if (!full_path)
 				{
-					int len = strlen(path_dirs[i]) + strlen(cmd[0]) + 2;
-					char *full_path = malloc(len);
-					if (!full_path)
-					{
-						perror("malloc");
-						exit(127);
-					}
-					sprintf(full_path, "%s/%s", path_dirs[i], cmd[0]);
-					if (access(full_path, X_OK) == 0)
-					{
-						execve(full_path, cmd, env_array);
-						/* If execve returns, an error occurred. */
-						perror("execve");
-						free(full_path);
-						break;
-					}
-					free(full_path);
+					perror("malloc");
+					exit(127);
 				}
-				/* Free the split PATH array */
-				for (int i = 0; path_dirs[i]; i++)
-					free(path_dirs[i]);
-				free(path_dirs);
+				sprintf(full_path, "%s/%s", path_dirs[i], cmd[0]);
+				if (access(full_path, X_OK) == 0)
+				{
+					execve(full_path, cmd, env_array);
+					/* If execve returns, an error occurred. */
+					perror("execve");
+					free(full_path);
+					break;
+				}
+				free(full_path);
 			}
+			/* Free the split PATH array */
+			for (int i = 0; path_dirs[i]; i++)
+				free(path_dirs[i]);
+			free(path_dirs);
 		}
 
 		/* If no valid command was found, print an error and exit */
@@ -376,3 +378,4 @@ int execute_ast(t_minishell **shell)
 
 	return result;
 }
+
