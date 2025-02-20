@@ -42,21 +42,25 @@ t_env *init_minimal_env(void)
 	// Initialize PWD using getenv("PWD") or getcwd fallback
 	node_pwd->key = ft_strdup("PWD");
 	node_pwd->value = init_pwd();
+	node_pwd->path = 0;
 	node_pwd->next = NULL;
 
 	// Initialize SHLVL
 	node_shlvl->key = ft_strdup("SHLVL");
 	node_shlvl->value = ft_strdup("1");
+	node_shlvl->path = 0;
 	node_shlvl->next = node_pwd; // Link PWD after SHLVL
 
 	// Initialize "_" variable
 	node_underscore->key = ft_strdup("_");
 	node_underscore->value = ft_strdup("/usr/bin/env");
+	node_underscore->path = 0;
 	node_underscore->next = node_shlvl; // Link SHLVL after _
 
 	// Initialize PATH with default directories
 	node_path->key = ft_strdup("PATH");
 	node_path->value = ft_strdup("/bin:/usr/bin:/usr/local/bin");
+	node_path->path = 1;
 	node_path->next = node_underscore; // Link _ after PATH
 
 	return node_path; // Head of the list
@@ -92,6 +96,7 @@ t_env *init_env(char **envp)
 			return (NULL);
 		new_node->key = key;
 		new_node->value = value;
+		new_node->path = 0;
 		new_node->next = env;
 		env = new_node;
 		i++;

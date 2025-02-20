@@ -59,7 +59,7 @@ void print_env(t_env *env)
 
     while (tmp)
     {
-        if (tmp->key && tmp->value) // Ensure key and value are not null
+        if (tmp->key && tmp->value && tmp->path == 0) // Ensure key and value are not null
             printf("%s=%s\n", tmp->key, tmp->value);
         tmp = tmp->next;
     }
