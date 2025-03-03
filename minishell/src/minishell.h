@@ -31,8 +31,9 @@ typedef enum e_redir_type
 
 typedef struct s_redir
 {
-    int type;
-    char *file;
+	int fd;
+	int type;
+	char *file;
 } t_redir;
 
 // AST type
@@ -128,6 +129,8 @@ int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
 void print_redir(t_list *redir);
 int handle_redirections(t_list *redir_list);
+int process_heredocs(t_ast_node *node);
+int handle_heredoc(char *delimiter);
 
 // expansion
 void expand_tokens(t_minishell *shell);
