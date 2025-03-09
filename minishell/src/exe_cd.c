@@ -5,20 +5,21 @@
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp)
 {
     t_env *env = envp;
+    t_env *head = envp; // Store the head of the list
     int found = 0;
 
     // Iterate through the environment linked list
     while (env)
     {
-        // printf("update pwd in env : %s\n", env->key);
+        // printf("update in env : %s\n", env->key);
         if (ft_strcmp(env->key, name) == 0)
         {
-            // printf("found pwd in env : %s\n", name);
+        //     printf("found in env : %s\n", name);
             // Replace the value if the key matches
             free(env->value);  // Free the old value
             env->value = ft_strdup(value);  // Assign the new value
             found = 1;
-            // printf("found pwd in env : %s\n", env->value);
+        //     printf("found in env : %s\n", env->value);
             break;
         }
         env = env->next;
@@ -26,6 +27,7 @@ t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp)
 
     if (!found)
     {
+        // printf("Not found in env : %s\n", name);
         // If the variable is not found, add a new one
         t_env *new_env = malloc(sizeof(t_env));
         if (!new_env)
@@ -33,10 +35,28 @@ t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp)
 
         new_env->key = ft_strdup(name);
         new_env->value = ft_strdup(value);
-        new_env->next = envp;
-        envp = new_env;
+        new_env->next = NULL;
+        
+        // Add the new node to the end of the list
+        if (!head) // If the list was empty
+        {
+            head = new_env;
+        }
+        else
+        {
+            // Find the last node
+            t_env *last = head;
+            while (last->next)
+                last = last->next;
+            
+            // Append the new node
+            last->next = new_env;
+        }
+        
+        // printf("added to env : %s\n", new_env->key);
     }
-    return (envp);
+    
+    return head; // Return the head of the list
 }
 
 char    *get_oldpwd(char *key, t_minishell **shell)

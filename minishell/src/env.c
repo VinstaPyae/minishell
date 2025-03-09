@@ -22,18 +22,18 @@ char *init_pwd(void)
 t_env *init_minimal_env(void)
 {
 	t_env *node_pwd;
-	t_env *node_shlvl;
+	// t_env *node_shlvl;
 	t_env *node_underscore;
 	t_env *node_path;
 
 	node_pwd = malloc(sizeof(t_env));
-	node_shlvl = malloc(sizeof(t_env));
+	// node_shlvl = malloc(sizeof(t_env));
 	node_underscore = malloc(sizeof(t_env));
 	node_path = malloc(sizeof(t_env));
-	if (!node_pwd || !node_shlvl || !node_underscore || !node_path)
+	if (!node_pwd /*|| !node_shlvl*/ || !node_underscore || !node_path)
 	{
 		free(node_pwd);
-		free(node_shlvl);
+		// free(node_shlvl);
 		free(node_underscore);
 		free(node_path);
 		return NULL;
@@ -46,16 +46,17 @@ t_env *init_minimal_env(void)
 	node_pwd->next = NULL;
 
 	// Initialize SHLVL
-	node_shlvl->key = ft_strdup("SHLVL");
-	node_shlvl->value = ft_strdup("1");
-	node_shlvl->path = 0;
-	node_shlvl->next = node_pwd; // Link PWD after SHLVL
+	// node_shlvl->key = ft_strdup("SHLVL");
+	// node_shlvl->value = ft_strdup("1");
+	// node_shlvl->path = 0;
+	// node_shlvl->next = node_pwd; // Link PWD after SHLVL
 
 	// Initialize "_" variable
 	node_underscore->key = ft_strdup("_");
 	node_underscore->value = ft_strdup("/usr/bin/env");
 	node_underscore->path = 0;
-	node_underscore->next = node_shlvl; // Link SHLVL after _
+	node_underscore->next = node_pwd; // Link PWD after SHLVL
+	// node_underscore->next = node_shlvl; // Link SHLVL after _
 
 	// Initialize PATH with default directories
 	node_path->key = ft_strdup("PATH");
@@ -80,6 +81,7 @@ t_env *init_env(char **envp)
 		env = init_minimal_env();
 		if (!env)
 			printf("Error: Failed to initialize minimal environment\n");
+		update_shlvl(&env);
 		return (env);
 	}
 	while (envp[i])
