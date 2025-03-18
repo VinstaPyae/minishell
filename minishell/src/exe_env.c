@@ -53,14 +53,12 @@ void split_key_value(char *str, char **key, char **value)
     *value = ft_strdup(equal_sign + 1);       // Copy everything after '='
 }
 
-void print_env(t_env *env)
+void print_env(t_minishell *shell)
 {
-    t_env *tmp = env;
-
+    t_env *tmp = shell->envp;
     while (tmp)
     {
-        if (tmp->key && tmp->value && tmp->path == 0) // Ensure key and value are not null
-            printf("%s=%s\n", tmp->key, tmp->value);
+        printf("%s=%s\n", tmp->key, tmp->value);
         tmp = tmp->next;
     }
 }
@@ -73,6 +71,6 @@ int exe_env(t_minishell **shell)
         return (1);
     }
 
-    print_env((*shell)->envp);
+    print_env((*shell));
     return (0);
 }

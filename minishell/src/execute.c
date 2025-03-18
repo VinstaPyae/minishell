@@ -353,8 +353,7 @@ int execute_ast(t_minishell **shell)
 
 	if (!(*shell)->ast)
 		return 1;
-	if (process_heredocs((*shell)->ast) == -1)
-		return 1;
+
 	saved_stdout = dup(STDOUT_FILENO);
 	saved_stdin = dup(STDIN_FILENO);
 

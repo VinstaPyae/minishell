@@ -78,20 +78,13 @@ static void update_env_vars(t_minishell **shell)
     char cwd[1024];
     char *oldpwd = get_oldpwd("PWD", shell);
     if (!oldpwd)
-        return ;
-    // printf("OldPWD: %s\n", oldpwd);
-    char *new_oldpwd;
+        oldpwd = ft_strdup(""); // If PWD is not found, set oldpwd to an empty string
 
     // Update OLDPWD
     if (oldpwd)
     {
-        new_oldpwd = ft_strdup(oldpwd);  // Duplicate the old PWD
-        if (new_oldpwd)
-        {
-            // Update the custom environment list
-            replace_or_add_env_var("OLDPWD", new_oldpwd, (*shell)->envp);
-            free(new_oldpwd);
-        }
+        replace_or_add_env_var("OLDPWD", oldpwd, (*shell)->envp);
+        free(oldpwd);
     }
 
     // Update PWD
@@ -160,4 +153,3 @@ int exe_cd(t_minishell **shell)
     update_env_vars(shell);
     return (0);
 }
-

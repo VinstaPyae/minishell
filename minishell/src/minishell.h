@@ -31,9 +31,8 @@ typedef enum e_redir_type
 
 typedef struct s_redir
 {
-	int fd;
-	int type;
-	char *file;
+    int type;
+    char *file;
 } t_redir;
 
 // AST type
@@ -71,7 +70,6 @@ typedef struct s_env
 {
     char *key;
     char *value;
-    int     path;
     struct s_env *next;
 } t_env;
 
@@ -129,8 +127,6 @@ int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
 void print_redir(t_list *redir);
 int handle_redirections(t_list *redir_list);
-int process_heredocs(t_ast_node *node);
-int handle_heredoc(char *delimiter);
 
 // expansion
 void expand_tokens(t_minishell *shell);
@@ -155,7 +151,7 @@ void free_env(t_env *env);
 void split_key_value(char *str, char **key, char **value);
 t_env *init_env(char **envp);
 t_env *init_env(char **envp);
-void print_env(t_env *env);
+void print_env(t_minishell *shell);
 int exe_env(t_minishell **shell);
 char *ft_strndup(const char *s, size_t n);
 int exe_unset(t_minishell **shell);
