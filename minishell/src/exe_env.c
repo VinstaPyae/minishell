@@ -34,23 +34,25 @@ void split_key_value(char *str, char **key, char **value)
 {
     char *equal_sign;
 
-    if (!str) // Check if input string is NULL
-    {
-        *key = NULL;
-        *value = NULL;
-        return;
-    }
-    equal_sign = ft_strchr(str, '='); // Find the first '=' in the string
-    if (!equal_sign)
+    if (!str)
     {
         *key = NULL;
         *value = NULL;
         return;
     }
 
-    // Split the string into key and value
-    *key = ft_strndup(str, equal_sign - str); // Copy everything before '='
-    *value = ft_strdup(equal_sign + 1);       // Copy everything after '='
+    equal_sign = ft_strchr(str, '=');
+    if (!equal_sign)
+    {
+        // No '=', meaning key is present but no value
+        *key = ft_strdup(str);
+        *value = ft_strdup(""); // Store empty string instead of NULL
+        return;
+    }
+
+    // Split key and value
+    *key = ft_strndup(str, equal_sign - str);
+    *value = ft_strdup(equal_sign + 1);
 }
 
 void print_env(t_minishell *shell)
@@ -58,7 +60,8 @@ void print_env(t_minishell *shell)
     t_env *tmp = shell->envp;
     while (tmp)
     {
-        printf("%s=%s\n", tmp->key, tmp->value);
+        if (tmp->key && tmp->value) // Only print if value is NOT NULL
+            printf("%s=%s\n", tmp->key, tmp->value);
         tmp = tmp->next;
     }
 }

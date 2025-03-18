@@ -79,7 +79,9 @@ char **env_list_to_array(t_env *env)
 	t_env *tmp = env;
 	while (tmp)
 	{
-		count++;
+		// Only count environment variables that have both key and value
+		if (tmp->key && tmp->value)
+			count++;
 		tmp = tmp->next;
 	}
 
@@ -91,17 +93,21 @@ char **env_list_to_array(t_env *env)
 	int i = 0;
 	while (tmp)
 	{
-		char *env_entry = malloc(ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2);
-		if (!env_entry)
+		// Skip entries with NULL values
+		if (tmp->key && tmp->value)
 		{
-			// Free previously allocated memory
-			for (int j = 0; j < i; j++)
-				free(env_array[j]);
-			free(env_array);
-			return NULL;
+			char *env_entry = malloc(ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2);
+			if (!env_entry)
+			{
+				// Free previously allocated memory
+				for (int j = 0; j < i; j++)
+					free(env_array[j]);
+				free(env_array);
+				return NULL;
+			}
+			sprintf(env_entry, "%s=%s", tmp->key, tmp->value);
+			env_array[i++] = env_entry;
 		}
-		sprintf(env_entry, "%s=%s", tmp->key, tmp->value);
-		env_array[i++] = env_entry;
 		tmp = tmp->next;
 	}
 	env_array[i] = NULL; // Null-terminate the array

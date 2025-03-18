@@ -16,8 +16,8 @@ void split_value(char *str, char **key, char **value)
     equal_sign = ft_strchr(str, '='); // Find the first '=' in the string
     if (!equal_sign)
     {
-        *key = ft_strdup(str);  // If no '=', the whole string is the key
-        *value = NULL;          // Set value to NULL
+        *key = ft_strdup(str); // If no '=', the whole string is the key
+        *value = NULL;         // Set value to NULL
         if (!*key)
         {
             perror("malloc failed");
@@ -60,13 +60,12 @@ void split_value(char *str, char **key, char **value)
         }
     }
 
-    /* 
+    /*
      * Do NOT free the value if it's an empty string.
      * If the original token contained an '=', we want to preserve the empty value.
      * (Thus, "c=" produces key "c" with value "" while "c" produces key "c" with value NULL.)
      */
 }
-
 
 // Function to add or update an environment variable in the envp linked list
 static void add_or_update_env_var(const char *key, const char *value, t_minishell *shell)
@@ -78,21 +77,23 @@ static void add_or_update_env_var(const char *key, const char *value, t_minishel
     {
         if (ft_strcmp(tmp->key, key) == 0)
         {
-            free(tmp->value); // Free the old value
-            if (value)
-                tmp->value = ft_strdup(value); // Set new value if provided
-            else
-                tmp->value = NULL; // Set value to NULL if not provided
-            if (value && !tmp->value) {
-                perror("malloc failed for value");
-                return;
+            if (value) // Only update the value if provided
+            {
+                free(tmp->value);
+                tmp->value = ft_strdup(value);
+                if (!tmp->value)
+                {
+                    perror("malloc failed for value");
+                    return;
+                }
             }
-            return;
+            return; // Variable already exists
         }
         prev = tmp;
         tmp = tmp->next;
     }
 
+    // If variable does not exist, create a new one
     t_env *new_var = (t_env *)malloc(sizeof(t_env));
     if (!new_var)
     {
@@ -101,18 +102,17 @@ static void add_or_update_env_var(const char *key, const char *value, t_minishel
     }
 
     new_var->key = ft_strdup(key);
-    if (!new_var->key) {
+    if (!new_var->key)
+    {
         perror("malloc failed for key");
         free(new_var);
         return;
     }
 
-    if (value)
-        new_var->value = ft_strdup(value); // Set value if provided
-    else
-        new_var->value = NULL; // Set value to NULL if not provided
+    new_var->value = value ? ft_strdup(value) : NULL; // Allow NULL values
 
-    if (value && !new_var->value) {
+    if (value && !new_var->value)
+    {
         perror("malloc failed for value");
         free(new_var->key);
         free(new_var);
@@ -120,7 +120,6 @@ static void add_or_update_env_var(const char *key, const char *value, t_minishel
     }
 
     new_var->next = NULL;
-
     if (prev)
         prev->next = new_var;
     else
@@ -154,7 +153,7 @@ static int process_export_args(t_minishell *shell)
         return (1);
     cmd = trim_cmd(shell->ast->cmd_arg);
     if (!cmd)
-	return (1);
+        return (1);
     i = 1;
     while (cmd[i])
     {
@@ -180,7 +179,6 @@ static int process_export_args(t_minishell *shell)
     return (0);
 }
 
-
 // Function to process export when no arguments are provided
 static int process_export_no_args(t_minishell *shell)
 {
@@ -201,7 +199,7 @@ static int process_export_no_args(t_minishell *shell)
 int exe_export(t_minishell **shell)
 {
     if (!shell || !*shell || !(*shell)->ast)
-        return (1);  // Early exit if shell or AST is invalid
+        return (1); // Early exit if shell or AST is invalid
 
     if (!(*shell)->ast->cmd_arg[1])
         return process_export_no_args(*shell);
