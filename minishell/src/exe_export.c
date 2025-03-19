@@ -3,8 +3,8 @@
 void split_value(char *str, char **key, char **value)
 {
     char *equal_sign;
-    char *quote_start;
-    char *quote_end;
+//     char *quote_start;
+//     char *quote_end;
 
     if (!str) // Check if input string is NULL
     {
@@ -12,7 +12,7 @@ void split_value(char *str, char **key, char **value)
         *value = NULL;
         return;
     }
-    printf("cmd_arg : %s\n", str);
+//     printf("cmd_arg : (%s)\n", str);
     equal_sign = ft_strchr(str, '='); // Find the first '=' in the string
     if (!equal_sign)
     {
@@ -44,22 +44,22 @@ void split_value(char *str, char **key, char **value)
     }
 
     // Handle quoted values
-    quote_start = *value;
-    if (*quote_start == '"' || *quote_start == '\'')
-    {
-        quote_end = ft_strchr(quote_start + 1, *quote_start);
-        if (quote_end)
-        {
-            // Remove the quotes by copying the substring between them
-            char *unquoted_value = ft_strndup(quote_start + 1, quote_end - (quote_start + 1));
-            if (unquoted_value)
-            {
-                free(*value);
-                *value = unquoted_value;
-            }
-        }
-    }
-
+//     quote_start = *value;
+//     if (*quote_start == '"' || *quote_start == '\'')
+//     {
+//         quote_end = ft_strchr(quote_start + 1, *quote_start);
+//         if (quote_end)
+//         {
+//             // Remove the quotes by copying the substring between them
+//             char *unquoted_value = ft_strndup(quote_start + 1, quote_end - (quote_start + 1));
+//             if (unquoted_value)
+//             {
+//                 free(*value);
+//                 *value = unquoted_value;
+//             }
+//         }
+//     }
+    //printf("cmd_arg : (%s)\n", (*value));
     /*
      * Do NOT free the value if it's an empty string.
      * If the original token contained an '=', we want to preserve the empty value.
@@ -151,9 +151,9 @@ static int process_export_args(t_minishell *shell)
 
     if (!shell || !shell->ast || !shell->ast->cmd_arg)
         return (1);
-    cmd = trim_cmd(shell->ast->cmd_arg);
-    if (!cmd)
-        return (1);
+    cmd = shell->ast->cmd_arg;
+//     if (!cmd)
+//         return (1);
     i = 1;
     while (cmd[i])
     {
