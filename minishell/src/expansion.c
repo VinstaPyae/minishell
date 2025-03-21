@@ -11,26 +11,101 @@ char *get_env_value(t_env *env, char *key)
     return (NULL); // Return NULL if key is not found
 }
 
-
-char *expand_variable(char *var, t_minishell *shell)
+char **create_single_result(char *str)
 {
-	char *value;
-
-	if (!var)
-		return (NULL);
-	if (var[1] == '\0')
-		return (ft_strdup("$"));
-
-	if (var[1] == '?' && var[2] == '\0') // Handle $?
-		return (ft_itoa(shell->exit_status));
-
-	value = get_env_value(shell->envp, &var[1]);
-	if (value)
-		return (ft_strdup(value));
-	
-	return (ft_strdup(""));
+    char **result = malloc(sizeof(char*) * 2);
+    if (!result) {
+        free(str);
+        return (NULL);
+    }
+    result[0] = str;
+    result[1] = NULL;
+    return (result);
 }
 
+// Handle the special case of "$"
+char **expand_dollar_sign(void)
+{
+    char *str = ft_strdup("$");
+    if (!str)
+        return (NULL);
+    return (create_single_result(str));
+}
+
+// Handle the special case of "$?"
+char **expand_exit_status(t_minishell *shell)
+{
+    char *exit_str = ft_itoa(shell->exit_status);
+    if (!exit_str)
+        return (NULL);
+    return (create_single_result(exit_str));
+}
+
+// Handle environment variable expansion
+char **expand_env_variable(char *var_name, t_minishell *shell)
+{
+    char *value;
+    char **result;
+    
+    value = get_env_value(shell->envp, var_name);
+    
+    // Variable not found
+    if (!value)
+        return (create_single_result(ft_strdup("")));
+    
+    // Split the value if it contains spaces
+    int i = ft_strlen(value);
+    printf("value space (%c)\n", value[i-1]);
+    result = ft_split(value, ' ');
+    
+    // Check if split resulted in empty array
+    if (!result || !result[0]) {
+        if (result)
+            free(result);
+        return (create_single_result(ft_strdup("")));
+    }
+    int j = 0;
+    while (result[j])
+    	j++;
+    if (ft_isspace(value[i-1]))
+    {
+	result [j - 1] = ft_strjoin(result[j - 1], " "); //$$$$$$$$this could lead to segfault or conditional jump
+    }
+    printf("result space: (%s)\n", result[j - 1]);
+    return (result);
+}
+
+// Debug function to print expanded values
+void debug_print_expansion(char **result)
+{
+    int i = 0;
+    while (result[i]) {
+        printf("expand: (%s)\n", result[i++]);
+    }
+}
+char **expand_variable(char *var, t_minishell *shell)
+{
+    char **result;
+    
+    if (!var)
+        return (NULL);
+    
+    // Handle special cases
+    if (var[1] == '\0')
+        return (expand_dollar_sign());
+    
+    if (var[1] == '?' && var[2] == '\0')
+        return (expand_exit_status(shell));
+    
+    // Handle normal environment variable
+    result = expand_env_variable(&var[1], shell);
+    
+    // Debug output
+    debug_print_expansion(result);
+    
+    return (result);
+}
+/*
 char *expand_double_quotes(char *input, t_minishell *shell)
 {
     char *result = ft_strdup(""); // Start with an empty string
@@ -52,7 +127,7 @@ char *expand_double_quotes(char *input, t_minishell *shell)
                 j++;
 
             char *var_name = ft_substr(input, i, j - i); // Extract "$VAR"
-            char *expanded = expand_variable(var_name, shell); // Expand it
+            char **expanded = expand_variable(var_name, shell); // Expand it
             free(var_name);
 
             // Append the expanded variable to the result
@@ -75,14 +150,17 @@ char *expand_double_quotes(char *input, t_minishell *shell)
         }
     }
     return result;
-}
+}*/
 
 
-
+/*
 void expand_tokens(t_minishell *shell)
 {
+	int	i;
     t_list *current = shell->l_token;
     t_list *before_c = shell->l_token;
+    
+    i = 0;
     while (current)
     {
         t_token *token = (t_token *)current->content;
@@ -90,7 +168,8 @@ void expand_tokens(t_minishell *shell)
         if (token->type == TOKEN_VARIABLE)
         {
 		//printf("before token: %s\n", ((t_token *)before_c->content)->token);
-		char *expanded_value = expand_variable(token->token, shell);
+		char **expanded_value = expand_variable(token->token, shell);
+		if (expanded_value[i + 1] != )
 		free(token->token);
 		token->token = expanded_value;
 		if ((!expanded_value[0]) && ((t_token *)before_c->content)->space > 0)
@@ -116,6 +195,86 @@ void expand_tokens(t_minishell *shell)
 	}
 	if (current != before_c)
 		before_c = before_c->next;
+        current = current->next;
+    }
+}*/
+
+void expand_tokens(t_minishell *shell)
+{
+    t_list *current = shell->l_token;
+    t_list *before_c = shell->l_token;
+    
+    while (current)
+    {
+        t_token *token = (t_token *)current->content;
+        
+        if (token->type == TOKEN_VARIABLE)
+        {
+            char **expanded_value = expand_variable(token->token, shell);
+            
+            if (expanded_value && expanded_value[0]) {
+                // Modify current token with first expanded value
+                free(token->token);
+                token->token = ft_strdup(expanded_value[0]);
+		if (ft_strchr)
+                token->type = TOKEN_WD;
+
+                // Check if there are multiple expanded values
+                if (expanded_value[1]) {
+			token->space = 1;
+                    t_list *next_save = current->next;
+                    
+                    // Create and insert tokens for each additional expanded value
+                    for (int i = 1; expanded_value[i]; i++) {
+                        // Use your token creation function
+                        char *new_token_str = ft_strdup(expanded_value[i]);
+                        t_list *new_token_node = create_token(new_token_str, TOKEN_WD, 
+                                                             (expanded_value[i+1] != NULL) ? 1 : 0);
+                        
+                        if (!new_token_node) {
+                            print_error(__func__, __FILE__, __LINE__, 
+                                       "Failed to create token for expanded value");
+                            free(new_token_str);
+                            break;
+                        }
+                        
+                        // Insert new token after current
+                        new_token_node->next = current->next;
+                        current->next = new_token_node;
+                        
+                        // Move current to the newly added token
+                        current = new_token_node;
+                    }
+                    
+                    // Ensure the last token connects to the saved next pointer
+                    current->next = next_save;
+                }
+		else if (ft_isspace(token->token[ft_strlen(token->token) - 1]))
+			token->space = 1;
+		else
+			token->space = 0;
+            } else {
+                // Empty expansion
+                free(token->token);
+                token->token = ft_strdup("");
+                token->type = TOKEN_WD;
+            }
+            
+            // Free expanded_value array
+            for (int j = 0; expanded_value && expanded_value[j]; j++)
+                free(expanded_value[j]);
+            free(expanded_value);
+        }
+        // else if (token->type == TOKEN_DQUOTE)
+        // {
+        //     char *d_qvalue = expand_double_quotes(token->token, shell);
+        //     free(token->token);
+        //     token->token = d_qvalue;
+        // }
+        
+        if (current != before_c && before_c->next)
+            before_c = before_c->next;
+            
         current = current->next;
     }
 }
