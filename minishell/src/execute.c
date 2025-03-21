@@ -159,11 +159,27 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		}
 
 		/* Otherwise, search for the command in the directories listed in PATH */
-		char *path_env = getenv("PATH");
+		/* Otherwise, search for the command in the directories listed in PATH */
+		char *path_env = NULL;
+		t_env *env_ptr = shell->envp;
+		while (env_ptr)
+		{
+			if (ft_strcmp(env_ptr->key, "PATH") == 0)
+			{
+				path_env = env_ptr->value;
+				break;
+			}
+			env_ptr = env_ptr->next;
+		}
+
 		if (!path_env)
 		{
-			// If PATH is unset, use the default PATH
-			path_env = "/bin:/usr/bin:/usr/local/bin";
+			// If PATH is unset or not found
+			fprintf(stderr, "%s: No such file or directory!\n", cmd[0]);
+			for (int i = 0; env_array[i]; i++)
+				free(env_array[i]);
+			free(env_array);
+			exit(127);
 		}
 
 		char **path_dirs = split_path(path_env);

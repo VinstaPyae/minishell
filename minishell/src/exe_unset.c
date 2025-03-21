@@ -10,14 +10,14 @@ static void update_env_var(t_env **envp, char *var_name)
     prev = NULL;
     trimmed_v = ft_strtrim(var_name, " \n\r\t");
     if (!trimmed_v)
-        return; 
+        return;
 
     printf("Searching for variable: %s\n", trimmed_v); // Use trimmed_v here for clarity
 
     while (current)
     {
-        printf("Current key: %s\n", current->key);
-        printf("Comparing %s (len: %zu) with %s (len: %zu)\n", current->key, strlen(current->key), trimmed_v, strlen(trimmed_v));
+        // printf("Current key: %s\n", current->key);
+        // printf("Comparing %s (len: %zu) with %s (len: %zu)\n", current->key, strlen(current->key), trimmed_v, strlen(trimmed_v));
 
         if (ft_strcmp(current->key, trimmed_v) == 0)
         {
@@ -31,7 +31,7 @@ static void update_env_var(t_env **envp, char *var_name)
             free(current->value);
             free(current);
             printf("Variable removed: %s\n", trimmed_v);
-            free(trimmed_v);  // Free after use
+            free(trimmed_v); // Free after use
             return;
         }
         prev = current;
@@ -39,9 +39,8 @@ static void update_env_var(t_env **envp, char *var_name)
     }
 
     printf("Variable not found: %s\n", trimmed_v);
-    free(trimmed_v);  // Free even if not found
+    free(trimmed_v); // Free even if not found
 }
-
 
 int exe_unset(t_minishell **shell)
 {
@@ -62,3 +61,4 @@ int exe_unset(t_minishell **shell)
 
     return (0);
 }
+
