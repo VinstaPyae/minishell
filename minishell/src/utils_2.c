@@ -29,10 +29,10 @@ volatile sig_atomic_t g_signal_status = 0;
 void handle_sigint(int signo)
 {
 	(void)signo;
-
 	if (g_signal_status == 2) // Child is running, mark the signal
 	{
 		g_signal_status = 1;
+		// No newline here - just mark the signal
 		return;
 	}
 
@@ -66,3 +66,4 @@ void setup_signal_handlers(void)
 	/* Ignore SIGTSTP (Ctrl-Z) so the shell is not stopped */
 	sigaction(SIGTSTP, &sa, NULL);
 }
+

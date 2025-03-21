@@ -227,8 +227,15 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		int sigint_received = (g_signal_status == 1);
 		g_signal_status = 0; // Reset global state
 
+		// Handle newline if signal was received
 		if (sigint_received)
-			write(STDOUT_FILENO, "\n", 1);
+		{
+			// Use stderr directly (file descriptor 2)
+			if (isatty(2)) // 2 is the file descriptor for stderr
+			{
+				write(2, "\n", 1); // Write newline to stderr
+			}
+		}
 
 		if (WIFSIGNALED(status))
 			shell->exit_status = 128 + WTERMSIG(status);
