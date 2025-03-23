@@ -216,7 +216,6 @@ void expand_tokens(t_minishell *shell)
                 // Modify current token with first expanded value
                 free(token->token);
                 token->token = ft_strdup(expanded_value[0]);
-		if (ft_strchr)
                 token->type = TOKEN_WD;
 
                 // Check if there are multiple expanded values

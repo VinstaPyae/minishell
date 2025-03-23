@@ -42,29 +42,6 @@ void split_value(char *str, char **key, char **value)
         free(*key);
         return;
     }
-
-    // Handle quoted values
-//     quote_start = *value;
-//     if (*quote_start == '"' || *quote_start == '\'')
-//     {
-//         quote_end = ft_strchr(quote_start + 1, *quote_start);
-//         if (quote_end)
-//         {
-//             // Remove the quotes by copying the substring between them
-//             char *unquoted_value = ft_strndup(quote_start + 1, quote_end - (quote_start + 1));
-//             if (unquoted_value)
-//             {
-//                 free(*value);
-//                 *value = unquoted_value;
-//             }
-//         }
-//     }
-    //printf("cmd_arg : (%s)\n", (*value));
-    /*
-     * Do NOT free the value if it's an empty string.
-     * If the original token contained an '=', we want to preserve the empty value.
-     * (Thus, "c=" produces key "c" with value "" while "c" produces key "c" with value NULL.)
-     */
 }
 
 // Function to add or update an environment variable in the envp linked list
@@ -158,6 +135,12 @@ static int process_export_args(t_minishell *shell)
     while (cmd[i])
     {
         // Split the string into key and value
+        //printf("cmd: (%s)\n", cmd[i]);
+        if (cmd[i + 1])
+        {
+            cmd[i] = ft_strtrim(cmd[i], " ");
+            //printf("cmd: (%s)\n", cmd[i]);
+        }
         split_value(cmd[i], &key, &value);
 
         if (!key || !is_valid_env_name(key))
