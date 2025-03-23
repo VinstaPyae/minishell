@@ -101,7 +101,7 @@ char **expand_variable(char *var, t_minishell *shell)
     result = expand_env_variable(&var[1], shell);
     
     // Debug output
-    debug_print_expansion(result);
+    // debug_print_expansion(result);
     
     return (result);
 }
@@ -220,7 +220,7 @@ void expand_tokens(t_minishell *shell)
 
                 // Check if there are multiple expanded values
                 if (expanded_value[1]) {
-			token->space = 1;
+                token->space = 1;
                     t_list *next_save = current->next;
                     
                     // Create and insert tokens for each additional expanded value
@@ -248,7 +248,7 @@ void expand_tokens(t_minishell *shell)
                     // Ensure the last token connects to the saved next pointer
                     current->next = next_save;
                 }
-		else if (ft_isspace(token->token[ft_strlen(token->token) - 1]))
+		else if (ft_isspace(token->token[ft_strlen(token->token) - 1]) || token->space == 1)
 			token->space = 1;
 		else
 			token->space = 0;
