@@ -220,38 +220,37 @@ void expand_tokens(t_minishell *shell)
 
                 // Check if there are multiple expanded values
                 if (expanded_value[1]) {
-                token->space = 1;
                     t_list *next_save = current->next;
-                    
-                    // Create and insert tokens for each additional expanded value
-                    for (int i = 1; expanded_value[i]; i++) {
-                        // Use your token creation function
+                    int i = 1;
+                    while (expanded_value[i]) {
                         char *new_token_str = ft_strdup(expanded_value[i]);
-                        t_list *new_token_node = create_token(new_token_str, TOKEN_WD, 
-                                                             (expanded_value[i+1] != NULL) ? 1 : 0);
+                        
+                        int flag;
+                        if (expanded_value[i + 1] || token->space == 1)
+                            flag = 1;
+                        else
+                            flag = 0;
+                        t_list *new_token_node = create_token(new_token_str, TOKEN_WD, flag);
                         
                         if (!new_token_node) {
-                            print_error(__func__, __FILE__, __LINE__, 
-                                       "Failed to create token for expanded value");
+                            print_error(__func__, __FILE__, __LINE__, "Failed to create token for expanded value");
                             free(new_token_str);
                             break;
                         }
-                        
-                        // Insert new token after current
+                        token->space = 1;
                         new_token_node->next = current->next;
                         current->next = new_token_node;
-                        
-                        // Move current to the newly added token
                         current = new_token_node;
+                        
+                        i++;
                     }
                     
-                    // Ensure the last token connects to the saved next pointer
                     current->next = next_save;
                 }
-		else if (ft_isspace(token->token[ft_strlen(token->token) - 1]) || token->space == 1)
-			token->space = 1;
-		else
-			token->space = 0;
+		        else if (ft_isspace(token->token[ft_strlen(token->token) - 1]) || token->space == 1)
+			        token->space = 1;
+		        else
+			        token->space = 0;
             } else {
                 // Empty expansion
                 free(token->token);
