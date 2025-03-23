@@ -24,6 +24,32 @@ char **trim_cmd(char **cmd_arg)
 	cmd[i] = NULL;
 	return (cmd);
 }
+
+char *trim_last_char(const char *s, char c)
+{
+    size_t len;
+    char *trimmed;
+
+    if (!s)
+        return NULL;
+
+    len = strlen(s);
+    
+    // If the string is not empty and the last character matches 'c'
+    if (len > 0 && s[len - 1] == c)
+        len--;  // Reduce the length by one
+
+    trimmed = (char *)malloc(len + 1);
+    if (!trimmed)
+        return NULL;
+
+    // Copy the appropriate number of characters
+    ft_memcpy(trimmed, s, len);
+    trimmed[len] = '\0';
+
+    return trimmed;
+}
+
 volatile sig_atomic_t g_signal_status = 0;
 
 void handle_sigint(int signo)

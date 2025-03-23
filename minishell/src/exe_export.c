@@ -135,11 +135,11 @@ static int process_export_args(t_minishell *shell)
     while (cmd[i])
     {
         // Split the string into key and value
-        //printf("cmd: (%s)\n", cmd[i]);
+        printf("cmd: (%s)\n", cmd[i]);
         if (cmd[i + 1])
         {
-            cmd[i] = ft_strtrim(cmd[i], " ");
-            //printf("cmd: (%s)\n", cmd[i]);
+            cmd[i] = trim_last_char(cmd[i], ' ');
+            printf("cmd: (%s)\n", cmd[i]);
         }
         split_value(cmd[i], &key, &value);
 
