@@ -11,8 +11,6 @@ t_list *get_token_list(char *input)
 	{
 		if (lex_token_pipe(input, &i, &l_token))
 			break;
-		/* if (lex_token_bracket(input, &i, &l_token))
-			break; */
 		if (lex_token_quote(input, &i, &l_token))
 			break;
 		if (lex_token_redirin_hdc(input, &i, &l_token))

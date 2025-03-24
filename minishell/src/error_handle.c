@@ -26,6 +26,24 @@
     free(*shell); // Free the shell structure
     *shell = NULL; // Set the pointer to NULL to avoid dangling references
 } */
+#include <stdlib.h>
+
+void free_env_list(t_env *head)
+{
+    t_env *tmp;
+
+    while (head)
+    {
+        tmp = head->next;
+        if (head->key)
+            free(head->key);
+        if (head->value)
+            free(head->value);
+        free(head);
+        head = tmp;
+    }
+}
+
 
 void cleanup(t_minishell **shell)
 {
@@ -52,6 +70,14 @@ void cleanup(t_minishell **shell)
         free_ast((*shell)->ast);
         (*shell)->ast = NULL;
     }
+
+	// free envp
+	if ((*shell)->envp)
+	{
+		free_env_list((*shell)->envp);
+		(*shell)->envp = NULL;
+	}
+
 	free(*shell);
     *shell = NULL;
     // Do not free envp here, as it is shared across iterations
@@ -70,7 +96,6 @@ void c_token_destroy(void *c_token)
 
 	free(token);
 }
-
 
 void free_ast(t_ast_node *node)
 {

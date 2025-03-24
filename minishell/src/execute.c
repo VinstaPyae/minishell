@@ -116,9 +116,9 @@ char **env_list_to_array(t_env *env)
 }
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
-	char **cmd = trim_cmd(ast_cmd->cmd_arg);
+	char **cmd = trim_cmd(ast_cmd->cmd_arg); //$$$ need to clean this cmd
 	if (!cmd || !cmd[0])
-		return -1;
+		return (free_arg(cmd),-1);
 
 	g_signal_status = 2; // Mark that a child process is running
 
@@ -126,7 +126,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	if (pid < 0)
 	{
 		perror("fork");
-		return -1;
+		return (free_arg(cmd),-1);
 	}
 
 	if (pid == 0) // Child process
@@ -144,6 +144,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		if (!env_array)
 		{
 			perror("env_list_to_array");
+			free_arg(cmd);
 			exit(127);
 		}
 
@@ -155,6 +156,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			for (int i = 0; env_array[i]; i++)
 				free(env_array[i]);
 			free(env_array);
+			free_arg(cmd);
 			exit(127);
 		}
 
@@ -179,6 +181,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			for (int i = 0; env_array[i]; i++)
 				free(env_array[i]);
 			free(env_array);
+			free_arg(cmd);
 			exit(127);
 		}
 
@@ -192,6 +195,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 				if (!full_path)
 				{
 					perror("malloc");
+					free_arg(cmd);
 					exit(127);
 				}
 				sprintf(full_path, "%s/%s", path_dirs[i], cmd[0]);
@@ -216,6 +220,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		for (int i = 0; env_array[i]; i++)
 			free(env_array[i]);
 		free(env_array);
+		free_arg(cmd);
 		exit(127);
 	}
 	else // Parent process
@@ -241,7 +246,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			shell->exit_status = 128 + WTERMSIG(status);
 		else
 			shell->exit_status = WEXITSTATUS(status);
-
+		free_arg(cmd);
 		return shell->exit_status;
 	}
 }
@@ -255,21 +260,20 @@ int builtin_cmd_check(t_minishell **shell)
 
 	// printf("cmd: %s\n", cmd);
 	if (ft_strcmp(cmd, "echo") == 0)
-		return exe_echo(shell);
+		return (free(cmd),exe_echo(shell));
 	else if (strcmp(cmd, "env") == 0)
-		return exe_env(shell);
+		return (free(cmd), exe_env(shell));
 	else if (strcmp(cmd, "unset") == 0)
-		return exe_unset(shell);
+		return (free(cmd),exe_unset(shell));
 	else if (strcmp(cmd, "exit") == 0)
-		return exe_exit(shell);
+		return (free(cmd), exe_exit(shell));
 	else if (strcmp(cmd, "pwd") == 0)
-		return exe_pwd(shell);
+		return (free(cmd),exe_pwd(shell));
 	else if (strcmp(cmd, "cd") == 0)
-		return exe_cd(shell);
+		return (free(cmd),exe_cd(shell));
 	else if (strcmp(cmd, "export") == 0)
-		return exe_export(shell);
-
-	return -1;
+		return (free(cmd),exe_export(shell));
+	return (free(cmd),-1);
 }
 
 int exe_cmd(t_minishell **shell)
