@@ -105,7 +105,26 @@ char **expand_variable(char *var, t_minishell *shell)
     
     return (result);
 }
-/*
+
+char *expand_quote_variable(char *var, t_minishell *shell)
+{
+	char *value;
+
+	if (!var)
+		return (NULL);
+	if (var[1] == '\0')
+		return (ft_strdup("$"));
+
+	if (var[1] == '?' && var[2] == '\0') // Handle $?
+		return (ft_itoa(shell->exit_status));
+
+	value = get_env_value(shell->envp, &var[1]);
+	if (value)
+		return (ft_strdup(value));
+	
+	return (ft_strdup(""));
+}
+
 char *expand_double_quotes(char *input, t_minishell *shell)
 {
     char *result = ft_strdup(""); // Start with an empty string
@@ -127,7 +146,7 @@ char *expand_double_quotes(char *input, t_minishell *shell)
                 j++;
 
             char *var_name = ft_substr(input, i, j - i); // Extract "$VAR"
-            char **expanded = expand_variable(var_name, shell); // Expand it
+            char *expanded = expand_quote_variable(var_name, shell); // Expand it
             free(var_name);
 
             // Append the expanded variable to the result
@@ -150,7 +169,7 @@ char *expand_double_quotes(char *input, t_minishell *shell)
         }
     }
     return result;
-}*/
+}
 
 
 /*
@@ -263,12 +282,12 @@ void expand_tokens(t_minishell *shell)
                 free(expanded_value[j]);
             free(expanded_value);
         }
-        // else if (token->type == TOKEN_DQUOTE)
-        // {
-        //     char *d_qvalue = expand_double_quotes(token->token, shell);
-        //     free(token->token);
-        //     token->token = d_qvalue;
-        // }
+        else if (token->type == TOKEN_DQUOTE)
+        {
+            char *d_qvalue = expand_double_quotes(token->token, shell);
+            free(token->token);
+            token->token = d_qvalue;
+        }
         
         if (current != before_c && before_c->next)
             before_c = before_c->next;
