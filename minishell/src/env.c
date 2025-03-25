@@ -106,6 +106,7 @@ t_env *init_env(char **envp)
 void update_shlvl(t_env **env_list)
 {
 	int lvl;
+	char *new_val;
 	t_env *env = *env_list;
 	int found = 0;
 
@@ -113,18 +114,18 @@ void update_shlvl(t_env **env_list)
 	{
 		if (ft_strcmp(env->key, "SHLVL") == 0)
 		{
-			lvl = atoi(env->value);
+			lvl = ft_atoi(env->value);
 			lvl++;
-			char *new_val = ft_itoa(lvl);
+			new_val = ft_itoa(lvl);
 			if (!new_val)
 			{
 				perror("ft_itoa");
 				return;
 			}
 			free(env->value);
+			env->value = NULL;
 			env->value = new_val;
 			found = 1;
-			break;
 		}
 		env = env->next;
 	}

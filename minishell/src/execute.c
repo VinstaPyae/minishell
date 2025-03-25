@@ -75,44 +75,58 @@ char *find_executable(char *cmd)
 
 char **env_list_to_array(t_env *env)
 {
-	int count = 0;
-	t_env *tmp = env;
-	while (tmp)
-	{
-		// Only count environment variables that have both key and value
-		if (tmp->key && tmp->value)
-			count++;
-		tmp = tmp->next;
-	}
+    int count = 0;
+    t_env *tmp = env;
+    
+    // First pass: count valid environment variables
+    while (tmp)
+    {
+        // Only count environment variables that have both key and value
+        if (tmp->key && tmp->value)
+            count++;
+        tmp = tmp->next;
+    }
 
-	char **env_array = malloc((count + 1) * sizeof(char *));
-	if (!env_array)
-		return NULL;
+    // Allocate array with space for pointers
+    char **env_array = malloc((count + 1) * sizeof(char *));
+    if (!env_array)
+        return NULL;
 
-	tmp = env;
-	int i = 0;
-	while (tmp)
-	{
-		// Skip entries with NULL values
-		if (tmp->key && tmp->value)
-		{
-			char *env_entry = malloc(ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2);
-			if (!env_entry)
-			{
-				// Free previously allocated memory
-				for (int j = 0; j < i; j++)
-					free(env_array[j]);
-				free(env_array);
-				return NULL;
-			}
-			sprintf(env_entry, "%s=%s", tmp->key, tmp->value);
-			env_array[i++] = env_entry;
-		}
-		tmp = tmp->next;
-	}
-	env_array[i] = NULL; // Null-terminate the array
+    // Reset tmp pointer
+    tmp = env;
+    int i = 0;
+    
+    // Second pass: create environment entries
+    while (tmp)
+    {
+        // Skip entries with NULL key or value
+        if (tmp->key && tmp->value)
+        {
+            // Calculate total length needed (+1 for '=' and +1 for null terminator)
+            int total_len = ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2;
+            
+            // Allocate memory for the full environment entry
+            env_array[i] = malloc(total_len * sizeof(char));
+            if (!env_array[i])
+            {
+                // Free previously allocated memory if allocation fails
+                for (int j = 0; j < i; j++)
+                    free(env_array[j]);
+                free(env_array);
+                return NULL;
+            }
 
-	return env_array;
+            // Correctly create the environment entry string
+            snprintf(env_array[i], total_len, "%s=%s", tmp->key, tmp->value);
+            i++;
+        }
+        tmp = tmp->next;
+    }
+
+    // Null-terminate the array
+    env_array[i] = NULL;
+
+    return env_array;
 }
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
