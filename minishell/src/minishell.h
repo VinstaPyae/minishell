@@ -151,7 +151,6 @@ int execute_ast(t_minishell **shell);
 int n_option_checked(const char *str);
 int exe_echo(t_minishell **shell);
 int exe_exit(t_minishell **shell);
-void free_env(t_env *env);
 void split_key_value(char *str, char **key, char **value);
 t_env *init_env(char **envp);
 t_env *init_env(char **envp);
@@ -177,6 +176,7 @@ void cleanup(t_minishell **shell);
 void free_ast(t_ast_node *node);
 void free_arg(char **str);
 void free_redir(void *redir);
+void free_env_list(t_env *head);
 void remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
 
 

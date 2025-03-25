@@ -5,10 +5,10 @@ char *get_env_value(t_env *env, char *key)
     while (env)
     {
         if (ft_strcmp(env->key, key) == 0)
-            return (env->value); // Return the value if key matches
+            return (ft_strdup(env->value)); // Return the value if key matches
         env = env->next;
     }
-    return (NULL); // Return NULL if key is not found
+    return (ft_strdup("")); // Return NULL if key is not found
 }
 
 char **create_single_result(char *str)
@@ -51,7 +51,7 @@ char **expand_env_variable(char *var_name, t_minishell *shell)
     
     // Variable not found
     if (!value)
-        return (create_single_result(ft_strdup("")));
+        return (free(value),create_single_result(ft_strdup("")));
     
     // Split the value if it contains spaces
     int i = ft_strlen(value);
@@ -62,7 +62,7 @@ char **expand_env_variable(char *var_name, t_minishell *shell)
     if (!result || !result[0]) {
         if (result)
             free(result);
-        return (create_single_result(ft_strdup("")));
+        return (free(value),create_single_result(ft_strdup("")));
     }
     int j = 0;
     while (result[j])
@@ -72,7 +72,7 @@ char **expand_env_variable(char *var_name, t_minishell *shell)
 	result [j - 1] = ft_strjoin(result[j - 1], " "); //$$$$$$$$this could lead to segfault or conditional jump
     }
     printf("result space: (%s)\n", result[j - 1]);
-    return (result);
+    return (free(value),result);
 }
 
 // Debug function to print expanded values

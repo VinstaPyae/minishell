@@ -72,11 +72,11 @@ void cleanup(t_minishell **shell)
     }
 
 	// free envp
-	if ((*shell)->envp)
-	{
-		free_env_list((*shell)->envp);
-		(*shell)->envp = NULL;
-	}
+	// if ((*shell)->envp)
+	// {
+	// 	free_env_list((*shell)->envp);
+	// 	(*shell)->envp = NULL;
+	// }
 
 	free(*shell);
     *shell = NULL;

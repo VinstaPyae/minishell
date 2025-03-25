@@ -16,20 +16,6 @@ char *ft_strndup(const char *s, size_t n)
     return (dup);
 }
 
-void free_env(t_env *env)
-{
-    t_env *tmp;
-
-    while (env)
-    {
-        tmp = env;
-        env = env->next;
-        free(tmp->key);
-        free(tmp->value);
-        free(tmp);
-    }
-}
-
 void split_key_value(char *str, char **key, char **value)
 {
     char *equal_sign;

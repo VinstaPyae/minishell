@@ -59,6 +59,7 @@
   "C_Cpp.errorSquiggles": "disabled",
   "files.associations": {
     "minishell.h": "c",
-    "type_traits": "c"
+    "type_traits": "c",
+    "stdlib.h": "c"
   }
 }

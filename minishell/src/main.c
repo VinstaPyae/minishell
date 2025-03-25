@@ -91,7 +91,7 @@ int main(int ac, char **av, char **env)
         {
             printf("Error: Failed to initialize minishell\n");
             cleanup(&shell);
-            free_env(envp);
+            // free_env_list(shell->envp);
             return (1);
         }
         shell->input = get_input();
@@ -100,7 +100,7 @@ int main(int ac, char **av, char **env)
         shell->l_token = lexer(shell->input);
         if (!shell->l_token)
         {
-            printf("Error: Lexer failed\n");
+            //printf("Error: Lexer failed\n");
             cleanup(&shell);
             continue;
         }
@@ -115,9 +115,10 @@ int main(int ac, char **av, char **env)
         }
         execute_ast(&shell); // This should call exe_exit for the "exit" command
         cleanup(&shell);     // Clean up after each iteration
+        // free_env_list(shell->envp);
     }
     cleanup(&shell); // Final cleanup
-    free_env(envp);
+    free_env_list(shell->envp);
     rl_clear_history(); // Clear readline history
     return (0);
 }
