@@ -2,6 +2,8 @@
 
 char *get_env_value(t_env *env, char *key)
 {
+    if (!key) // Add null check
+        return ft_strdup("");
     while (env)
     {
         if (ft_strcmp(env->key, key) == 0)
@@ -46,23 +48,24 @@ char **expand_env_variable(char *var_name, t_minishell *shell)
 {
     char *value;
     char **result;
+
+    if (!var_name) // Add null check
+        return (create_single_result(ft_strdup("")));
     
     value = get_env_value(shell->envp, var_name);
-    
-    // Variable not found
-    if (!value)
-        return (free(value),create_single_result(ft_strdup("")));
+    if (!value || value[0] == '\0') {
+        free(value);
+        return (create_single_result(ft_strdup("")));
+    }
     
     // Split the value if it contains spaces
     int i = ft_strlen(value);
     printf("value space (%c)\n", value[i-1]);
     result = ft_split(value, ' ');
-    
-    // Check if split resulted in empty array
     if (!result || !result[0]) {
         if (result)
             free(result);
-        return (free(value),create_single_result(ft_strdup("")));
+        return (create_single_result(ft_strdup("")));
     }
     int j = 0;
     while (result[j])
@@ -170,54 +173,6 @@ char *expand_double_quotes(char *input, t_minishell *shell)
     }
     return result;
 }
-
-
-/*
-void expand_tokens(t_minishell *shell)
-{
-	int	i;
-    t_list *current = shell->l_token;
-    t_list *before_c = shell->l_token;
-    
-    i = 0;
-    while (current)
-    {
-        t_token *token = (t_token *)current->content;
-        // Handle variables inside double quotes or standalone
-        if (token->type == TOKEN_VARIABLE)
-        {
-		//printf("before token: %s\n", ((t_token *)before_c->content)->token);
-		char **expanded_value = expand_variable(token->token, shell);
-		if (expanded_value[i + 1] != )
-		free(token->token);
-		token->token = expanded_value;
-		if ((!expanded_value[0]) && ((t_token *)before_c->content)->space > 0)
-			token->space = 0;
-		// Convert TOKEN_VARIABLE → TOKEN_WD after expansion
-		if (token->type == TOKEN_VARIABLE)
-			token->type = TOKEN_WD;
-            // If expansion results in an empty string, remove token
-        	// if (!expanded_value[0])
-		// {
-		// t_list *to_remove = current;
-		// current = current->next;
-		// printf("list remove!\n");
-		// remove_node(&shell->l_token, to_remove, c_token_destroy);
-		// continue;
-		// }
-        }
-	if (token->type == TOKEN_DQUOTE)
-	{
-		char *d_qvalue = expand_double_quotes(token->token, shell);
-		free(token->token);
-		token->token = d_qvalue;
-	}
-	if (current != before_c)
-		before_c = before_c->next;
-        current = current->next;
-    }
-}*/
-
 void expand_tokens(t_minishell *shell)
 {
     t_list *current = shell->l_token;
@@ -266,10 +221,11 @@ void expand_tokens(t_minishell *shell)
                     
                     current->next = next_save;
                 }
-		        else if (ft_isspace(token->token[ft_strlen(token->token) - 1]) || token->space == 1)
-			        token->space = 1;
-		        else
-			        token->space = 0;
+                // Fix: Check if token->token is non-empty before accessing last char.
+                else if ((ft_strlen(token->token) > 0 && ft_isspace(token->token[ft_strlen(token->token) - 1])) || token->space == 1)
+                    token->space = 1;
+                else
+                    token->space = 0;
             } else {
                 // Empty expansion
                 free(token->token);
@@ -295,4 +251,5 @@ void expand_tokens(t_minishell *shell)
         current = current->next;
     }
 }
+
 
