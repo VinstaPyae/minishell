@@ -54,12 +54,25 @@ void print_env(t_minishell *shell)
 
 int exe_env(t_minishell **shell)
 {
-    if (!shell || !(*shell) || !(*shell)->envp)
+    int path_exist;
+
+    t_env *env = (*shell)->envp;
+    path_exist = 0;
+    while (env)
     {
-        printf("env: No environment variables found\n");
-        return (1);
+        if (ft_strcmp(env->key, "PATH") == 0)
+        {
+            path_exist = 1;
+            break;
+        }
+        env = env->next;
+    }
+    if (!path_exist)
+    {
+        ft_fprintf(2, "env: No such file or directory\n");
+        return (127); // Exit code 127 (command not found)
     }
 
-    print_env((*shell));
+    print_env(*shell);
     return (0);
 }

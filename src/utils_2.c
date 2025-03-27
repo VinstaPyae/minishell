@@ -27,27 +27,27 @@ char **trim_cmd(char **cmd_arg)
 
 char *trim_last_char(const char *s, char c)
 {
-    size_t len;
-    char *trimmed;
+	size_t len;
+	char *trimmed;
 
-    if (!s)
-        return NULL;
+	if (!s)
+		return NULL;
 
-    len = strlen(s);
-    
-    // If the string is not empty and the last character matches 'c'
-    if (len > 0 && s[len - 1] == c)
-        len--;  // Reduce the length by one
+	len = strlen(s);
 
-    trimmed = (char *)malloc(len + 1);
-    if (!trimmed)
-        return NULL;
+	// If the string is not empty and the last character matches 'c'
+	if (len > 0 && s[len - 1] == c)
+		len--; // Reduce the length by one
 
-    // Copy the appropriate number of characters
-    ft_memcpy(trimmed, s, len);
-    trimmed[len] = '\0';
+	trimmed = (char *)malloc(len + 1);
+	if (!trimmed)
+		return NULL;
 
-    return trimmed;
+	// Copy the appropriate number of characters
+	ft_memcpy(trimmed, s, len);
+	trimmed[len] = '\0';
+
+	return trimmed;
 }
 
 volatile sig_atomic_t g_signal_status = 0;
@@ -55,18 +55,23 @@ volatile sig_atomic_t g_signal_status = 0;
 void handle_sigint(int signo)
 {
 	(void)signo;
-	if (g_signal_status == 2) // Child is running, mark the signal
-	{
+	if (g_signal_status == 2)
+	{ // Child is running
 		g_signal_status = 1;
-		// No newline here - just mark the signal
 		return;
 	}
 
-	// Refresh the prompt when shell is waiting for input
+	// For shell prompt interruption
+	write(1, "\n", 1);
 	rl_replace_line("", 0);
-	rl_crlf();
 	rl_on_new_line();
 	rl_redisplay();
+
+	// Directly set exit status using existing mechanism
+	if (g_signal_status == 0)
+	{
+		g_signal_status = 130; // Store signal status
+	}
 }
 
 void handle_sigquit(int signo)
@@ -92,4 +97,3 @@ void setup_signal_handlers(void)
 	/* Ignore SIGTSTP (Ctrl-Z) so the shell is not stopped */
 	sigaction(SIGTSTP, &sa, NULL);
 }
-

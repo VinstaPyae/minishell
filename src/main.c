@@ -32,6 +32,21 @@
 //     replace_or_add_env_var("SHELVL", new_shlvl, envp);
 //     free(new_shlvl);
 // }
+static void cleanup_ast(t_minishell *shell)
+{
+    if (shell->ast)
+    {
+        free_ast(shell->ast);
+        shell->ast = NULL;
+    }
+    if (shell->l_token)
+    {
+        ft_lstclear(&shell->l_token, c_token_destroy);
+        shell->l_token = NULL;
+    }
+    free(shell->input);
+    shell->input = NULL;
+}
 
 char *get_input(void)
 {
@@ -76,31 +91,40 @@ int main(int ac, char **av, char **env)
     (void)ac;
     (void)av;
     setup_signal_handlers(); // Add this line
-    shell = NULL;
+
     envp = init_env(env);
+
     if (!envp)
     {
         printf("Error: Failed to initialize environment\n");
         return (1);
     }
+    shell = create_minshell(envp);
     printf("Calling minishell!\n");
     while (1)
     {
-        shell = create_minshell(envp);
-        if (!shell)
-        {
-            printf("Error: Failed to initialize minishell\n");
-            cleanup(&shell);
-            // free_env_list(shell->envp);
-            return (1);
-        }
+        // shell = create_minshell(envp);
+        // if (!shell)
+        // {
+        //     printf("Error: Failed to initialize minishell\n");
+        //     cleanup(&shell);
+        //     // free_env_list(shell->envp);
+        //     return (1);
+        // }
         shell->input = get_input();
+        // Check signal status after input
+        if (g_signal_status == 130)
+        {
+            shell->exit_status = 130;
+            g_signal_status = 0; // Reset after handling
+        }
         if (!shell->input)
             break;
         shell->l_token = lexer(shell->input);
         if (!shell->l_token)
         {
-            //printf("Error: Lexer failed\n");
+            // printf("Error: Lexer failed\n");
+            shell->exit_status = 1;
             cleanup(&shell);
             continue;
         }
@@ -109,12 +133,13 @@ int main(int ac, char **av, char **env)
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {
+            shell->exit_status = 1;
             printf("Error: ast failed\n");
             cleanup(&shell);
             continue;
         }
         execute_ast(&shell); // This should call exe_exit for the "exit" command
-        cleanup(&shell);     // Clean up after each iteration
+        cleanup_ast(shell);  // Cleanup AST but keep shell instance
         // free_env_list(shell->envp);
     }
     cleanup(&shell); // Final cleanup
@@ -171,4 +196,3 @@ int main(int ac, char **av, char **env)
 //     cleanup(&l_token, &input, &ast);
 //     return 0;
 // }
-

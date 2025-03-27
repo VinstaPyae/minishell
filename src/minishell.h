@@ -8,6 +8,7 @@
 #include <termios.h> // For tcsetattr and terminal control
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "libft.h"
@@ -168,7 +169,7 @@ static int process_export_no_args(t_minishell *shell);
 int exe_export(t_minishell **shell);
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 
-//env
+// env
 void update_shlvl(t_env **env_list);
 
 // error_handle
@@ -179,12 +180,10 @@ void free_redir(void *redir);
 void free_env_list(t_env *head);
 void remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
 
-
 void handle_sigquit(int signo);
 void handle_sigint(int signo);
 void setup_signal_handlers(void);
 // debug
 void print_error(const char *func_name, const char *file, int line, const char *format, ...);
-
+void ft_fprintf(int fd, const char *format, ...);
 #endif
-

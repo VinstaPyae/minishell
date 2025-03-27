@@ -1,138 +1,122 @@
 #include "minishell.h"
 
+static char **allocate_paths(char *path_env)
+{
+	int count;
+	char **path_dirs;
+
+	count = 1;
+	if (!path_env) // Handle NULL case
+		return (NULL);
+	while (*path_env)
+	{
+		if (*path_env == ':')
+			count++;
+		path_env++;
+	}
+	path_dirs = malloc((count + 1) * sizeof(char *));
+	if (!path_dirs)
+		return (NULL);
+	return (path_dirs);
+}
+
+static void free_paths(char **path_dirs, int index)
+{
+	while (index-- > 0)
+		free(path_dirs[index]);
+	free(path_dirs);
+}
+
 char **split_path(char *path_env)
 {
-	int count = 1; // at least one directory in PATH
-	for (int i = 0; path_env[i]; i++)
-	{
-		if (path_env[i] == ':')
-		{
-			count++;
-		}
-	}
+	char **path_dirs;
+	char *start;
+	int index;
+	int count;
 
-	char **path_dirs = malloc((count + 1) * sizeof(char *));
+	path_dirs = allocate_paths(path_env);
 	if (!path_dirs)
-		return NULL;
-
-	int index = 0;
-	char *start = path_env;
-	for (int i = 0; path_env[i]; i++)
+		return (NULL);
+	start = path_env;
+	index = 0;
+	while (*path_env)
 	{
-		if (path_env[i] == ':' || path_env[i + 1] == '\0')
+		if (*path_env == ':' || !*(path_env + 1))
 		{
-			int length = &path_env[i] - start + (path_env[i + 1] == '\0' ? 1 : 0);
-			path_dirs[index] = malloc(length + 1);
+			count = path_env - start + (!*(path_env + 1));
+			path_dirs[index] = ft_strndup(start, count);
 			if (!path_dirs[index])
-			{
-				// Free already allocated memory
-				for (int j = 0; j < index; j++)
-				{
-					free(path_dirs[j]);
-				}
-				free(path_dirs);
-				return NULL;
-			}
-			strncpy(path_dirs[index], start, length);
-			path_dirs[index][length] = '\0';
+				return (free_paths(path_dirs, index), NULL);
 			index++;
-			start = &path_env[i + 1];
+			start = path_env + 1;
 		}
+		path_env++;
 	}
-
 	path_dirs[index] = NULL;
-	return path_dirs;
+	return (path_dirs);
 }
-
-char *find_executable(char *cmd)
-{
-	char *path_env = getenv("PATH");
-	if (!path_env)
-		return NULL;
-
-	char *paths = ft_strdup(path_env);
-	if (!paths)
-		return NULL;
-
-	char *saveptr;
-	char *dir = strtok_r(paths, ":", &saveptr);
-	char full_path[PATH_MAX];
-	struct stat sb;
-
-	while (dir)
-	{
-		snprintf(full_path, sizeof(full_path), "%s/%s", dir, cmd);
-		if (stat(full_path, &sb) == 0 && (sb.st_mode & S_IXUSR))
-		{
-			free(paths);
-			return ft_strdup(full_path);
-		}
-		dir = strtok_r(NULL, ":", &saveptr);
-	}
-	free(paths);
-	return NULL;
-}
+////////////////////////////////
 
 char **env_list_to_array(t_env *env)
 {
-    int count = 0;
-    t_env *tmp = env;
-    
-    // First pass: count valid environment variables
-    while (tmp)
-    {
-        // Only count environment variables that have both key and value
-        if (tmp->key && tmp->value)
-            count++;
-        tmp = tmp->next;
-    }
+	int count = 0;
+	t_env *tmp = env;
+	
+	// First pass: count valid environment variables
+	while (tmp)
+	{
+		// Only count environment variables that have both key and value
+		if (tmp->key && tmp->value)
+			count++;
+		tmp = tmp->next;
+	}
 
-    // Allocate array with space for pointers
-    char **env_array = malloc((count + 1) * sizeof(char *));
-    if (!env_array)
-        return NULL;
+	// Allocate array with space for pointers
+	char **env_array = malloc((count + 1) * sizeof(char *));
+	if (!env_array)
+		return NULL;
 
-    // Reset tmp pointer
-    tmp = env;
-    int i = 0;
-    
-    // Second pass: create environment entries
-    while (tmp)
-    {
-        // Skip entries with NULL key or value
-        if (tmp->key && tmp->value)
-        {
-            // Calculate total length needed (+1 for '=' and +1 for null terminator)
-            int total_len = ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2;
-            
-            // Allocate memory for the full environment entry
-            env_array[i] = malloc(total_len * sizeof(char));
-            if (!env_array[i])
-            {
-                // Free previously allocated memory if allocation fails
-                for (int j = 0; j < i; j++)
-                    free(env_array[j]);
-                free(env_array);
-                return NULL;
-            }
+	// Reset tmp pointer
+	tmp = env;
+	int i = 0;
+	
+	// Second pass: create environment entries
+	while (tmp)
+	{
+		// Skip entries with NULL key or value
+		if (tmp->key && tmp->value)
+		{
+			// Calculate total length needed (+1 for '=' and +1 for null terminator)
+			int total_len = ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2;
+			
+			// Allocate memory for the full environment entry
+			env_array[i] = malloc(total_len * sizeof(char));
+			if (!env_array[i])
+			{
+				// Free previously allocated memory if allocation fails
+				for (int j = 0; j < i; j++)
+					free(env_array[j]);
+				free(env_array);
+				return NULL;
+			}
 
-            // Correctly create the environment entry string
-            snprintf(env_array[i], total_len, "%s=%s", tmp->key, tmp->value);
-            i++;
-        }
-        tmp = tmp->next;
-    }
+			// Correctly create the environment entry string
+			snprintf(env_array[i], total_len, "%s=%s", tmp->key, tmp->value);
+			i++;
+		}
+		tmp = tmp->next;
+	}
 
-    // Null-terminate the array
-    env_array[i] = NULL;
+	// Null-terminate the array
+	env_array[i] = NULL;
 
-    return env_array;
+	return env_array;
 }
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
 	char **cmd = trim_cmd(ast_cmd->cmd_arg); //$$$ need to clean this cmd
 	if (!cmd || !cmd[0])
-		return (free_arg(cmd),-1);
+		return (free_arg(cmd), -1);
 
 	g_signal_status = 2; // Mark that a child process is running
 
@@ -140,7 +124,8 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	if (pid < 0)
 	{
 		perror("fork");
-		return (free_arg(cmd),-1);
+		shell->exit_status = 1;
+		return (free_arg(cmd), -1);
 	}
 
 	if (pid == 0) // Child process
@@ -153,6 +138,14 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		sigaction(SIGQUIT, &sa, NULL);
 		sigaction(SIGTSTP, &sa, NULL);
 
+		// Check if the command is a directory
+		struct stat sb;
+		if (stat(cmd[0], &sb) == 0 && S_ISDIR(sb.st_mode))
+		{
+			fprintf(stderr, "%s: Is a directory\n", cmd[0]);
+			exit(126);
+		}
+
 		/* Convert environment list to array */
 		char **env_array = env_list_to_array(shell->envp);
 		if (!env_array)
@@ -162,16 +155,26 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			exit(127);
 		}
 
-		/* If the command is an absolute or relative path, use it directly */
 		if (cmd[0][0] == '/' || cmd[0][0] == '.')
 		{
-			execve(cmd[0], cmd, env_array);
-			perror("execve");
-			for (int i = 0; env_array[i]; i++)
-				free(env_array[i]);
-			free(env_array);
-			free_arg(cmd);
-			exit(127);
+			if (execve(cmd[0], cmd, env_array) == -1)
+			{
+				if (errno == EACCES)
+				{
+					fprintf(stderr, "%s: Permission denied\n", cmd[0]);
+					exit(126);
+				}
+				else if (errno == EISDIR)
+				{
+					fprintf(stderr, "%s: Is a directory\n", cmd[0]);
+					exit(126);
+				}
+				else
+				{
+					perror("execve");
+					// ... clean up and exit ...
+				}
+			}
 		}
 
 		/* Otherwise, search for the command in the directories listed in PATH */
@@ -213,15 +216,25 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 					exit(127);
 				}
 				sprintf(full_path, "%s/%s", path_dirs[i], cmd[0]);
-				if (access(full_path, X_OK) == 0)
+				// First check permissions to return 126 for permission issues
+				if (access(full_path, X_OK) != 0)
 				{
-					execve(full_path, cmd, env_array);
-					/* If execve returns, an error occurred. */
-					perror("execve");
+					if (errno == EACCES)
+					{
+						fprintf(stderr, "%s: Permission denied\n", full_path);
+						free(full_path);
+						for (int j = 0; path_dirs[j]; j++)
+							free(path_dirs[j]);
+						free(path_dirs);
+						exit(126);
+					}
 					free(full_path);
-					break;
+					continue;
 				}
+
+				execve(full_path, cmd, env_array);
 				free(full_path);
+				break;
 			}
 			/* Free the split PATH array */
 			for (int i = 0; path_dirs[i]; i++)
@@ -256,10 +269,12 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			}
 		}
 
-		if (WIFSIGNALED(status))
-			shell->exit_status = 128 + WTERMSIG(status);
-		else
+		// Set exit status based on child termination
+		if (WIFEXITED(status))
 			shell->exit_status = WEXITSTATUS(status);
+		else if (WIFSIGNALED(status))
+			shell->exit_status = 128 + WTERMSIG(status);
+
 		free_arg(cmd);
 		return shell->exit_status;
 	}
@@ -268,32 +283,45 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 int builtin_cmd_check(t_minishell **shell)
 {
 	if (!shell || !(*shell) || !(*shell)->ast || !(*shell)->ast->cmd_arg)
+	{
+		(*shell)->exit_status = 1;
 		return -1;
+	}
 
 	char *cmd = ft_strtrim((*shell)->ast->cmd_arg[0], " ");
+	if (!cmd)
+	{
+		(*shell)->exit_status = 1;
+		return -1;
+	}
 
-	// printf("cmd: %s\n", cmd);
+	int ret = -1;
 	if (ft_strcmp(cmd, "echo") == 0)
-		return (free(cmd),exe_echo(shell));
+		ret = exe_echo(shell);
 	else if (strcmp(cmd, "env") == 0)
-		return (free(cmd), exe_env(shell));
+		ret = exe_env(shell);
 	else if (strcmp(cmd, "unset") == 0)
-		return (free(cmd),exe_unset(shell));
+		ret = exe_unset(shell);
 	else if (strcmp(cmd, "exit") == 0)
-		return (free(cmd), exe_exit(shell));
+		ret = exe_exit(shell);
 	else if (strcmp(cmd, "pwd") == 0)
-		return (free(cmd),exe_pwd(shell));
+		ret = exe_pwd(shell);
 	else if (strcmp(cmd, "cd") == 0)
-		return (free(cmd),exe_cd(shell));
+		ret = exe_cd(shell);
 	else if (strcmp(cmd, "export") == 0)
-		return (free(cmd),exe_export(shell));
-	return (free(cmd),-1);
+		ret = exe_export(shell);
+
+	free(cmd);
+	if (ret != -1)
+		(*shell)->exit_status = ret;
+	return ret;
 }
 
 int exe_cmd(t_minishell **shell)
 {
 	if (!(*shell)->ast)
 	{
+		(*shell)->exit_status = 1;
 		fprintf(stderr, "Error: No command provided\n");
 		return 1;
 	}
@@ -301,14 +329,22 @@ int exe_cmd(t_minishell **shell)
 	if ((*shell)->ast->redir)
 	{
 		if (handle_redirections((*shell)->ast->redir) == -1)
+		{
+			(*shell)->exit_status = 1;
 			return 1;
+		}
 	}
 
 	int ret = builtin_cmd_check(shell);
 	if (ret != -1)
+	{
+		(*shell)->exit_status = ret;
 		return ret;
+	}
 
-	return execute_external_command((*shell)->ast, *shell);
+	ret = execute_external_command((*shell)->ast, *shell);
+	(*shell)->exit_status = ret;
+	return ret;
 }
 
 int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
@@ -361,9 +397,17 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 	close(pipe_fds[1]);
 
 	waitpid(pid1, &status, 0);
-	shell->exit_status = WEXITSTATUS(status);
+	if (WIFEXITED(status))
+		shell->exit_status = WEXITSTATUS(status);
+	else if (WIFSIGNALED(status))
+		shell->exit_status = 128 + WTERMSIG(status);
+
 	waitpid(pid2, &status, 0);
-	shell->exit_status = WEXITSTATUS(status);
+	// For pipes, we typically care about the rightmost command's status
+	if (WIFEXITED(status))
+		shell->exit_status = WEXITSTATUS(status);
+	else if (WIFSIGNALED(status))
+		shell->exit_status = 128 + WTERMSIG(status);
 
 	return shell->exit_status;
 }
@@ -384,18 +428,24 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 		shell->ast = cmd_node;
 		int ret = exe_cmd(&shell);
 		shell->ast = old_ast;
+		shell->exit_status = ret; // Ensure status is set
 		return ret;
 	}
 
 	if (cmd_node->type == NODE_PIPE)
-		return execute_pipe(cmd_node, shell);
+	{
+		int ret = execute_pipe(cmd_node, shell);
+		shell->exit_status = ret; // Ensure status is set
+		return ret;
+	}
 
+	shell->exit_status = 1;
 	return 1;
 }
 
 int execute_ast(t_minishell **shell)
 {
-	int saved_stdout, saved_stdin;
+	int saved_fd[2];
 	int result = 0;
 
 	if (!(*shell)->ast)
@@ -403,28 +453,30 @@ int execute_ast(t_minishell **shell)
 
 	if (process_heredocs((*shell)->ast) == -1)
 		return 1;
-	saved_stdout = dup(STDOUT_FILENO);
-	saved_stdin = dup(STDIN_FILENO);
+	saved_fd[1] = dup(STDOUT_FILENO);
+	saved_fd[0] = dup(STDIN_FILENO);
 
 	if ((*shell)->ast->type == NODE_COMMAND)
 	{
 		result = exe_cmd(shell);
+		(*shell)->exit_status = result;
 	}
 	else if ((*shell)->ast->type == NODE_PIPE)
 	{
 		result = execute_pipe((*shell)->ast, *shell);
+		(*shell)->exit_status = result;
 	}
 	else
 	{
 		fprintf(stderr, "Error: Unsupported AST node type\n");
+		(*shell)->exit_status = 1;
 		result = 1;
 	}
 
-	dup2(saved_stdout, STDOUT_FILENO);
-	dup2(saved_stdin, STDIN_FILENO);
-	close(saved_stdout);
-	close(saved_stdin);
+	dup2(saved_fd[1], STDOUT_FILENO);
+	dup2(saved_fd[0], STDIN_FILENO);
+	close(saved_fd[1]);
+	close(saved_fd[0]);
 
 	return result;
 }
-

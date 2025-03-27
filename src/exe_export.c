@@ -3,8 +3,8 @@
 void split_value(char *str, char **key, char **value)
 {
     char *equal_sign;
-//     char *quote_start;
-//     char *quote_end;
+    //     char *quote_start;
+    //     char *quote_end;
 
     if (!str) // Check if input string is NULL
     {
@@ -12,7 +12,7 @@ void split_value(char *str, char **key, char **value)
         *value = NULL;
         return;
     }
-//     printf("cmd_arg : (%s)\n", str);
+    //     printf("cmd_arg : (%s)\n", str);
     equal_sign = ft_strchr(str, '='); // Find the first '=' in the string
     if (!equal_sign)
     {
@@ -125,12 +125,13 @@ static int process_export_args(t_minishell *shell)
     char *key;
     char *value;
     char **cmd;
+    int error_flag = 0;
 
     if (!shell || !shell->ast || !shell->ast->cmd_arg)
         return (1);
     cmd = shell->ast->cmd_arg;
-//     if (!cmd)
-//         return (1);
+    //     if (!cmd)
+    //         return (1);
     i = 1;
     while (cmd[i])
     {
@@ -148,6 +149,7 @@ static int process_export_args(t_minishell *shell)
             printf("export: `%s`: not a valid identifier\n", cmd[i]);
             free(key);
             free(value);
+            error_flag = 1;
             i++;
             continue;
         }
@@ -159,7 +161,7 @@ static int process_export_args(t_minishell *shell)
         free(value);
         i++;
     }
-    return (0);
+    return (error_flag);
 }
 
 // Function to process export when no arguments are provided
@@ -189,4 +191,3 @@ int exe_export(t_minishell **shell)
 
     return process_export_args(*shell);
 }
-
