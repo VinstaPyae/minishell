@@ -107,7 +107,7 @@ char **expand_variable(char *var, t_minishell *shell)
     // debug_print_expansion(result);
     
     return (result);
-}git@github.com:VinstaPyae/minishell.git
+}
 char *expand_quote_variable(char *var, t_minishell *shell)
 {
 	char *value;
