@@ -139,11 +139,12 @@ int main(int ac, char **av, char **env)
             continue;
         }
         execute_ast(&shell); // This should call exe_exit for the "exit" command
-        cleanup_ast(shell);  // Cleanup AST but keep shell instance
+        cleanup(&shell);  // Cleanup AST but keep shell instance
         // free_env_list(shell->envp);
     }
     cleanup(&shell); // Final cleanup
     free_env_list(shell->envp);
+    free(shell);
     rl_clear_history(); // Clear readline history
     return (0);
 }

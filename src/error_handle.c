@@ -78,8 +78,8 @@ void cleanup(t_minishell **shell)
 	// 	(*shell)->envp = NULL;
 	// }
 
-	free(*shell);
-    *shell = NULL;
+	// free(*shell);
+    // *shell = NULL;
     // Do not free envp here, as it is shared across iterations
 }
 void c_token_destroy(void *c_token)

@@ -297,21 +297,36 @@ int builtin_cmd_check(t_minishell **shell)
 
 	int ret = -1;
 	if (ft_strcmp(cmd, "echo") == 0)
+	{
 		ret = exe_echo(shell);
+	}
 	else if (strcmp(cmd, "env") == 0)
+	{
 		ret = exe_env(shell);
+	}
 	else if (strcmp(cmd, "unset") == 0)
+	{
 		ret = exe_unset(shell);
+	}
 	else if (strcmp(cmd, "exit") == 0)
+	{
+		free(cmd);
 		ret = exe_exit(shell);
+	}
 	else if (strcmp(cmd, "pwd") == 0)
+	{
 		ret = exe_pwd(shell);
+	}
 	else if (strcmp(cmd, "cd") == 0)
+	{
 		ret = exe_cd(shell);
+	}
 	else if (strcmp(cmd, "export") == 0)
+	{
 		ret = exe_export(shell);
-
-	free(cmd);
+	}
+	if (cmd)
+		free(cmd);
 	if (ret != -1)
 		(*shell)->exit_status = ret;
 	return ret;

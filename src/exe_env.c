@@ -35,7 +35,6 @@ void split_key_value(char *str, char **key, char **value)
         *value = ft_strdup(""); // Store empty string instead of NULL
         return;
     }
-
     // Split key and value
     *key = ft_strndup(str, equal_sign - str);
     *value = ft_strdup(equal_sign + 1);
