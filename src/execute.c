@@ -61,7 +61,7 @@ char **env_list_to_array(t_env *env)
 {
 	int count = 0;
 	t_env *tmp = env;
-	
+
 	// First pass: count valid environment variables
 	while (tmp)
 	{
@@ -79,7 +79,7 @@ char **env_list_to_array(t_env *env)
 	// Reset tmp pointer
 	tmp = env;
 	int i = 0;
-	
+
 	// Second pass: create environment entries
 	while (tmp)
 	{
@@ -88,7 +88,7 @@ char **env_list_to_array(t_env *env)
 		{
 			// Calculate total length needed (+1 for '=' and +1 for null terminator)
 			int total_len = ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2;
-			
+
 			// Allocate memory for the full environment entry
 			env_array[i] = malloc(total_len * sizeof(char));
 			if (!env_array[i])
@@ -361,12 +361,12 @@ int exe_cmd(t_minishell **shell)
 	(*shell)->exit_status = ret;
 	return ret;
 }
-
 int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 {
 	int pipe_fds[2];
 	pid_t pid1, pid2;
 	int status;
+	int ret = 0;
 
 	if (!pipe_node || pipe_node->type != NODE_PIPE)
 		return -1;
@@ -383,12 +383,11 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 		perror("fork");
 		return -1;
 	}
-	if (pid1 == 0) // First child executes left command
+	if (pid1 == 0)
 	{
-		close(pipe_fds[0]);				  // Close unused read end
-		dup2(pipe_fds[1], STDOUT_FILENO); // Redirect stdout to pipe
-		close(pipe_fds[1]);				  // Close original write end
-
+		close(pipe_fds[0]);
+		dup2(pipe_fds[1], STDOUT_FILENO);
+		close(pipe_fds[1]);
 		exit(execute_ast_command(pipe_node->left, shell));
 	}
 
@@ -398,33 +397,26 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 		perror("fork");
 		return -1;
 	}
-	if (pid2 == 0) // Second child executes right command
+	if (pid2 == 0)
 	{
-		close(pipe_fds[1]);				 // Close unused write end
-		dup2(pipe_fds[0], STDIN_FILENO); // Redirect stdin from pipe
-		close(pipe_fds[0]);				 // Close original read end
-
+		close(pipe_fds[1]);
+		dup2(pipe_fds[0], STDIN_FILENO);
+		close(pipe_fds[0]);
 		exit(execute_ast_command(pipe_node->right, shell));
 	}
 
-	// Parent process: close pipe ends and wait for children
 	close(pipe_fds[0]);
 	close(pipe_fds[1]);
 
 	waitpid(pid1, &status, 0);
-	if (WIFEXITED(status))
-		shell->exit_status = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		shell->exit_status = 128 + WTERMSIG(status);
-
 	waitpid(pid2, &status, 0);
-	// For pipes, we typically care about the rightmost command's status
-	if (WIFEXITED(status))
-		shell->exit_status = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		shell->exit_status = 128 + WTERMSIG(status);
 
-	return shell->exit_status;
+	if (WIFEXITED(status))
+		ret = WEXITSTATUS(status);
+	else if (WIFSIGNALED(status))
+		ret = 128 + WTERMSIG(status);
+
+	return ret;
 }
 
 /*
@@ -457,7 +449,6 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 	shell->exit_status = 1;
 	return 1;
 }
-
 int execute_ast(t_minishell **shell)
 {
 	int saved_fd[2];
@@ -467,25 +458,32 @@ int execute_ast(t_minishell **shell)
 		return 1;
 
 	if (process_heredocs((*shell)->ast) == -1)
+	{
+		(*shell)->exit_status = 130;
 		return 1;
+	}
+
 	saved_fd[1] = dup(STDOUT_FILENO);
 	saved_fd[0] = dup(STDIN_FILENO);
 
 	if ((*shell)->ast->type == NODE_COMMAND)
 	{
 		result = exe_cmd(shell);
-		(*shell)->exit_status = result;
 	}
 	else if ((*shell)->ast->type == NODE_PIPE)
 	{
 		result = execute_pipe((*shell)->ast, *shell);
-		(*shell)->exit_status = result;
 	}
 	else
 	{
-		fprintf(stderr, "Error: Unsupported AST node type\n");
 		(*shell)->exit_status = 1;
 		result = 1;
+	}
+
+	// Only update exit status if not interrupted
+	if (g_signal_status != 130)
+	{
+		(*shell)->exit_status = result;
 	}
 
 	dup2(saved_fd[1], STDOUT_FILENO);

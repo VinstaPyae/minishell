@@ -2,31 +2,33 @@
 
 t_list *create_redir(char *file, int type)
 {
-	t_redir *c_redir;
-	t_list	*redir;
+    t_redir *c_redir;
+    t_list *redir;
 
-	// Allocate memory for the redirection structure
-	c_redir = malloc(sizeof(t_redir));
-	if (c_redir == NULL)
-		return NULL;
+    // Allocate memory for the redirection structure
+    c_redir = malloc(sizeof(t_redir));
+    if (c_redir == NULL)
+        return NULL;
 
-	// Handle the case where file is NULL
-	if (file == NULL)
-		c_redir->file = NULL;
-	else {
-		c_redir->file = ft_strdup(file);
-		if (c_redir->file == NULL) {
-		free(c_redir);
-		return NULL;
-		}
-	}
-	c_redir->type = type;
-	c_redir->fd = -1;
-	redir = ft_lstnew(c_redir);
-	if (redir == NULL)
-		return (free(c_redir),NULL);
-	redir->next = NULL;
-	return (redir);
+    // Handle the case where file is NULL
+    if (file == NULL)
+        c_redir->file = NULL;
+    else
+    {
+        c_redir->file = ft_strdup(file);
+        if (c_redir->file == NULL)
+        {
+            free(c_redir);
+            return NULL;
+        }
+    }
+    c_redir->type = type;
+    c_redir->fd = -1;
+    redir = ft_lstnew(c_redir);
+    if (redir == NULL)
+        return (free(c_redir), NULL);
+    redir->next = NULL;
+    return (redir);
 }
 
 void print_redir(t_list *redir)
@@ -40,71 +42,97 @@ void print_redir(t_list *redir)
     }
 }
 
-// Process all heredocs first, before any command execution
+// Modified process_heredocs function
 int process_heredocs(t_ast_node *node)
 {
     if (!node)
-        return 0;
-    
-    // Process heredocs in this node
+        return (0);
+
     if (node->redir)
     {
-        t_list *redir_list = node->redir;
-        while (redir_list)
+        t_list *current = node->redir;
+        while (current)
         {
-            t_redir *redir = (t_redir *)redir_list->content;
+            t_redir *redir = (t_redir *)current->content;
             if (redir->type == TOKEN_HDC)
             {
-                int heredoc_fd = handle_heredoc(redir->file);
-                if (heredoc_fd == -1)
-                    return -1;
-                
-                // Store the file descriptor for later use
-                redir->fd = heredoc_fd;
+                redir->fd = handle_heredoc(redir->file);
+                if (redir->fd == -1)
+                    return (-1);
             }
-            redir_list = redir_list->next;
+            current = current->next;
         }
     }
-    
-    // Recursively process heredocs in pipe nodes
+
     if (node->type == NODE_PIPE)
     {
-        if (process_heredocs(node->left) == -1)
-            return -1;
-        if (process_heredocs(node->right) == -1)
-            return -1;
+        if (process_heredocs(node->left) == -1 || process_heredocs(node->right) == -1)
+            return (-1);
     }
-    
-    return 0;
+
+    return (0);
 }
 
+// Modified handle_heredoc function
 int handle_heredoc(char *delimiter)
 {
-	int pipefd[2];
-	if (pipe(pipefd) == -1)
-	{
-		perror("pipe");
-		return -1;
-	}
-	
-	char *line;
-	while (1)
-	{
-		// You might use readline() from the GNU Readline library
-		line = readline("> ");
-		if (!line || strcmp(line, delimiter) == 0)
-		{
-		free(line);
-		break;
-		}
-		write(pipefd[1], line, strlen(line));
-		write(pipefd[1], "\n", 1);
-		free(line);
-	}
-	close(pipefd[1]); // Close the write end after writing
-	return pipefd[0]; // Return the read end to be used as STDIN
-}
+    int pipefd[2];
+    if (pipe(pipefd) == -1)
+    {
+        perror("pipe");
+        return -1;
+    }
 
+    struct sigaction old_sa, new_sa;
+    sigaction(SIGINT, NULL, &old_sa);
+    new_sa = old_sa;
+    new_sa.sa_handler = handle_sigint_heredoc;
+    new_sa.sa_flags &= ~SA_RESTART;
+    sigaction(SIGINT, &new_sa, NULL);
+
+    g_signal_status = 0;
+    rl_event_hook = check_sigint;
+
+    char *line;
+    int eof_warning = 0;
+    while (1)
+    {
+        line = readline("> ");
+        if (!line)
+        {
+            if (!eof_warning)
+            {
+                fprintf(stderr, "minishell: warning: here-document delimited by end-of-file (wanted `%s')\n", delimiter);
+                eof_warning = 1;
+            }
+            break;
+        }
+        if (g_signal_status == 130)
+        {
+            free(line);
+            break;
+        }
+        if (strcmp(line, delimiter) == 0)
+        {
+            free(line);
+            break;
+        }
+        write(pipefd[1], line, strlen(line));
+        write(pipefd[1], "\n", 1);
+        free(line);
+    }
+
+    close(pipefd[1]);
+    sigaction(SIGINT, &old_sa, NULL);
+    rl_event_hook = NULL;
+
+    if (g_signal_status == 130)
+    {
+        close(pipefd[0]);
+        return -1;
+    }
+    return pipefd[0];
+}
 
 int handle_redirections(t_list *redir_list)
 {

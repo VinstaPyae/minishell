@@ -186,4 +186,7 @@ void setup_signal_handlers(void);
 // debug
 void print_error(const char *func_name, const char *file, int line, const char *format, ...);
 void ft_fprintf(int fd, const char *format, ...);
+
+int check_sigint(void);
+void handle_sigint_heredoc(int signo);
 #endif

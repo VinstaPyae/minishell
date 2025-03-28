@@ -73,6 +73,24 @@ void handle_sigint(int signo)
 		g_signal_status = 130; // Store signal status
 	}
 }
+// Add these two helper functions
+int check_sigint(void)
+{
+	if (g_signal_status == 130)
+	{
+		rl_done = 1;
+		return (1);
+	}
+	return (0);
+}
+
+void handle_sigint_heredoc(int signo)
+{
+	(void)signo;
+	g_signal_status = 130;
+	rl_replace_line("", 0);
+	rl_done = 1;
+}
 
 void handle_sigquit(int signo)
 {
