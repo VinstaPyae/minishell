@@ -20,13 +20,6 @@ static char **allocate_paths(char *path_env)
 	return (path_dirs);
 }
 
-static void free_paths(char **path_dirs, int index)
-{
-	while (index-- > 0)
-		free(path_dirs[index]);
-	free(path_dirs);
-}
-
 char **split_path(char *path_env)
 {
 	char **path_dirs;
@@ -46,7 +39,7 @@ char **split_path(char *path_env)
 			count = path_env - start + (!*(path_env + 1));
 			path_dirs[index] = ft_strndup(start, count);
 			if (!path_dirs[index])
-				return (free_paths(path_dirs, index), NULL);
+				return (free_array_list(path_dirs, index), NULL);
 			index++;
 			start = path_env + 1;
 		}
@@ -56,62 +49,72 @@ char **split_path(char *path_env)
 	return (path_dirs);
 }
 ////////////////////////////////
-
-char **env_list_to_array(t_env *env)
+static char *create_env_entry(char *key, char *value)
 {
-	int count = 0;
-	t_env *tmp = env;
+	char *entry;
+	size_t key_len;
+	size_t value_len;
+	size_t total_len;
 
-	// First pass: count valid environment variables
-	while (tmp)
+	key_len = ft_strlen(key);
+	value_len = ft_strlen(value);
+	total_len = key_len + value_len + 2; // +1 for '=', +1 for '\0'
+	entry = malloc(total_len);
+	if (!entry)
+		return (NULL);
+
+	ft_memcpy(entry, key, key_len);
+	entry[key_len] = '=';
+	ft_memcpy(entry + key_len + 1, value, value_len);
+	entry[total_len - 1] = '\0';
+	return (entry);
+}
+
+char **fill_env_array(char **env_array, t_env *tmp, int i)
+{
+
+	while (tmp != NULL)
 	{
-		// Only count environment variables that have both key and value
-		if (tmp->key && tmp->value)
-			count++;
-		tmp = tmp->next;
-	}
-
-	// Allocate array with space for pointers
-	char **env_array = malloc((count + 1) * sizeof(char *));
-	if (!env_array)
-		return NULL;
-
-	// Reset tmp pointer
-	tmp = env;
-	int i = 0;
-
-	// Second pass: create environment entries
-	while (tmp)
-	{
-		// Skip entries with NULL key or value
-		if (tmp->key && tmp->value)
+		if (tmp->key != NULL && tmp->value != NULL)
 		{
-			// Calculate total length needed (+1 for '=' and +1 for null terminator)
-			int total_len = ft_strlen(tmp->key) + ft_strlen(tmp->value) + 2;
-
-			// Allocate memory for the full environment entry
-			env_array[i] = malloc(total_len * sizeof(char));
-			if (!env_array[i])
+			env_array[i] = create_env_entry(tmp->key, tmp->value);
+			if (env_array[i] == NULL)
 			{
-				// Free previously allocated memory if allocation fails
-				for (int j = 0; j < i; j++)
-					free(env_array[j]);
-				free(env_array);
-				return NULL;
+				free_array_list(env_array, i);
+				return (NULL);
 			}
-
-			// Correctly create the environment entry string
-			snprintf(env_array[i], total_len, "%s=%s", tmp->key, tmp->value);
 			i++;
 		}
 		tmp = tmp->next;
 	}
-
-	// Null-terminate the array
 	env_array[i] = NULL;
-
-	return env_array;
+	return (env_array);
 }
+
+char **env_list_to_array(t_env *env)
+{
+	int count;
+	t_env *tmp;
+	char **env_array;
+	int i;
+
+	count = 0;
+	tmp = env;
+	i = 0;
+	while (tmp != NULL)
+	{
+		if (tmp->key != NULL && tmp->value != NULL)
+			count++;
+		tmp = tmp->next;
+	}
+	env_array = malloc((count + 1) * sizeof(char *));
+	if (env_array == NULL)
+		return (NULL);
+	tmp = env;
+	env_array = fill_env_array(env_array, tmp, i);
+	return (env_array);
+}
+///////////
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
 	char **cmd = trim_cmd(ast_cmd->cmd_arg); //$$$ need to clean this cmd
@@ -259,15 +262,8 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		int sigint_received = (g_signal_status == 1);
 		g_signal_status = 0; // Reset global state
 
-		// Handle newline if signal was received
-		if (sigint_received)
-		{
-			// Use stderr directly (file descriptor 2)
-			if (isatty(2)) // 2 is the file descriptor for stderr
-			{
-				write(2, "\n", 1); // Write newline to stderr
-			}
-		}
+		if (sigint_received && isatty(STDERR_FILENO))
+			write(STDERR_FILENO, "\n", 1);
 
 		// Set exit status based on child termination
 		if (WIFEXITED(status))
@@ -279,88 +275,66 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		return shell->exit_status;
 	}
 }
-
+////////
+int execute_builtin(t_minishell **shell, char *cmd)
+{
+	if (ft_strcmp(cmd, "echo") == 0)
+		return (exe_echo(shell));
+	if (ft_strcmp(cmd, "cd") == 0)
+		return (exe_cd(shell));
+	if (ft_strcmp(cmd, "pwd") == 0)
+		return (exe_pwd(shell));
+	if (ft_strcmp(cmd, "export") == 0)
+		return (exe_export(shell));
+	if (ft_strcmp(cmd, "unset") == 0)
+		return (exe_unset(shell));
+	if (ft_strcmp(cmd, "env") == 0)
+		return (exe_env(shell));
+	return (-1);
+}
 int builtin_cmd_check(t_minishell **shell)
 {
+	char *cmd;
+	int ret;
+
 	if (!shell || !(*shell) || !(*shell)->ast || !(*shell)->ast->cmd_arg)
-	{
-		(*shell)->exit_status = 1;
-		return -1;
-	}
-
-	char *cmd = ft_strtrim((*shell)->ast->cmd_arg[0], " ");
+		return (return_with_status(shell, 1));
+	cmd = ft_strtrim((*shell)->ast->cmd_arg[0], " ");
 	if (!cmd)
-	{
-		(*shell)->exit_status = 1;
-		return -1;
-	}
-
-	int ret = -1;
-	if (ft_strcmp(cmd, "echo") == 0)
-	{
-		ret = exe_echo(shell);
-	}
-	else if (strcmp(cmd, "env") == 0)
-	{
-		ret = exe_env(shell);
-	}
-	else if (strcmp(cmd, "unset") == 0)
-	{
-		ret = exe_unset(shell);
-	}
-	else if (strcmp(cmd, "exit") == 0)
+		return (return_with_status(shell, 1));
+	ret = execute_builtin(shell, cmd);
+	if (ret == -1 && ft_strcmp(cmd, "exit") == 0)
 	{
 		free(cmd);
-		ret = exe_exit(shell);
+		return (exe_exit(shell));
 	}
-	else if (strcmp(cmd, "pwd") == 0)
-	{
-		ret = exe_pwd(shell);
-	}
-	else if (strcmp(cmd, "cd") == 0)
-	{
-		ret = exe_cd(shell);
-	}
-	else if (strcmp(cmd, "export") == 0)
-	{
-		ret = exe_export(shell);
-	}
-	if (cmd)
-		free(cmd);
+	free(cmd);
 	if (ret != -1)
-		(*shell)->exit_status = ret;
-	return ret;
+		set_exit_status(*shell, ret);
+	return (ret);
 }
-
+//////
 int exe_cmd(t_minishell **shell)
 {
+	int ret;
+
 	if (!(*shell)->ast)
 	{
-		(*shell)->exit_status = 1;
-		fprintf(stderr, "Error: No command provided\n");
-		return 1;
+		ft_putstr_fd("Error: No command provided\n", STDERR_FILENO);
+		return (return_with_status(shell, 1));
 	}
-
 	if ((*shell)->ast->redir)
 	{
 		if (handle_redirections((*shell)->ast->redir) == -1)
-		{
-			(*shell)->exit_status = 1;
-			return 1;
-		}
+			return (return_with_status(shell, 1));
 	}
-
-	int ret = builtin_cmd_check(shell);
+	ret = builtin_cmd_check(shell);
 	if (ret != -1)
-	{
-		(*shell)->exit_status = ret;
-		return ret;
-	}
-
+		return (return_with_status(shell, ret));
 	ret = execute_external_command((*shell)->ast, *shell);
-	(*shell)->exit_status = ret;
-	return ret;
+	return (return_with_status(shell, ret));
 }
+/*
 int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 {
 	int pipe_fds[2];
@@ -418,6 +392,81 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 
 	return ret;
 }
+*/
+
+static pid_t create_child_process(t_ast_node *node, t_minishell *shell, int in_fd, int out_fd)
+{
+	pid_t pid;
+
+	pid = fork();
+	if (pid < 0)
+	{
+		perror("fork");
+		return -1;
+	}
+	if (pid == 0)
+	{
+		if (in_fd != STDIN_FILENO)
+		{
+			dup2(in_fd, STDIN_FILENO);
+			close(in_fd);
+		}
+		if (out_fd != STDOUT_FILENO)
+		{
+			dup2(out_fd, STDOUT_FILENO);
+			close(out_fd);
+		}
+		exit(execute_ast_command(node, shell));
+	}
+	return pid;
+}
+static int wait_for_child_processes(pid_t pid1, pid_t pid2)
+{
+	int status;
+	int ret;
+
+	ret = 0;
+	waitpid(pid1, &status, 0);
+	waitpid(pid2, &status, 0);
+	if (WIFEXITED(status))
+		ret = WEXITSTATUS(status);
+	else if (WIFSIGNALED(status))
+		ret = 128 + WTERMSIG(status);
+	return (ret);
+}
+
+int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
+{
+	int pipe_fds[2];
+	pid_t pid1, pid2;
+	int status;
+	int ret;
+
+	ret = 0;
+	if (!pipe_node || pipe_node->type != NODE_PIPE)
+		return -1;
+	if (pipe(pipe_fds) == -1)
+	{
+		perror("pipe");
+		return -1;
+	}
+	pid1 = create_child_process(pipe_node->left, shell, STDIN_FILENO, pipe_fds[1]);
+	if (pid1 < 0)
+		return (-1);
+	close(pipe_fds[1]);
+	pid2 = create_child_process(pipe_node->right, shell, pipe_fds[0], STDOUT_FILENO);
+	if (pid2 < 0)
+		return (-1);
+	close(pipe_fds[0]);
+	ret = wait_for_child_processes(pid1, pid2);
+	if (g_signal_status == 1)
+	{
+		g_signal_status = 0;
+		return (130); // Return status without writing
+	}
+
+	return (ret);
+}
 
 /*
  * This function temporarily overrides shell->ast with the given command node.
@@ -427,7 +476,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 {
 	if (!cmd_node)
-		return 1;
+		return (1);
 
 	if (cmd_node->type == NODE_COMMAND)
 	{
@@ -436,7 +485,7 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 		int ret = exe_cmd(&shell);
 		shell->ast = old_ast;
 		shell->exit_status = ret; // Ensure status is set
-		return ret;
+		return (ret);
 	}
 
 	if (cmd_node->type == NODE_PIPE)
@@ -445,9 +494,8 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 		shell->exit_status = ret; // Ensure status is set
 		return ret;
 	}
-
 	shell->exit_status = 1;
-	return 1;
+	return (1);
 }
 int execute_ast(t_minishell **shell)
 {

@@ -229,50 +229,51 @@ static int ft_atoll(const char *str, long long *num)
 
 int exe_exit(t_minishell **shell)
 {
-    char **args = (*shell)->ast->cmd_arg;
-    int arg_count = 0;
-    int saved_exit_status;
-    long long exit_num;
+	char **args = (*shell)->ast->cmd_arg;
+	int arg_count = 0;
+	int saved_exit_status;
+	long long exit_num;
 
-    while (args[arg_count])
-        arg_count++;
+	while (args[arg_count])
+		arg_count++;
 
-    // Save exit status before freeing *shell
-    saved_exit_status = (*shell)->exit_status;
+	// Save exit status before freeing *shell
+	saved_exit_status = (*shell)->exit_status;
 
-    // No arguments: exit with last status
-    if (arg_count == 1)
-    {
-        cleanup(shell); // Final cleanup
-        free_env_list((*shell)->envp);
-        free(*shell);
-        rl_clear_history();
-        exit(saved_exit_status);
-    }
+	// No arguments: exit with last status
+	if (arg_count == 1)
+	{
+		cleanup(shell); // Final cleanup
+		free_env_list((*shell)->envp);
+		free(*shell);
+		rl_clear_history();
+		exit(saved_exit_status);
+	}
 
-    if (!ft_atoll(args[1], &exit_num))
-    {
-        cleanup(shell); // Final cleanup
-        free_env_list((*shell)->envp);
-        free(*shell);
-        rl_clear_history();
-        ft_putstr_fd("exit: ", STDERR_FILENO);
-        ft_putstr_fd(args[1], STDERR_FILENO);
-        ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
-        exit(2);
-    }
+	if (!ft_atoll(args[1], &exit_num))
+	{
+		ft_putstr_fd("exit: ", STDERR_FILENO);
+		ft_putstr_fd(args[1], STDERR_FILENO);
+		ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
+		cleanup(shell); // Final cleanup
+		free_env_list((*shell)->envp);
+		free(*shell);
+		rl_clear_history();
+		exit(2);
+	}
 
-    if (arg_count > 2)
-    {
-        ft_putstr_fd("exit: too many arguments\n", STDERR_FILENO);
-        (*shell)->exit_status = 1;
-        printf("Exit Status: %d\n", (*shell)->exit_status);
-        return (1); // Don't exit shell
-    }
+	if (arg_count > 2)
+	{
+		ft_putstr_fd("exit: too many arguments\n", STDERR_FILENO);
+		(*shell)->exit_status = 1;
+		printf("Exit Status: %d\n", (*shell)->exit_status);
+		return (1); // Don't exit shell
+	}
 
-    cleanup(shell); // Final cleanup
-    free_env_list((*shell)->envp);
-    free(*shell);
-    rl_clear_history();
-    exit((unsigned char)exit_num);
+	cleanup(shell); // Final cleanup
+	free_env_list((*shell)->envp);
+	free(*shell);
+	rl_clear_history();
+	exit((unsigned char)exit_num);
 }
+

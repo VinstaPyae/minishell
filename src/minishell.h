@@ -186,7 +186,14 @@ void setup_signal_handlers(void);
 // debug
 void print_error(const char *func_name, const char *file, int line, const char *format, ...);
 void ft_fprintf(int fd, const char *format, ...);
+void free_array_list(char **path_dirs, int index);
 
 int check_sigint(void);
 void handle_sigint_heredoc(int signo);
+
+// status_utils
+void set_exit_status(t_minishell *shell, int status);
+int return_with_status(t_minishell **shell, int status);
+int return_error(t_minishell **shell, const char *msg, int status);
 #endif
+
