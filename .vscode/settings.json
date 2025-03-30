@@ -59,6 +59,7 @@
   "C_Cpp.errorSquiggles": "disabled",
   "files.associations": {
     "LEXER.C": "cpp",
-    "libft.h": "c"
+    "libft.h": "c",
+    "minishell.h": "c"
   }
 }

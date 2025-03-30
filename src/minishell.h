@@ -88,7 +88,7 @@ typedef struct s_minishell
 // lex_handle
 int lex_token_pipe(char *str, int *i, t_list **l_token);
 // int	lex_token_bracket(char *str, int *i, t_list **l_token);
-int lex_token_quote(char *str, int *i, t_list **l_token);
+int lex_token_quote(char *str, int *i, t_list **l_token, int c_space);
 int lex_token_redirin_hdc(char *str, int *i, t_list **l_token);
 int lex_token_redirout_app(char *str, int *i, t_list **l_token);
 int lex_token_variable(char *str, int *i, t_list **l_token);
@@ -121,7 +121,7 @@ int lexer_syntax_check(t_list *l_token);
 int check_redirect_in_grammar(t_list *l_token);
 int check_redirect_out_grammar(t_list *l_token);
 int check_append_grammar(t_list *l_token);
-int check_heredoc_grammar(t_list *l_token);
+int check_heredoc_grammar(t_list *l_token, t_token *next);
 // int check_word_grammar(t_list *l_token);
 
 // redir
