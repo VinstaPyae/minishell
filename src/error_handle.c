@@ -113,8 +113,8 @@ void free_ast(t_ast_node *node)
 	if (node->cmd_arg)
 	{
 		free_arg(node->cmd_arg);
+		node->cmd_arg = NULL;
 	}
-
 	// Free redirections
 	if (node->redir)
 	{

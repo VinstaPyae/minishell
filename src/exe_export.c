@@ -122,26 +122,39 @@ static int is_valid_env_name(const char *name)
 static int process_export_args(t_minishell *shell)
 {
     int i;
-    char *key;
-    char *value;
+    char *key = NULL;
+    char *value = NULL;
     char **cmd;
     int error_flag = 0;
 
     if (!shell || !shell->ast || !shell->ast->cmd_arg)
         return (1);
+
     cmd = shell->ast->cmd_arg;
-    //     if (!cmd)
-    //         return (1);
     i = 1;
+
     while (cmd[i])
     {
         // Split the string into key and value
         printf("cmd: (%s)\n", cmd[i]);
+
+        // Trim the last character if necessary
         if (cmd[i + 1])
         {
-            cmd[i] = trim_last_char(cmd[i], ' ');
+            char *trimmed = trim_last_char(cmd[i], ' ');
+            if (!trimmed)
+            {
+                perror("malloc failed in trim_last_char");
+                error_flag = 1;
+                i++;
+                continue;
+            }
+            free(cmd[i]); // Free the original cmd[i] before overwriting
+            cmd[i] = trimmed;
             printf("cmd: (%s)\n", cmd[i]);
         }
+
+        // Split the string into key and value
         split_value(cmd[i], &key, &value);
 
         if (!key || !is_valid_env_name(key))
@@ -153,6 +166,7 @@ static int process_export_args(t_minishell *shell)
             i++;
             continue;
         }
+
         // Add or update the environment variable
         add_or_update_env_var(key, value, shell);
 
@@ -161,6 +175,7 @@ static int process_export_args(t_minishell *shell)
         free(value);
         i++;
     }
+
     return (error_flag);
 }
 

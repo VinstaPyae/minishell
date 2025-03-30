@@ -43,39 +43,79 @@ char **expand_exit_status(t_minishell *shell)
     return (create_single_result(exit_str));
 }
 
-// Handle environment variable expansion
+// ...existing code...
+
+// Helper function to handle empty or null variable names
+static char **handle_empty_var_name(void)
+{
+    return create_single_result(ft_strdup(""));
+}
+
+// Helper function to retrieve and validate the environment variable value
+static char *get_valid_env_value(char *var_name, t_minishell *shell)
+{
+    char *value = get_env_value(shell->envp, var_name);
+    if (!value || value[0] == '\0')
+    {
+        free(value);
+        return ft_strdup("");
+    }
+    return value;
+}
+
+// Helper function to split the environment variable value
+static char **split_env_value(char *value)
+{
+    char **result = ft_split(value, ' ');
+    if (!result || !result[0])
+    {
+        if (result)
+            free(result);
+        return create_single_result(ft_strdup(""));
+    }
+    return result;
+}
+
+// Helper function to handle trailing spaces in the last token
+static void handle_trailing_space(char **result, char *value)
+{
+    int i = ft_strlen(value);
+    int j = 0;
+
+    while (result[j])
+        j++;
+
+    if (ft_isspace(value[i - 1]))
+    {
+        char *tmp = ft_strjoin(result[j - 1], " ");
+        free(result[j - 1]);
+        result[j - 1] = tmp;
+    }
+}
+
+// Main function to expand environment variables
 char **expand_env_variable(char *var_name, t_minishell *shell)
 {
     char *value;
     char **result;
 
-    if (!var_name) // Add null check
-        return (create_single_result(ft_strdup("")));
-    
-    value = get_env_value(shell->envp, var_name);
-    if (!value || value[0] == '\0') {
-        free(value);
-        return (create_single_result(ft_strdup("")));
-    }
-    
-    // Split the value if it contains spaces
-    int i = ft_strlen(value);
-    printf("value space (%c)\n", value[i-1]);
-    result = ft_split(value, ' ');
-    if (!result || !result[0]) {
-        if (result)
-            free(result);
-        return (create_single_result(ft_strdup("")));
-    }
-    int j = 0;
-    while (result[j])
-    	j++;
-    if (ft_isspace(value[i-1]))
+    if (!var_name)
+        return handle_empty_var_name();
+
+    value = get_valid_env_value(var_name, shell);
+    if (!value)
+        return create_single_result(ft_strdup(""));
+
+    result = split_env_value(value);
+    if (!result || !result[0])
     {
-	result [j - 1] = ft_strjoin(result[j - 1], " "); //$$$$$$$$this could lead to segfault or conditional jump
+        free(value);
+        return result;
     }
-    printf("result space: (%s)\n", result[j - 1]);
-    return (free(value),result);
+
+    handle_trailing_space(result, value);
+    free(value);
+    return result;
 }
 
 // Debug function to print expanded values
@@ -92,38 +132,30 @@ char **expand_variable(char *var, t_minishell *shell)
     
     if (!var)
         return (NULL);
-    
-    // Handle special cases
     if (var[1] == '\0')
         return (expand_dollar_sign());
-    
     if (var[1] == '?' && var[2] == '\0')
         return (expand_exit_status(shell));
-    
-    // Handle normal environment variable
     result = expand_env_variable(&var[1], shell);
-    
-    // Debug output
-    // debug_print_expansion(result);
-    
     return (result);
 }
-char *expand_quote_variable(char *var, t_minishell *shell)
+char	*expand_quote_variable(char *var, t_minishell *shell)
 {
-	char *value;
+	char	*value;
 
 	if (!var)
 		return (NULL);
 	if (var[1] == '\0')
 		return (ft_strdup("$"));
-
-	if (var[1] == '?' && var[2] == '\0') // Handle $?
+	if (var[1] == '?' && var[2] == '\0')
 		return (ft_itoa(shell->exit_status));
-
 	value = get_env_value(shell->envp, &var[1]);
 	if (value)
-		return (ft_strdup(value));
-	
+	{
+		char	*dup = ft_strdup(value);
+		free(value);
+		return (dup);
+	}
 	return (ft_strdup(""));
 }
 

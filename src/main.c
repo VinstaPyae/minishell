@@ -48,7 +48,7 @@ static void cleanup_ast(t_minishell *shell)
     shell->input = NULL;
 }
 
-char *get_input(void)
+char * get_input(void)
 {
     char *input;
 
