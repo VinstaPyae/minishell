@@ -60,6 +60,7 @@
   "files.associations": {
     "LEXER.C": "cpp",
     "libft.h": "c",
-    "minishell.h": "c"
+    "minishell.h": "c",
+    "typeinfo": "c"
   }
 }

@@ -7,10 +7,15 @@ char *get_env_value(t_env *env, char *key)
     while (env)
     {
         if (ft_strcmp(env->key, key) == 0)
-            return (ft_strdup(env->value)); // Return the value if key matches
+        {
+            if (env->value) // Check if env->value is not NULL
+                return (ft_strdup(env->value));
+            else
+                return (ft_strdup("")); // Return an empty string if value is NULL
+        }
         env = env->next;
     }
-    return (ft_strdup("")); // Return NULL if key is not found
+    return (ft_strdup("")); // Return an empty string if key is not found
 }
 
 char **create_single_result(char *str)
@@ -82,14 +87,19 @@ static void handle_trailing_space(char **result, char *value)
     int i = ft_strlen(value);
     int j = 0;
 
+    if (i == 0) // Ensure value is not empty
+        return;
+
     while (result[j])
         j++;
 
-    if (ft_isspace(value[i - 1]))
+    if (ft_isspace(value[i - 1])) // Check the last character of value
     {
         char *tmp = ft_strjoin(result[j - 1], " ");
-        free(result[j - 1]);
-        result[j - 1] = tmp;
+        if (!tmp)
+            return; // Handle memory allocation failure
+        free(result[j - 1]); // Free old string
+        result[j - 1] = tmp; // Assign new string
     }
 }
 
@@ -109,12 +119,14 @@ char **expand_env_variable(char *var_name, t_minishell *shell)
     result = split_env_value(value);
     if (!result || !result[0])
     {
-        free(value);
-        return result;
+        free(value); // Free value before returning
+        if (result)
+            free(result); // Free result if allocated
+        return create_single_result(ft_strdup(""));
     }
 
     handle_trailing_space(result, value);
-    free(value);
+    free(value); // Free value after use
     return result;
 }
 
