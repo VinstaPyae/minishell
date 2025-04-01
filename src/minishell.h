@@ -191,6 +191,7 @@ void free_array_list(char **path_dirs, int index);
 int check_sigint(void);
 void handle_sigint_heredoc(int signo);
 
+void print_signal_message(int sig);
 // status_utils
 void set_exit_status(t_minishell *shell, int status);
 int return_with_status(t_minishell **shell, int status);

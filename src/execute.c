@@ -258,18 +258,18 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		int status;
 		waitpid(pid, &status, WUNTRACED);
 
-		/* Check if a SIGINT was received during child execution */
-		int sigint_received = (g_signal_status == 1);
-		g_signal_status = 0; // Reset global state
-
-		if (sigint_received && isatty(STDERR_FILENO))
-			write(STDERR_FILENO, "\n", 1);
+		/* Reset global state */
+		g_signal_status = 0;
 
 		// Set exit status based on child termination
 		if (WIFEXITED(status))
 			shell->exit_status = WEXITSTATUS(status);
 		else if (WIFSIGNALED(status))
-			shell->exit_status = 128 + WTERMSIG(status);
+		{
+			int sig = WTERMSIG(status);
+			shell->exit_status = 128 + sig;
+			print_signal_message(sig);
+		}
 
 		free_arg(cmd);
 		return shell->exit_status;
@@ -393,6 +393,15 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 	return ret;
 }
 */
+void print_signal_message(int sig)
+{
+	if (isatty(STDERR_FILENO))
+	{
+		if (sig == SIGQUIT)
+			write(STDERR_FILENO, "Quit\n", 4);
+	}
+	write(STDERR_FILENO, "\n", 1);
+}
 
 static pid_t create_child_process(t_ast_node *node, t_minishell *shell, int in_fd, int out_fd)
 {
@@ -422,16 +431,29 @@ static pid_t create_child_process(t_ast_node *node, t_minishell *shell, int in_f
 }
 static int wait_for_child_processes(pid_t pid1, pid_t pid2)
 {
-	int status;
+	int status1;
+	int status2;
 	int ret;
-
 	ret = 0;
-	waitpid(pid1, &status, 0);
-	waitpid(pid2, &status, 0);
-	if (WIFEXITED(status))
-		ret = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		ret = 128 + WTERMSIG(status);
+
+	waitpid(pid1, &status1, 0);
+	waitpid(pid2, &status2, 0);
+
+	if (WIFSIGNALED(status2))
+	{
+		int sig = WTERMSIG(status2);
+		ret = 128 + sig;
+		print_signal_message(sig);
+	}
+	else if (WIFSIGNALED(status1))
+	{
+		ret = 128 + WTERMSIG(status1);
+	}
+	else if (WIFEXITED(status2))
+	{
+		ret = WEXITSTATUS(status2);
+	}
+
 	return (ret);
 }
 
@@ -439,17 +461,17 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 {
 	int pipe_fds[2];
 	pid_t pid1, pid2;
-	int status;
 	int ret;
 
 	ret = 0;
 	if (!pipe_node || pipe_node->type != NODE_PIPE)
-		return -1;
+		return (-1);
 	if (pipe(pipe_fds) == -1)
 	{
 		perror("pipe");
-		return -1;
+		return (-1);
 	}
+	g_signal_status = 2; // Mark that child processes are running
 	pid1 = create_child_process(pipe_node->left, shell, STDIN_FILENO, pipe_fds[1]);
 	if (pid1 < 0)
 		return (-1);
@@ -459,12 +481,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 		return (-1);
 	close(pipe_fds[0]);
 	ret = wait_for_child_processes(pid1, pid2);
-	if (g_signal_status == 1)
-	{
-		g_signal_status = 0;
-		return (130); // Return status without writing
-	}
-
+	g_signal_status = 0; // Reset signal status
 	return (ret);
 }
 
@@ -528,12 +545,7 @@ int execute_ast(t_minishell **shell)
 		result = 1;
 	}
 
-	// Only update exit status if not interrupted
-	if (g_signal_status != 130)
-	{
-		(*shell)->exit_status = result;
-	}
-
+	(*shell)->exit_status = result;
 	dup2(saved_fd[1], STDOUT_FILENO);
 	dup2(saved_fd[0], STDIN_FILENO);
 	close(saved_fd[1]);

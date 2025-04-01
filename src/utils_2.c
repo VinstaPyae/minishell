@@ -60,19 +60,14 @@ void handle_sigint(int signo)
 		g_signal_status = 1;
 		return;
 	}
-
-	// For shell prompt interruption
+	// Only print newline and redisplay if at prompt
 	write(1, "\n", 1);
 	rl_replace_line("", 0);
 	rl_on_new_line();
 	rl_redisplay();
-
-	// Directly set exit status using existing mechanism
-	if (g_signal_status == 0)
-	{
-		g_signal_status = 130; // Store signal status
-	}
+	g_signal_status = 130;
 }
+
 // Add these two helper functions
 int check_sigint(void)
 {
@@ -95,7 +90,12 @@ void handle_sigint_heredoc(int signo)
 void handle_sigquit(int signo)
 {
 	(void)signo;
-	// Do nothing for SIGQUIT at the shell level.
+	if (g_signal_status == 2)
+	{ // Child is running
+		// Do nothing, let the default action occur in the child
+		return;
+	}
+	// Do nothing for SIGQUIT at the shell level
 }
 
 void setup_signal_handlers(void)
@@ -109,9 +109,10 @@ void setup_signal_handlers(void)
 	sigaction(SIGINT, &sa, NULL);
 
 	/* Ignore SIGQUIT (Ctrl-\) */
-	sa.sa_handler = SIG_IGN;
+	sa.sa_handler = handle_sigquit;
 	sigaction(SIGQUIT, &sa, NULL);
 
 	/* Ignore SIGTSTP (Ctrl-Z) so the shell is not stopped */
 	sigaction(SIGTSTP, &sa, NULL);
 }
+
