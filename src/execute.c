@@ -115,166 +115,185 @@ char **env_list_to_array(t_env *env)
 	return (env_array);
 }
 ///////////
+
+static void handle_child_signals(void)
+{
+	struct sigaction sa;
+
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL);
+	sigaction(SIGTSTP, &sa, NULL);
+}
+
+static void print_error_message(char *cmd, char *message)
+{
+	write(STDERR_FILENO, cmd, ft_strlen(cmd));
+	write(STDERR_FILENO, ": ", 2);
+	write(STDERR_FILENO, message, ft_strlen(message));
+	write(STDERR_FILENO, "\n", 1);
+}
+
+static int is_directory(char *cmd, t_minishell *shell)
+{
+	struct stat sb;
+
+	if (stat(cmd, &sb) == 0 && S_ISDIR(sb.st_mode))
+	{
+		print_error_message(cmd, "Is a directory");
+		set_exit_status(shell, 126);
+		return (1);
+	}
+	return (0);
+}
+
+static char **get_env_array(t_minishell *shell)
+{
+	char **env_array;
+
+	env_array = env_list_to_array(shell->envp);
+	if (!env_array)
+	{
+		perror("env_list_to_array");
+		set_exit_status(shell, 127);
+	}
+	return (env_array);
+}
+
+static void execute_command(char *cmd, char **args, char **env_array, t_minishell *shell)
+{
+	if (execve(cmd, args, env_array) == -1)
+	{
+		if (errno == EACCES)
+		{
+			print_error_message(cmd, "Permission denied");
+			exit(126);
+		}
+		else if (errno == ENOENT)
+		{
+			print_error_message(cmd, "No such file or directory");
+			exit(127);
+		}
+		else if (errno == EISDIR)
+		{
+			print_error_message(cmd, "Is a directory");
+			exit(126);
+		}
+		else
+		{
+			perror(cmd);
+			exit(126);
+		}
+	}
+}
+static int handle_no_path(char *cmd, t_minishell *shell)
+{
+	print_error_message(cmd, "No such file or directory");
+	free(cmd);
+	return (return_with_status(&shell, 127));
+}
+
+static int check_and_execute(char *full_path, char **cmd, char **env_array, t_minishell *shell)
+{
+	if (access(full_path, X_OK) == 0)
+	{
+		execute_command(full_path, cmd, env_array, shell);
+		return (1);
+	}
+	return (0);
+}
+
+static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
+{
+	char **path_dirs;
+	char *full_path;
+	int i;
+
+	if (!getenv("PATH"))
+		return (handle_no_path(cmd[0], shell));
+	path_dirs = split_path(getenv("PATH"));
+	if (!path_dirs)
+		return (return_with_status(&shell, 127));
+	i = 0;
+	while (path_dirs[i])
+	{
+		full_path = ft_strjoin(path_dirs[i], "/");
+		full_path = ft_strjoin(full_path, cmd[0]);
+		if (check_and_execute(full_path, cmd, env_array, shell))
+			return (free(full_path), 0);
+		free(full_path);
+		i++;
+	}
+	print_error_message(cmd[0], "Command not found");
+	free_arg(cmd);
+	return (return_with_status(&shell, 127));
+}
+
+static void execute_child_process(char **cmd, t_minishell *shell)
+{
+	char **env_array;
+
+	handle_child_signals();
+	if (is_directory(cmd[0], shell))
+		exit(126);
+	env_array = get_env_array(shell);
+	if (!env_array)
+		exit(127);
+	if (cmd[0][0] == '/' || cmd[0][0] == '.')
+	{
+		execute_command(cmd[0], cmd, env_array, shell);
+	}
+	search_and_execute(cmd, env_array, shell);
+	free_array_list(env_array, -1);
+	exit(127);
+}
+
+static int handle_parent_process(pid_t pid, t_minishell *shell)
+{
+	int status;
+
+	waitpid(pid, &status, WUNTRACED);
+	g_signal_status = 0;
+	if (WIFEXITED(status))
+	{
+		set_exit_status(shell, WEXITSTATUS(status));
+	}
+	else if (WIFSIGNALED(status))
+	{
+		set_exit_status(shell, 128 + WTERMSIG(status));
+		print_signal_message(WTERMSIG(status));
+	}
+	return (shell->exit_status);
+}
+
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
-	char **cmd = trim_cmd(ast_cmd->cmd_arg); //$$$ need to clean this cmd
+	char **cmd;
+	pid_t pid;
+
+	cmd = trim_cmd(ast_cmd->cmd_arg);
 	if (!cmd || !cmd[0])
-		return (free_arg(cmd), -1);
-
-	g_signal_status = 2; // Mark that a child process is running
-
-	pid_t pid = fork();
+	{
+		free_arg(cmd);
+		return (-1);
+	}
+	g_signal_status = 2;
+	pid = fork();
 	if (pid < 0)
 	{
 		perror("fork");
-		shell->exit_status = 1;
-		return (free_arg(cmd), -1);
-	}
-
-	if (pid == 0) // Child process
-	{
-		struct sigaction sa;
-		sa.sa_handler = SIG_DFL; // Restore default signal handling
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = 0;
-		sigaction(SIGINT, &sa, NULL);
-		sigaction(SIGQUIT, &sa, NULL);
-		sigaction(SIGTSTP, &sa, NULL);
-
-		// Check if the command is a directory
-		struct stat sb;
-		if (stat(cmd[0], &sb) == 0 && S_ISDIR(sb.st_mode))
-		{
-			fprintf(stderr, "%s: Is a directory\n", cmd[0]);
-			exit(126);
-		}
-
-		/* Convert environment list to array */
-		char **env_array = env_list_to_array(shell->envp);
-		if (!env_array)
-		{
-			perror("env_list_to_array");
-			free_arg(cmd);
-			exit(127);
-		}
-
-		if (cmd[0][0] == '/' || cmd[0][0] == '.')
-		{
-			if (execve(cmd[0], cmd, env_array) == -1)
-			{
-				if (errno == EACCES)
-				{
-					fprintf(stderr, "%s: Permission denied\n", cmd[0]);
-					exit(126);
-				}
-				else if (errno == EISDIR)
-				{
-					fprintf(stderr, "%s: Is a directory\n", cmd[0]);
-					exit(126);
-				}
-				else
-				{
-					perror("execve");
-					// ... clean up and exit ...
-				}
-			}
-		}
-
-		/* Otherwise, search for the command in the directories listed in PATH */
-		/* Otherwise, search for the command in the directories listed in PATH */
-		char *path_env = NULL;
-		t_env *env_ptr = shell->envp;
-		while (env_ptr)
-		{
-			if (ft_strcmp(env_ptr->key, "PATH") == 0)
-			{
-				path_env = env_ptr->value;
-				break;
-			}
-			env_ptr = env_ptr->next;
-		}
-
-		if (!path_env)
-		{
-			// If PATH is unset or not found
-			fprintf(stderr, "%s: No such file or directory!\n", cmd[0]);
-			for (int i = 0; env_array[i]; i++)
-				free(env_array[i]);
-			free(env_array);
-			free_arg(cmd);
-			exit(127);
-		}
-
-		char **path_dirs = split_path(path_env);
-		if (path_dirs)
-		{
-			for (int i = 0; path_dirs[i]; i++)
-			{
-				int len = strlen(path_dirs[i]) + strlen(cmd[0]) + 2;
-				char *full_path = malloc(len);
-				if (!full_path)
-				{
-					perror("malloc");
-					free_arg(cmd);
-					exit(127);
-				}
-				sprintf(full_path, "%s/%s", path_dirs[i], cmd[0]);
-				// First check permissions to return 126 for permission issues
-				if (access(full_path, X_OK) != 0)
-				{
-					if (errno == EACCES)
-					{
-						fprintf(stderr, "%s: Permission denied\n", full_path);
-						free(full_path);
-						for (int j = 0; path_dirs[j]; j++)
-							free(path_dirs[j]);
-						free(path_dirs);
-						exit(126);
-					}
-					free(full_path);
-					continue;
-				}
-
-				execve(full_path, cmd, env_array);
-				free(full_path);
-				break;
-			}
-			/* Free the split PATH array */
-			for (int i = 0; path_dirs[i]; i++)
-				free(path_dirs[i]);
-			free(path_dirs);
-		}
-
-		/* If no valid command was found, print an error and exit */
-		fprintf(stderr, "Command not found: %s\n", cmd[0]);
-		for (int i = 0; env_array[i]; i++)
-			free(env_array[i]);
-		free(env_array);
+		set_exit_status(shell, 1);
 		free_arg(cmd);
-		exit(127);
+		return (-1);
 	}
-	else // Parent process
-	{
-		int status;
-		waitpid(pid, &status, WUNTRACED);
-
-		/* Reset global state */
-		g_signal_status = 0;
-
-		// Set exit status based on child termination
-		if (WIFEXITED(status))
-			shell->exit_status = WEXITSTATUS(status);
-		else if (WIFSIGNALED(status))
-		{
-			int sig = WTERMSIG(status);
-			shell->exit_status = 128 + sig;
-			print_signal_message(sig);
-		}
-
-		free_arg(cmd);
-		return shell->exit_status;
-	}
+	if (pid == 0)
+		execute_child_process(cmd, shell);
+	free_arg(cmd);
+	return (handle_parent_process(pid, shell));
 }
+
 ////////
 int execute_builtin(t_minishell **shell, char *cmd)
 {

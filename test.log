@@ -1,0 +1,1170 @@
+LAST EDITED: 10 Nov 2024
+
+
+CREDITS: test compilation thanks to test cases brought up by ~
+cgoh, filim, geheng, hulim, hyan-yi, jolai, tjegades, xlow
+
+
+LEGEND:
+[ ] to fix,
+[OK] program handles,
+[FIXED] program handles after fix is applied
+[EXPLAIN] program does not follow bash, but justification can be provided
+[!!] edge case
+--- EXPECTED ---    refers to bash behaviour
+--- ACTUAL ---      refers to minishell program behaviour
+
+
+CONTENTS:
+1	BEFORE EVALUATION BEGINS
+2	SIMPLE CMDS, GLOBAL VAR
+3	ECHO
+4	EXIT
+5	RETURN VALUES
+6	SIGNALS
+7	QUOTATIONS
+8	ENV
+9	EXPORT
+10	UNSET
+11	CD, PWD
+12	ENV PATH
+13	REDIRECTS
+14	HEREDOC
+15	PIPES
+16	REDIRECTS + PIPES
+17	SYNTAX ERRS
+18	FILE PERMISSIONS
+
+
+== BEFORE EVALUATION ==
+1.1 ====== NORM =======
+[OK] check global variable is used in main.c, declared in minishell.h
+reason: captures the exit status returned by a signal (for ctrl-c, ctrl-\)
+norminette *
+
+1.2 ====== MAKE =======
+[OK] check compilation uses "-Wall -Wextra -Werror"
+make -n
+
+1.3 ==== EXT. FUNC ====
+[OK] ensure no forbidden functions are used!
+after compiling, key `nm -u ./minishell`
+	[X] readline			[X] stat
+	[X] rl_clear_history	[ ] lstat
+	[X] rl_on_new_line		[ ] fstat
+	[X] rl_replace_line		[ ] unlink
+	[X] rl_redisplay		[X] execve
+	[X] add_history			[X] dup
+	[X] printf				[X] dup2
+	[X] malloc				[X] pipe
+	[X] free				[ ] opendir
+	[X] write				[ ] readdir
+	[X] access				[ ] closedir
+	[X] open				[X] strerror
+	[ ] read				[X] perror
+	[X] close				[ ] isatty
+	[X] fork				[ ] ttyname
+	[ ] read				[ ] ttyslot
+	[ ] readwait			[ ] ioctl
+	[X] waitpid				[ ] getenv
+	[ ] wait3				[ ] tcsetattr
+	[ ] wait4				[ ] tcgetattr
+	[X] signal				[ ] tgetent
+	[X] sigaction			[ ] tgetflag
+	[X] sigemptyset			[ ] tgetnum
+	[X] sigaddset			[ ] tgetstr
+	[ ] kill				[ ] tgoto
+	[X] exit				[ ] tputs
+	[X] getcwd
+	[X] chdir
+
+
+=== SIMPLE CMDS, GLOBAL VAR ===
+2.1 ===================
+[OK] cmd should be able to handle absolute path
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ /bin/ls
+Makefile   includes  minishell  readline.supp   test.log
+README.md  libft     obj        srcs
+elfoo@c1r5s4:~/cursus/MEnishell$ /bin/cat readline.supp
+{
+	leak readline
+	Memcheck:Leak
+ 	match-leak-kinds: reachable
+ 	...
+ 	obj:*/libreadline.so.*
+}
+{
+    readline_teardown_leak
+    Memcheck:Leak
+    match-leak-kinds: definite
+    fun: malloc
+    fun: xmalloc
+    fun: readline_internal_teardown
+    fun: readline
+    ...
+}
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+2.2 ===================
+[OK] error message is displayed when user input is invalid (first word gets interpreted as file or directory)
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ hello
+Command 'hello' not found, but can be installed with:
+snap install hello              # version 2.10, or
+apt  install hello              # version 2.10-2ubuntu4
+apt  install hello-traditional  # version 2.10-5
+See 'snap info hello' for additional versions.
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+2.3 ===================
+[OK] can run singular executable
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ ls
+Makefile   includes  minishell  readline.supp   test.log
+README.md  libft     obj        srcs
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+2.4 ===================
+[OK] empty command "" or '' should return 'command not found'
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ ""
+Command '' not found, but can be installed with:
+apt install mailutils-mh  # version 1:3.14-1, or
+apt install mmh           # version 0.4-4
+apt install nmh           # version 1.7.1-11
+apt install termtris      # version 1.3-1ubuntu1
+Ask your administrator to install one of them.
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r5s4:~/cursus/MEnishell$ ''
+Command '' not found, but can be installed with:
+apt install mailutils-mh  # version 1:3.14-1, or
+apt install mmh           # version 0.4-4
+apt install nmh           # version 1.7.1-11
+apt install termtris      # version 1.3-1ubuntu1
+Ask your administrator to install one of them.
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+2.5 ===================
+[OK] run multiple ./minishell
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ ./minishell
+MEnishell:~/github/menishell$ env | grep SHLVL
+SHLVL=2
+MEnishell:~/github/menishell$ ./minishell
+MEnishell:~/github/menishell$ env | grep SHLVL
+SHLVL=3
+MEnishell:~/github/menishell$ ./minishell
+MEnishell:~/github/menishell$ env | grep SHLVL
+SHLVL=4
+MEnishell:~/github/menishell$ exit
+exit
+MEnishell:~/github/menishell$ env | grep SHLVL
+SHLVL=3
+MEnishell:~/github/menishell$ exit
+exit
+MEnishell:~/github/menishell$ env | grep SHLVL
+SHLVL=2
+MEnishell:~/github/menishell$ exit
+exit
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+2.6 ===== ARGS ========
+[OK] run simple command with absolute path, command with arguments without single and double quotes
+elfoo@c1r5s4:~/cursus/MEnishell$ /bin/ls
+Makefile   includes  minishell  readline.supp   test.log
+README.md  libft     obj        srcs
+elfoo@c1r5s4:~/cursus/MEnishell$ /bin/echo hello
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+
+======== ECHO =========
+3.1 ===================
+[OK] echo with random tabs and spaces
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$       echo
+
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+3.2 ===================
+[TO NOTE] ft_isspace should not used to separate words; only apply to "whitespace" characters
+ft_run_program: cleaned_input should not ft_strtrim "\v", "\r" and "\f" since they are technically not characters that separate words (according to bash)
+
+3.3 ===================
+[OK] echo -nnnnnn with random tabs and spaces, with -n at the end
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ echo -nnnnn -nnnnnnnnnnnnn-n -nnnnnnna -n
+-nnnnnnnnnnnnn-n -nnnnnnna -nelfoo@c1r5s4:~/cursus/MEnishell$ echo -nnnnnnnnna hello world -n
+-nnnnnnnnna hello world -n
+elfoo@c1r5s4:~/cursus/MEnishell$ echo -nnnnnnnn hello
+helloelfoo@c1r5s4:~/cursus/MEnishell$ echo -nnnnnnna hello
+-nnnnnnna hello
+elfoo@c1r5s4:~/cursus/MEnishell$ echo -nnn hello -nnnna
+hello -nnnnaelfoo@c1r5s4:~/cursus/MEnishell$ echo -n abc
+abcelfoo@c1r5s4:~/cursus/MEnishell$ echo -n-n abc
+-n-n abc
+elfoo@c1r5s4:~/cursus/MEnishell$ echo -n  -n -n abc
+abcelfoo@c1r5s4:~/cursus/MEnishell$ echo -n -n-n-n abc
+-n-n-n abcelfoo@c1r5s4:~/cursus/MEnishell$ echo -n-n-n-n abc
+-n-n-n-n abc
+elfoo@c1r5s4:~/cursus/MEnishell$ echo -n-n-n-n -n abc
+-n-n-n-n -n abc
+elfoo@c1r5s4:~/cursus/MEnishell$ echo -n "-n-n-n -n abc"
+-n-n-n -n abcelfoo@c1r5s4:~/cursus/MEnishell$ echo "-n -n-n-n -n abc"
+-n -n-n-n -n abc
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+3.4 ===================
+[OK] echo $a, export a, echo $a
+solution: parser needs to do additional check if value is a NULL pointer
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $a
+
+elfoo@c1r8s7:~/cursus/MEnishell$ export a
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $a
+
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+3.5 ===================
+[OK] check that builtin echo function can expand multiple shell variables:
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $USER $HOME
+elfoo /home/elfoo
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+3.6 ===================
+[OK] echo "                  " | cat -A
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ echo "                  " | cat -A
+                  $
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+3.7 ===================
+[OK]
+elfoo@c1r8s7:~/cursus/MEnishell$ 'e''c''h''o' 13
+13
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+
+
+======== EXIT =========
+4.1 ===================
+[OK] exit number out of range, echo $?
+solution: call ft_free_master in ft_exit_handler a similar way to ft_close_fd
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=4
+elfoo@c1r8s7:~/cursus/MEnishell$ exit 999999999999999999999999999999
+exit
+bash: exit: 999999999999999999999999999999: numeric argument required
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+2
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=3
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+4.2 ===================
+[OK] exit invalid argument, echo $?
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=4
+elfoo@c1r8s7:~/cursus/MEnishell$ exit blah
+exit
+bash: exit: blah: numeric argument required
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+2
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=3
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+
+==== RETURN VALUES ====
+5.1 ==================
+[OK] check that echo $? value is the same in bash
+elfoo@c1r5s4:~/cursus/MEnishell$ /bin/ls
+Makefile   includes  minishell  readline.supp   test.log
+README.md  libft     obj        srcs
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+0
+elfoo@c1r5s4:~/cursus/MEnishell$ expr $? + $?
+0
+elfoo@c1r5s4:~/cursus/MEnishell$ ^C
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+130
+elfoo@c1r5s4:~/cursus/MEnishell$ expr $? + $?
+0
+elfoo@c1r5s4:~/cursus/MEnishell$ ^C
+elfoo@c1r5s4:~/cursus/MEnishell$ expr $? + $?
+260
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+
+====== SIGNALS ========
+6.1 ===================
+[OK] test ctrl-c, ctrl-d, ctrl-\ in different scenario
+ - in minishell program
+ - while receiving heredoc input
+ - when using blocking cmds (prevent the shell from accepting more input until they finish executing)
+	(ie. `cat` reads from STDIN, `sleep` and `grep` can have long execution times)
+
+6.2 ===================
+[OK] run blocking commands like cat without arguments or grep "something"
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ cat
+^C
+elfoo@c1r8s7:~/cursus/MEnishell$ cat
+^\Quit (core dumped)
+elfoo@c1r8s7:~/cursus/MEnishell$ cat
+elfoo@c1r8s7:~/cursus/MEnishell$ grep "something"
+^C
+elfoo@c1r8s7:~/cursus/MEnishell$ grep "something"
+^\Quit (core dumped)
+elfoo@c1r8s7:~/cursus/MEnishell$ grep "something"
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+6.3 ===================
+[OK] after doing $? with spaces and tabs inbetween, do ctrl-c
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$       $      ?
+$: command not found
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r8s7:~/cursus/MEnishell$ ^C
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+130
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+6.4 ===================
+[OK] after echo cmd, do ctrl-c
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ echo
+
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+0
+elfoo@c1r8s7:~/cursus/MEnishell$ ^C
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+130
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+6.5 ===================
+[OK] exit program after ctrl-c, exit status of ctrl-c should be captured in echo $?
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=2
+elfoo@c1r8s7:~/cursus/MEnishell$ ^C
+elfoo@c1r8s7:~/cursus/MEnishell$ exit
+exit
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+130
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=1
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+
+===== QUOTATIONS =====
+7.1 ==================
+[OK] execute simple command with and without double quotes
+elfoo@c1r8s7:~/cursus/MEnishell$ echo hello > lol.c
+elfoo@c1r8s7:~/cursus/MEnishell$ cat lol.c
+hello
+elfoo@c1r8s7:~/cursus/MEnishell$ echo "cat lol.c | cat lol.c"
+cat lol.c | cat lol.c
+elfoo@c1r8s7:~/cursus/MEnishell$ cat lol.c | cat lol.c
+hello
+elfoo@c1r8s7:~/cursus/MEnishell$
+7.2 ===================
+[OK] single quotes -> produces string literal
+double quotes -> produces string literal except for $, which expands
+no quotes -> produces string literal except for $, which expands
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $USER
+elfoo
+elfoo@c1r8s7:~/cursus/MEnishell$ echo '$USER'
+$USER
+elfoo@c1r8s7:~/cursus/MEnishell$ echo "$USER"
+elfoo
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+
+========= ENV =========
+8.1 ===================
+[OK] env more than 1 argument
+problem: wrong error message
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ env fhsdjkfh
+env: ‘fhsdjkfh’: No such file or directory
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+8.2 ===================
+[OK] [!!] run minishell without env: env -i ./minishell
+comments: consider implementing (if got time); when all variables are unset, env_list should still be able display an empty list; SHOULD NOT seg fault
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ env -i bash
+elfoo@c1r5s4:~/cursus/MEnishell$ env
+PWD=/home/elfoo/cursus/MEnishell
+SHLVL=1
+_=/usr/bin/env
+elfoo@c1r5s4:/home/elfoo/cursus/MEnishell$
+
+
+======= EXPORT ========
+9.1 ===================
+[OK] (a) export a, check in env <NO> and export <YES>
+check if env variable value != NULL, print variable
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ export a
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep a
+(no a variable displayed)
+elfoo@c1r8s7:~/cursus/MEnishell$ export | grep a
+...
+declare -x a
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+9.2 ===================
+[OK] export a=, check in env <YES> and export <YES>
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ export a=
+elfoo@c1r8s7:~/cursus/MEnishell$ env | grep a=
+a=
+elfoo@c1r8s7:~/cursus/MEnishell$ export | grep a=
+declare -x a=""
+elfoo@c1r8s7:~/cursus/MEnishell$
+(note that variable a gets overwritten)
+
+9.3 ===================
+[OK] (a) check that after exporting variables, program behaves similar to bash for shell expansion
+[OK] (b) 'export xyz=123', followed by 'export $xyz=123' 
+--- EXPECTED ---
+hello -nnnnaelfoo@c1r5s4:~/cursus/MEnishell$ export xyz=123 zzz=456
+elfoo@c1r5s4:~/cursus/MEnishell$ $xyz$zzz
+123456: command not found
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r5s4:~/cursus/MEnishell$ export $xyz$zzz
+bash: export: `123456': not a valid identifier
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+1
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+9.4 ===================
+[OK] export _
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ export _
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+9.5 ===================
+[OK] export 123, exit, echo $?, exit status should not be 0 but 1
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ export 123
+bash: export: `123': not a valid identifier
+elfoo@c1r8s7:~/cursus/MEnishell$ exit
+exit
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+1
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+9.6 ===================
+[!!] no word splitting happens for characters after the first '=' sign
+reason: we do not handle local variables...
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$ export novalue
+elfoo@ElizabethFoo:~$ export space=
+elfoo@ElizabethFoo:~$ export withspace="hello world"
+elfoo@ElizabethFoo:~$ export key=value
+elfoo@ElizabethFoo:~$ export
+...
+declare -x novalue
+declare -x space=""
+declare -x key="value"
+declare -x withspace="hello world"
+elfoo@ElizabethFoo:~$ export $key$withspace=$key=$withspace (aka 'valuehello world=value=hello world')
+elfoo@ElizabethFoo:~$ export
+declare -x key="value"
+declare -x novalue
+declare -x space=""
+declare -x valuehello
+declare -x withspace="hello world"
+declare -x world="value=hello"
+elfoo@ElizabethFoo:~$
+--- ACTUAL ---
+MEnishell:~/github/menishell$ export novalue
+MEnishell:~/github/menishell$ export space=
+MEnishell:~/github/menishell$ export withspace="hello world"
+MEnishell:~/github/menishell$ export key=value
+MEnishell:~/github/menishell$ export
+...
+declare -x key="value"
+declare -x novalue=""
+declare -x space=""
+declare -x withspace="hello world"
+MEnishell:~/github/menishell$ export $key$withspace=$key=$withspace (aka 'valuehello world=value=hello world')
+MEnishell:~/github/menishell$ export
+declare -x key="hello"
+declare -x novalue
+declare -x space=""
+declare -x valuehello
+declare -x withspace="hello world"
+declare -x world
+
+
+======= UNSET =========
+10.1 ==================
+[OK] unset PATH, ls
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ unset PATH
+elfoo@c1r8s7:~/cursus/MEnishell$ ls
+bash: ls: No such file or directory
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r8s7:~/cursus/MEnishell$ /bin/ls
+Makefile   includes  minishell  readline.supp   test.log
+README.md  libft     obj        srcs
+elfoo@c1r8s7:~/cursus/MEnishell$ /usr/bin/ls
+Makefile   includes  minishell  readline.supp   test.log
+README.md  libft     obj        srcs
+elfoo@c1r8s7:~/cursus/MEnishell$ which ls
+bash: which: No such file or directory
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+127
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+10.2 ==================
+[OK] if HOME gets unset, readline directory path should be expanded
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ env | grep HOME
+HOME=/home/elfoo
+elfoo@c1r5s4:~/cursus/MEnishell$ unset HOME
+elfoo@c1r5s4:/home/elfoo/cursus/MEnishell$ export HOME=/home/malee
+elfoo@c1r5s4:/home/elfoo/cursus/MEnishell$ cd ..
+elfoo@c1r5s4:/home/elfoo/cursus$ cd MEnishell/
+elfoo@c1r5s4:/home/elfoo/cursus/MEnishell$ export HOME=/home/elfoo
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+
+======= CD, PWD =======
+11.1 ==================
+[OK] cd 1 displays 'no such file or directory' message
+--- EXPECTED ---
+elfoo@c1r8s7:~/cursus/MEnishell$ cd 1
+bash: cd: 1: No such file or directory
+elfoo@c1r8s7:~/cursus/MEnishell$ echo $?
+1
+elfoo@c1r8s7:~/cursus/MEnishell$
+
+11.2 ==================
+[OK] 'cd       ""' should not cause 'cd' command to execute
+--- EXPECTED ---
+elfoo@c1r4s1:~/cursus/MEnishell$ cd       ""
+elfoo@c1r4s1:~/cursus/MEnishell$
+
+11.3 ==================
+[OK] cd should not handle '~', ie. '~', '~/cursus/MEnishell'
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ cd
+elfoo@c1r5s4:~$ pwd
+/home/elfoo
+elfoo@c1r5s4:~$ cd ~/cursus/MEnishell/
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+0
+elfoo@c1r5s4:~/cursus/MEnishell$ cd ~
+elfoo@c1r5s4:~$ echo $?
+0
+elfoo@c1r5s4:~$ cd cursus/MEnishell/
+elfoo@c1r5s4:~/cursus/MEnishell$
+--- ACTUAL ---
+MEnishell:~/cursus/MEnishell$ cd
+MEnishell:~$ pwd
+/home/elfoo
+MEnishell:~$ cd ~/cursus/MEnishell/
+MEnishell: cd: ~/cursus/MEnishell/: No such file or directory
+MEnishell:~$ echo $?
+1
+MEnishell:~$ cd ~
+MEnishell: cd: ~: No such file or directory
+MEnishell:~$ echo $?
+1
+MEnishell:~$
+
+
+====== ENV PATH =======
+12.1 ==================
+[OK] check if PATH variable file paths can run based on permission settings
+mkdir -p /tmp/test1 /tmp/test2
+cp /bin/ls /tmp/test1/ls
+cp /bin/ls /tmp/test2/ls
+chmod -x /tmp/test1/ls
+chmod +x /tmp/test2/ls
+export PATH=/tmp/test1:/tmp/test2:$PATH
+action: which ls
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ which ls
+/tmp/test2/ls
+elfoo@c1r5s4:~/cursus/MEnishell$ chmod +x /tmp/test1/ls
+elfoo@c1r5s4:~/cursus/MEnishell$ chmod -x /tmp/test2/ls
+elfoo@c1r5s4:~/cursus/MEnishell$ which ls
+/tmp/test1/ls
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+12.2 =================
+[OK] run without PATH variable present
+--- EXPECTED ---
+elfoo@ubuntu:~/github/menishell$ env | grep PATH
+PATH=/home/elfoo/.local/bin:/home/elfoo/.local/bin:/home/elfoo/.local/bin:/home/elfoo/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files (x86)/dotnet/:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/wamp64/bin/php/php8.2.0:/mnt/c/ProgramData/ComposerSetup/bin:/mnt/c/Program Files/nodejs/:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/eliza/appdata/local/programs/python/python39/scripts/:/mnt/c/Users/eliza/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/eliza/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/eliza/AppData/Roaming/Composer/vendor/bin:/mnt/c/Users/eliza/AppData/Roaming/npm:/snap/bin
+elfoo@ubuntu:~/github/menishell$ unset PATH
+elfoo@ubuntu:~/github/menishell$ env | grep PATH
+bash: env: No such file or directory
+bash: grep: No such file or directory
+elfoo@ubuntu:~/github/menishell$ echo $?
+127
+elfoo@ubuntu:~/github/menishell$
+
+
+====== REDIRECTS ======
+13.1 ==================
+[OK] detects ambiguous redirect
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$ echo <$a
+bash: $a: ambiguous redirect
+elfoo@ElizabethFoo:~$ echo $?
+1
+elfoo@ElizabethFoo:~$
+
+13.2 ==================
+[OK] multiple redirects (with cat command); input comes from Makefile, output goes to hello
+--- EXPECTED ---
+elfoo@ElizabethFoo:~/github/menishell$ >hello << eof < Makefile
+> bye
+> eof
+elfoo@ElizabethFoo:~/github/menishell$ cat hello
+elfoo@ElizabethFoo:~/github/menishell$
+---
+(hello is created but empty)
+(how to get Makefile content in hello)
+elfoo@ElizabethFoo:~/github/menishell$ cat >hello << eof < Makefile
+> bye
+> eof
+elfoo@ElizabethFoo:~/github/menishell$ cat hello
+(Makefile content)
+elfoo@ElizabethFoo:~/github/menishell$
+
+13.3 ==================
+[OK] (a) multiple redirects: `cat infile > out1 > out2 > out3`
+[OK] (b) if out2 has no_perm, exit status should be 1, not 0
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ cat infile > out1 > out2 > out3
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out1
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out2
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out3
+Apple
+Pear
+Peach
+elfoo@c1r5s4:~/cursus/MEnishell$ rm out1 out3
+elfoo@c1r5s4:~/cursus/MEnishell$ chmod -w out2
+elfoo@c1r5s4:~/cursus/MEnishell$ cat infile > out1 > out2 > out3
+bash: out2: Permission denied
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+1
+(note that while out1 is created, out3 is not created, and nothing is stored in out1 and out2)
+
+13.4 ==================
+[OK] check if redirect can happen in parent process: `echo hello > outfile`
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ echo hello > outfile
+elfoo@c1r5s4:~/cursus/MEnishell$ cat outfile
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+13.5 ==================
+[OK] check if redirect can happen without cmd: ` < infile`
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ cat infile
+Apple
+Pear
+Peach
+elfoo@c1r5s4:~/cursus/MEnishell$ < infile
+elfoo@c1r5s4:~/cursus/MEnishell$ cat infile
+Apple
+Pear
+Peach
+elfoo@c1r5s4:~/cursus/MEnishell$ > infile
+elfoo@c1r5s4:~/cursus/MEnishell$ cat infile
+elfoo@c1r5s4:~/cursus/MEnishell$
+(note that infile gets overwritten due to redirect out open settings)
+
+13.6 ==================
+[OK] check that file will not be created if there is no spacing after file name
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ > 1>2 > 3 > 4 > 5 < 1
+bash: syntax error near unexpected token `1'
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 5
+cat: 5: No such file or directory
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 4
+cat: 4: No such file or directory
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 3
+cat: 3: No such file or directory
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 2
+cat: 2: No such file or directory
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 1
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$
+---
+(reasonable for program to create files 1, 2, 3, 4 , 5; bash could be looking for redirect options hence displays syntax error, and priority lies in program robustness, if can handle redirects inbetween commands ie. `ls < file -la`)
+(how to get output 'hello' in filename '5')
+elfoo@c1r5s4:~/cursus/MEnishell$ echo hello > 1
+elfoo@c1r5s4:~/cursus/MEnishell$ >> 1 >2 > 3 > 4 > 5 < 1 cat
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 5
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 4
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 3
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 2
+elfoo@c1r5s4:~/cursus/MEnishell$ cat 1
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$
+(note it is better to not give number as filename)
+
+
+======= HEREDOC =======
+14.1 ==================
+[OK] heredoc with empty delimiter; heredoc takes in an empty quote as a delimiter
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$    <<   ""
+> hello
+>
+elfoo@ElizabethFoo:~$
+
+14.2 ==================
+[OK] heredoc without any input should work
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$    <<   eof
+> eof
+elfoo@ElizabethFoo:~$
+
+14.3 ==================
+[OK] ctrl-c inside heredoc prompt should end heredoc prompt
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$    <<   eof
+> ^C
+elfoo@ElizabethFoo:~$
+
+14.4 ==================
+[OK] ctrl-d inside heredoc prompt should end heredoc prompt
+problem: remove unwanted spaces in ctrl-d message
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$    <<   eof
+>
+bash: warning: here-document at line 12 delimited by end-of-file (wanted `eof')
+elfoo@ElizabethFoo:~$
+--- ACTUAL ---
+MEnishell:~/github/menishell$     <<   eof
+>
+MEnishell: warning: here-document delimited by end-of-file (wanted 'eof')
+MEnishell:~/github/menishell$
+
+14.5 ==================
+[OK] if heredoc delimiter is quoted, all expansion variables should be left untouched
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$    <<   ""eof cat
+> $USER
+> eof
+$USER
+elfoo@ElizabethFoo:~$    <<   ''eof cat
+> $USER
+> eof
+$USER
+elfoo@ElizabethFoo:~$    << "eof" cat
+> $USER
+> eof
+$USER
+elfoo@ElizabethFoo:~$    <<  'eof' cat
+> $USER
+> eof
+$USER
+elfoo@ElizabethFoo:~$
+
+14.6 ==================
+[OK] multiple redirects with multiple heredoc: `cat << EOF1 << EOF2 > out1 out2`
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ cat << EOF1 << EOF2 > out1 out2
+> hello
+> EOF1
+> 12345
+> EOF2
+cat: out2: No such file or directory
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+1
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out1
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out2
+cat: out2: No such file or directory
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+1
+elfoo@c1r5s4:~/cursus/MEnishell$
+---
+(even though heredocs are processed, cat reads from out2 (which does not exist), hence displaying the error message)
+(how to get heredoc EOF2 content in out1)
+elfoo@c1r5s4:~/cursus/MEnishell$ cat << EOF1 << EOF2 > out1
+> hello
+> EOF1
+> 12345
+> EOF2
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out2
+12345
+elfoo@c1r5s4:~/cursus/MEnishell$ 
+
+14.7 ==================
+[OK] if the filename matches the name of a command
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ echo hello > myfile
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$ cat < myfile > cat
+elfoo@c1r5s4:~/cursus/MEnishell$ cat cat
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$ 
+
+
+
+======== PIPES =========
+15.1 ===================
+[OK] for multiple pipes, displays last pipe command
+--- EXPECTED ---
+elfoo@ElizabethFoo:~/github/menishell$ echo a | blah
+blah: command not found
+elfoo@ElizabethFoo:~/github/menishell$ echo $?
+127
+elfoo@ElizabethFoo:~/github/menishell$ blah | echo a
+a
+blah: command not found
+elfoo@ElizabethFoo:~/github/menishell$ echo $?
+0
+elfoo@ElizabethFoo:~/github/menishell$
+---
+(to try in place of blah: $gibberish (causes SIGPIPE) and exit(reasonable for exit output to be displayed, but must not terminate minishell))
+MEnishell:~/github/menishell$ echo a | $gibberish
+MEnishell:~/github/menishell$ $gibberish | echo a
+a
+MEnishell:~/github/menishell$ echo a | exit
+exit
+MEnishell:~/github/menishell$ exit | echo a
+a
+MEnishell:~/github/menishell$
+
+15.2 ===================
+[OK] check if `exit` can run in child process: `> outfile | exit`
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=2
+elfoo@c1r5s4:~/cursus/MEnishell$ > outfile | exit
+elfoo@c1r5s4:~/cursus/MEnishell$ env | grep SHLVL
+SHLVL=2
+elfoo@c1r5s4:~/cursus/MEnishell$
+(outfile gets created in the process)
+
+15.4 ===================
+[OK] test for concurrency
+--- EXPECTED ---
+elfoo@ElizabethFoo:~/github/menishell$ cat | cat | ls
+Makefile   hello     libft      minishell_tester  readline.supp  test.log
+README.md  includes  minishell  obj               srcs
+
+
+elfoo@ElizabethFoo:~/github/menishell$ time sleep 5 | time sleep 3 | time sleep 2 | time sleep 4
+0.00user 0.00system 0:02.00elapsed 0%CPU (0avgtext+0avgdata 1984maxresident)k
+0inputs+0outputs (1major+102minor)pagefaults 0swaps
+0.00user 0.00system 0:03.00elapsed 0%CPU (0avgtext+0avgdata 1864maxresident)k
+0inputs+0outputs (0major+103minor)pagefaults 0swaps
+0.00user 0.00system 0:04.00elapsed 0%CPU (0avgtext+0avgdata 1864maxresident)k
+0inputs+0outputs (0major+101minor)pagefaults 0swaps
+
+real    0m5.005s
+user    0m0.014s
+sys     0m0.004s
+elfoo@ElizabethFoo:~/github/menishell$
+(try 'cat | cat | ls', versus 'cat | cat | cat | cat | cat | ls' (x5 cat))
+
+15.5 ===================
+[OK] contains a mixure of blocking commands and invalid commands; output is different
+elfoo@c1r8s9:~/cursus/MEnishell$ cat | ct | ls
+folder	  Makefile	    minishell_test.log	README.md  test_xf.log
+includes  minishell	    obj			srcs
+libft	  minishell_tester  readline.supp	test.log
+ct: command not found
+
+elfoo@c1r8s9:~/cursus/MEnishell$ ct | cat | ls
+folder	  Makefile	    minishell_test.log	README.md  test_xf.log
+includes  minishell	    obj			srcs
+libft	  minishell_tester  readline.supp	test.log
+ct: command not found
+elfoo@c1r8s9:~/cursus/MEnishell$ ls | cat | ct
+ct: command not found
+elfoo@c1r8s9:~/cursus/MEnishell$ cat | ls | ct
+ct: command not found
+
+elfoo@c1r8s9:~/cursus/MEnishell$ 
+
+15.6 ===================
+[OK] multiple++ pipes
+--- EXPECTED ---
+elfoo@ElizabethFoo:~/github/menishell$ echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a
+a
+elfoo@ElizabethFoo:~/github/menishell$
+--- ACTUAL ---
+MEnishell:~/github/menishell$ echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a | echo a
+a
+MEnishell:~/github/menishell$
+
+
+== REDIRECTS + PIPES ==
+16.1 ===================
+[OK] redirects in pipes: `cat infile > out1 | cat infile > out2`
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ cat infile > out1 | cat infile > out2
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out1
+Apple
+Pear
+Peach
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out2
+Apple
+Pear
+Peach
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+16.2 ==================
+[OK]
+< Makefile
+< Makefile cat | head -5 > out
+< Makefile grep a > out | echo 123
+< Makefile echo | ls
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ < Makefile
+elfoo@c1r5s4:~/cursus/MEnishell$ < Makefile cat | head -5 > out
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out
+# Colors
+RED			= \033[0;31m
+GREEN		= \033[0;32m
+YELLOW		= \033[0;33m
+RESET		= \033[0m
+elfoo@c1r5s4:~/cursus/MEnishell$ < Makefile grep a > out | echo 123
+123
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out
+(all content with 'a' inside)
+elfoo@c1r5s4:~/cursus/MEnishell$ < Makefile echo | ls
+Makefile   includes  minishell  readline.supp   test.log
+README.md  libft     obj        srcs
+elfoo@c1r5s4:~/cursus/MEnishell$ < Makefile echo
+
+elfoo@c1r5s4:~/cursus/MEnishell$
+(since there are no valid arguments given to echo (because < Makefile only affects STDIN), echo will print simply a newline)
+---
+(how to get no newline)
+elfoo@c1r5s4:~/cursus/MEnishell$ -n < Makefile echo
+-n: command not found
+elfoo@c1r5s4:~/cursus/MEnishell$ < Makefile echo -n
+elfoo@c1r5s4:~/cursus/MEnishell$ 
+
+16.3 ==================
+[OK]
+updates out3 [NO]   << a cat > out1 | << b cat > out2 | << cat >> out3
+updates out3 [NO]   << a cat | << b cat | << c cat
+updates out3 [YES]  << a cat >> out3
+updates out3 [NO]   < a cat >> out3, displays 'no such file or directory' message
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ << a cat > out1 | << b cat > out2 | << cat >> out3
+> hello
+> a
+> 12345
+> b
+> qwerty
+> cat
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out1
+hello
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out2
+12345
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out3
+elfoo@c1r5s4:~/cursus/MEnishell$ << a cat | << b cat | << c cat
+> hello
+> a
+> 12345
+> b
+> qwerty
+> c
+qwerty
+elfoo@c1r5s4:~/cursus/MEnishell$ << a cat >> out3
+> 67890
+> a
+elfoo@c1r5s4:~/cursus/MEnishell$ cat out3
+67890
+elfoo@c1r5s4:~/cursus/MEnishell$ < a cat >> out3
+bash: a: No such file or directory
+elfoo@c1r5s4:~/cursus/MEnishell$
+(a is not a filename, but the first heredoc prompt all this while)
+
+16.4 ==================
+[OK]
+content shows up once    env | env
+content shows up once    ls | ls
+
+16.5 ==================
+[OK]
+sleep 3 | << a cat > out1 | echo 2 | << b cat > out2 | echo 3
+ - triggers heredocs (a, b)
+ - displays '3',
+ - blinks 3 secs before returning prompt
+ --- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ sleep 3 | << a cat > out1 | echo 2 | << b cat > out2 | echo 3
+> hello
+> a
+> 12345
+> b
+3
+elfoo@c1r5s4:~/cursus/MEnishell$ 
+(causes SIGPIPE, leaks are reasonable)
+
+16.6 ==================
+[OK]
+/bin/ls   /bin/ls, produces /bin/ls
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ /bin/ls          /bin/ls
+/bin/ls
+elfoo@c1r5s4:~/cursus/MEnishell$ 
+
+
+===== SYNTAX ERRS ======
+17.1 ===================
+[OK] empty pipe, empty redirection sign, '&&' sign should produce syntax error
+reason: we do not interpret '&&', hence it gets interpreted as a command by default
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ | > out
+bash: syntax error near unexpected token `|'
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+2
+(note that out gets created)
+elfoo@c1r5s4:~/cursus/MEnishell$ <
+bash: syntax error near unexpected token `newline'
+elfoo@c1r5s4:~/cursus/MEnishell$ < |
+bash: syntax error near unexpected token `|'
+elfoo@c1r5s4:~/cursus/MEnishell$ | >
+bash: syntax error near unexpected token `|'
+elfoo@c1r5s4:~/cursus/MEnishell$ < >
+bash: syntax error near unexpected token `>'
+elfoo@c1r5s4:~/cursus/MEnishell$ ||
+bash: syntax error near unexpected token `||'
+elfoo@c1r5s4:~/cursus/MEnishell$ &&
+bash: syntax error near unexpected token `&&'
+elfoo@c1r5s4:~/cursus/MEnishell$ || >
+bash: syntax error near unexpected token `||'
+elfoo@c1r5s4:~/cursus/MEnishell$ < ||
+bash: syntax error near unexpected token `||'
+elfoo@c1r5s4:~/cursus/MEnishell$
+--- ACTUAL ---
+MEnishell:~/cursus/MEnishell$ | > out
+MEnishell: syntax error: near unexpected token: |
+(out gets greated)
+MEnishell:~/github/menishell$ <
+MEnishell: syntax error: near unexpected token: newline
+MEnishell:~/cursus/MEnishell$ echo $?
+2
+MEnishell:~/github/menishell$ < |
+MEnishell: syntax error: near unexpected token: |
+MEnishell:~/github/menishell$ | >
+MEnishell: syntax error: near unexpected token: |
+MEnishell:~/github/menishell$ < >
+MEnishell: syntax error: near unexpected token: >
+MEnishell:~/github/menishell$ ||
+MEnishell: syntax error: near unexpected token: |
+MEnishell:~/github/menishell$ &&
+MEnishell: &&: command not found
+MEnishell:~/github/menishell$ echo $?
+127
+MEnishell:~/github/menishell$ ""
+MEnishell: '': command not found
+MEnishell:~/github/menishell$ echo $?
+127
+MEnishell:~/github/menishell$ ''
+MEnishell: '': command not found
+MEnishell:~/github/menishell$ echo $?
+127
+MEnishell:~/github/menishell$ || >
+MEnishell: syntax error: near unexpected token: |
+MEnishell:~/github/menishell$ < ||
+MEnishell: syntax error: near unexpected token: |
+MEnishell:~/github/menishell$
+
+17.2 ===================
+[OK] having only one single or double quote will produce 'command not found' message
+--- EXPECTED ---
+elfoo@ElizabethFoo:~$ "'"
+': command not found
+elfoo@ElizabethFoo:~$ echo $?
+127
+elfoo@ElizabethFoo:~$ '"'
+": command not found
+elfoo@ElizabethFoo:~$ echo $?
+127
+elfoo@ElizabethFoo:~$
+
+
+=== FILE PERMISSIONS ===
+18.1 ===================
+[OK] cat, /usr/bin/cat, cp /usr/bin/cat ./cat, ./cat
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ cat
+^C
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+130
+elfoo@c1r5s4:~/cursus/MEnishell$ /usr/bin/cat
+^C
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+130
+elfoo@c1r5s4:~/cursus/MEnishell$ cp /usr/bin/cat ./cat
+elfoo@c1r5s4:~/cursus/MEnishell$ ./cat
+^C
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+130
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+18.2 ===================
+[OK] (b) touch fake, chmod +x fake, ./fake → should fail execve, free everything, then manual exit
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ touch fake
+elfoo@c1r5s4:~/cursus/MEnishell$ chmod +x fake
+elfoo@c1r5s4:~/cursus/MEnishell$ ./fake
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+0
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+18.3 ===================
+[OK] touch readwrite, chmod +rw readwrite, ./readwrite → should give 'Permission denied', '126'
+--- EXPECTED ---
+elfoo@c1r5s4:~/cursus/MEnishell$ touch readwrite
+elfoo@c1r5s4:~/cursus/MEnishell$ chmod +rw readwrite
+elfoo@c1r5s4:~/cursus/MEnishell$ ./readwrite
+bash: ./readwrite: Permission denied
+elfoo@c1r5s4:~/cursus/MEnishell$ echo $?
+126
+elfoo@c1r5s4:~/cursus/MEnishell$
+
+18.4 ===================
+[OK] mkdir folder, ./folder
+--- EXPECTED ---
+elfoo@ubuntu:~/github/menishell$ mkdir folder
+elfoo@ubuntu:~/github/menishell$ ./folder
+-bash: ./folder: Is a directory
+elfoo@ubuntu:~/github/menishell$ echo $?
+126
+elfoo@ubuntu:~/github/menishell$
+
+
+==== SPECIAL NOTE ====
+commands that will cause SIGPIPE; mem leaks in child process are reasonable since we are not expected to process SIGPIPE signal
+ie. echo a | $gibberish
+ie. echo << x | echo << y
+ie. echo << a | echo << b | echo << c
+ie. cat << a | cat << b | cat << c
+ie. sleep 3 | << a cat > out1 | echo 2 | << b cat > out2 | echo 3 (#14.6)

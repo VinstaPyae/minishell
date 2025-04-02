@@ -32,21 +32,7 @@
 //     replace_or_add_env_var("SHELVL", new_shlvl, envp);
 //     free(new_shlvl);
 // }
-static void cleanup_ast(t_minishell *shell)
-{
-    if (shell->ast)
-    {
-        free_ast(shell->ast);
-        shell->ast = NULL;
-    }
-    if (shell->l_token)
-    {
-        ft_lstclear(&shell->l_token, c_token_destroy);
-        shell->l_token = NULL;
-    }
-    free(shell->input);
-    shell->input = NULL;
-}
+
 
 char * get_input(void)
 {

@@ -39,7 +39,7 @@ int	lex_token_quote(char *str, int *i, t_list **l_token, int c_space)
 
 	q_len = quote_len(&str[*i]);
 	if (q_len == -1)
-		return (1);
+		return (printf("Error: Unclosed quote detected\n"), 1);
 	if (q_len > 0)
 	{
 		if (ft_isspace(str[*i + q_len]))
