@@ -56,11 +56,13 @@ int	lexer_syntax_check(t_list *l_token)
 	return (0);
 }
 
-t_list	*lexer(char *input)
+t_list	*lexer(t_minishell *shell)
 {
 	t_list	*l_token;
 
-	l_token = get_token_list(input);
+	l_token = get_token_list(shell->input);
+	free(shell->input);
+	shell->input = NULL;
 	if (!l_token)
 		return (ft_lstclear(&l_token, c_token_destroy), NULL);
 	if (lexer_syntax_check(l_token) == 1)

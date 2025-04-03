@@ -43,6 +43,13 @@ t_env *init_minimal_env(void)
 	node_pwd->key = ft_strdup("PWD");
 	node_pwd->value = init_pwd();
 	node_pwd->next = NULL;
+	if (!node_pwd->key || !node_pwd->value)
+	{
+		free(node_pwd->key);
+		free(node_pwd->value);
+		free(node_pwd);
+		return NULL;
+	}
 
 	// Initialize SHLVL
 	// node_shlvl->key = ft_strdup("SHLVL");
@@ -86,13 +93,19 @@ t_env *init_env(char **envp)
 		split_key_value(envp[i], &key, &value);
 		if (!key || !value)
 		{
+			free(key);   // Free partially allocated memory
+			free(value); // Free partially allocated memory
 			i++;
 			continue; // Skip invalid entries
 		}
 
 		new_node = (t_env *)malloc(sizeof(t_env));
 		if (!new_node)
+		{
+			free(key);
+			free(value);
 			return (NULL);
+		}
 		new_node->key = key;
 		new_node->value = value;
 		new_node->next = env;

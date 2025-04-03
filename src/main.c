@@ -34,7 +34,7 @@
 // }
 
 
-char * get_input(void)
+char    *get_input(void)
 {
     char *input;
 
@@ -56,6 +56,7 @@ t_minishell *create_minshell(t_env *envp)
     shell = malloc(sizeof(t_minishell));
     if (!shell)
         return (NULL);
+    shell = (t_minishell *)ft_memset(shell, 0, sizeof(t_minishell));
     shell->ast = NULL;
     shell->input = NULL;
     shell->l_token = NULL;
@@ -106,7 +107,7 @@ int main(int ac, char **av, char **env)
         }
         if (!shell->input)
             break;
-        shell->l_token = lexer(shell->input);
+        shell->l_token = lexer(shell);
         if (!shell->l_token)
         {
             // printf("Error: Lexer failed\n");
@@ -125,13 +126,18 @@ int main(int ac, char **av, char **env)
             continue;
         }
         execute_ast(&shell); // This should call exe_exit for the "exit" command
+        printf("looping\n");
         cleanup(&shell);     // Cleanup AST but keep shell instance
-        // free_env_list(shell->envp);
+        //free_env_list(shell->envp);
+        printf("cleaned\n");
     }
     cleanup(&shell); // Final cleanup
-    free_env_list(shell->envp);
+    if (shell->envp)
+        free_env_list(shell->envp);
     free(shell);
     rl_clear_history(); // Clear readline history
+    if (shell->input)
+        free(shell->input);
     return (0);
 }
 

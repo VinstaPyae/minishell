@@ -96,7 +96,7 @@ int lex_token_wd(char *str, int *i, t_list **l_token);
 
 // lex
 t_list *get_token_list(char *input);
-t_list *lexer(char *input);
+t_list *lexer(t_minishell *shell);
 // token
 t_list *create_token(char *str, int type, int s);
 t_token *token_content(t_list *token);

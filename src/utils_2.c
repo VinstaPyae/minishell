@@ -9,9 +9,7 @@ char **trim_cmd(char **cmd_arg)
 	if (!cmd_arg || !cmd_arg[0])
 		return (NULL);
 	while (cmd_arg[i])
-	{
 		i++;
-	}
 	cmd = malloc((i + 1) * sizeof(char *));
 	if (!cmd)
 		return (NULL);
@@ -19,6 +17,8 @@ char **trim_cmd(char **cmd_arg)
 	while (cmd_arg[i])
 	{
 		cmd[i] = ft_strtrim(cmd_arg[i], " ");
+		if (!cmd[i])
+			free_arg(cmd);
 		i++;
 	}
 	cmd[i] = NULL;

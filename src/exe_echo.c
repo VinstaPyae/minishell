@@ -237,7 +237,8 @@ int exe_exit(t_minishell **shell)
 	if (arg_count == 1)
 	{
 		cleanup(shell); // Final cleanup
-		free_env_list((*shell)->envp);
+		if ((*shell)->envp)
+			free_env_list((*shell)->envp);
 		free(*shell);
 		rl_clear_history();
 		exit(saved_exit_status);
@@ -249,7 +250,8 @@ int exe_exit(t_minishell **shell)
 		ft_putstr_fd(args[1], STDERR_FILENO);
 		ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
 		cleanup(shell); // Final cleanup
-		free_env_list((*shell)->envp);
+		if ((*shell)->envp)
+			free_env_list((*shell)->envp);
 		free(*shell);
 		rl_clear_history();
 		exit(2);
@@ -264,7 +266,8 @@ int exe_exit(t_minishell **shell)
 	}
 
 	cleanup(shell); // Final cleanup
-	free_env_list((*shell)->envp);
+	if ((*shell)->envp)
+			free_env_list((*shell)->envp);
 	free(*shell);
 	rl_clear_history();
 	exit((unsigned char)exit_num);
