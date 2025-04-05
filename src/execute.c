@@ -112,11 +112,6 @@ char **env_list_to_array(t_env *env)
 		return (NULL);
 	tmp = env;
 	env_array = fill_env_array(env_array, tmp, i);
-	if (!env_array) // Free env_array if fill_env_array fails
-	{
-		free(env_array);
-		return (NULL);
-	}
 	return (env_array);
 }
 ///////////
@@ -167,32 +162,31 @@ static char **get_env_array(t_minishell *shell)
 	return (env_array);
 }
 
-static int execute_command(char *cmd, char **args, char **env_array, t_minishell *shell)
+static void execute_command(char *cmd, char **args, char **env_array, t_minishell *shell)
 {
 	if (execve(cmd, args, env_array) == -1)
 	{
 		if (errno == EACCES)
 		{
 			print_error_message(cmd, "Permission denied");
-			return (return_with_status(&shell, 126));
+			exit(126);
 		}
 		else if (errno == ENOENT)
 		{
 			print_error_message(cmd, "No such file or directory");
-			return (return_with_status(&shell, 127));
+			exit(127);
 		}
 		else if (errno == EISDIR)
 		{
 			print_error_message(cmd, "Is a directory");
-			return (return_with_status(&shell, 126));
+			exit(126);
 		}
 		else
 		{
 			perror(cmd);
-			return (return_with_status(&shell, 126));
+			exit(126);
 		}
 	}
-	return (0);
 }
 static int handle_no_path(char *cmd, t_minishell *shell)
 {
@@ -205,12 +199,12 @@ static int check_and_execute(char *full_path, char **cmd, char **env_array, t_mi
 {
 	if (access(full_path, X_OK) == 0)
 	{
-		int ret = execute_command(full_path, cmd, env_array, shell);
+		execute_command(full_path, cmd, env_array, shell);
 		free(full_path);
-		return ret;
+		return (1);
 	}
 	free(full_path);
-	return -1;
+	return (0);
 }
 
 static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
@@ -252,27 +246,22 @@ static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
 
 static void execute_child_process(char **cmd, t_minishell *shell)
 {
-	char **env_array = NULL;
-	int exit_code = 0;
+	char **env_array;
 
 	handle_child_signals();
 	if (is_directory(cmd[0], shell))
-		exit_code = 126;
-	else
+		exit(126);
+	env_array = get_env_array(shell);
+	if (!env_array)
+		exit(127);
+	if (cmd[0][0] == '/' || cmd[0][0] == '.')
 	{
-		env_array = get_env_array(shell);
-		if (!env_array)
-			exit_code = 127;
-		else if (cmd[0][0] == '/' || cmd[0][0] == '.')
-			exit_code = execute_command(cmd[0], cmd, env_array, shell);
-		else
-			exit_code = search_and_execute(cmd, env_array, shell);
+		execute_command(cmd[0], cmd, env_array, shell);
 	}
-
-	if (env_array)
-		free_array_list(env_array, -1);
-	free_arg(cmd); // Free the cmd array in the child process
-	exit(exit_code);
+	// Before searching paths
+	int result = search_and_execute(cmd, env_array, shell);
+	free_array_list(env_array, -1);
+	exit(result);
 }
 
 static int handle_parent_process(pid_t pid, t_minishell *shell)
@@ -504,6 +493,7 @@ static int wait_for_child_processes(pid_t pid1, pid_t pid2)
 
 	return (ret);
 }
+
 int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 {
 	int pipe_fds[2];
@@ -513,37 +503,22 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 	ret = 0;
 	if (!pipe_node || pipe_node->type != NODE_PIPE)
 		return (-1);
-
 	if (pipe(pipe_fds) == -1)
 	{
 		perror("pipe");
 		return (-1);
 	}
-
 	g_signal_status = 2; // Mark that child processes are running
-
 	pid1 = create_child_process(pipe_node->left, shell, STDIN_FILENO, pipe_fds[1]);
 	if (pid1 < 0)
-	{
-		close(pipe_fds[0]);
-		close(pipe_fds[1]);
 		return (-1);
-	}
-
-	close(pipe_fds[1]); // Close write end after first child is created
-
+	close(pipe_fds[1]);
 	pid2 = create_child_process(pipe_node->right, shell, pipe_fds[0], STDOUT_FILENO);
 	if (pid2 < 0)
-	{
-		close(pipe_fds[0]);
 		return (-1);
-	}
-
-	close(pipe_fds[0]); // Close read end after second child is created
-
+	close(pipe_fds[0]);
 	ret = wait_for_child_processes(pid1, pid2);
 	g_signal_status = 0; // Reset signal status
-
 	return (ret);
 }
 
@@ -591,19 +566,7 @@ int execute_ast(t_minishell **shell)
 	}
 
 	saved_fd[1] = dup(STDOUT_FILENO);
-	if (saved_fd[1] == -1)
-	{
-		perror("dup");
-		return 1;
-	}
-
 	saved_fd[0] = dup(STDIN_FILENO);
-	if (saved_fd[0] == -1)
-	{
-		perror("dup");
-		close(saved_fd[1]);
-		return 1;
-	}
 
 	if ((*shell)->ast->type == NODE_COMMAND)
 	{
@@ -620,13 +583,8 @@ int execute_ast(t_minishell **shell)
 	}
 
 	(*shell)->exit_status = result;
-
-	// Make sure to restore file descriptors and close saved ones
-	if (dup2(saved_fd[1], STDOUT_FILENO) == -1)
-		perror("dup2");
-	if (dup2(saved_fd[0], STDIN_FILENO) == -1)
-		perror("dup2");
-
+	dup2(saved_fd[1], STDOUT_FILENO);
+	dup2(saved_fd[0], STDIN_FILENO);
 	close(saved_fd[1]);
 	close(saved_fd[0]);
 

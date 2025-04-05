@@ -1,72 +1,81 @@
 #include "minishell.h"
 
+static t_ast_node *create_pipe_node(t_list *tokens, t_ast_node *left)
+{
+    tokens = tokens->next; // Move to the next token after the pipe
+    t_ast_node *pipe_node = create_node(NODE_PIPE);
+    if (!pipe_node)
+        return (free_ast(left), NULL);
+
+    pipe_node->left = left;
+    pipe_node->right = parse_pipe(tokens);
+
+    if (!pipe_node->right)
+        return (free_ast(pipe_node->left), free(pipe_node), NULL);
+
+    return pipe_node;
+}
+
+static int is_pipe_token(t_list *tokens)
+{
+    return (tokens != NULL && token_content(tokens)->type == TOKEN_PIPE);
+}
+
 t_ast_node *parse_pipe(t_list *tokens)
 {
-	t_ast_node *left;
-	t_ast_node *p_node;
+    if (!tokens)
+        return NULL;
 
-	if (!(tokens))
-		return (NULL);
-	left = parse_cmd(&tokens);
-	if (!left)
-		return (NULL);
-	p_node = NULL;
-	if ((tokens) != NULL && (token_content(tokens)->type == TOKEN_PIPE))
-	{
-		// printf("PIPE : %s\n", (token_content(tokens)->token));
-		tokens = tokens->next;
-		p_node = create_node(NODE_PIPE);
-		if (!p_node)
-			return (free_ast(left), NULL);
-		p_node->left = left;
-		p_node->right = parse_pipe(tokens);
-		if (!p_node->right)
-			return (free_ast(p_node->left), free(p_node), NULL);
-	}
-	else
-	{
-		// printf("Return ONLY CMD\n");
-		return (left);
-	}
-	return (p_node);
+    t_ast_node *left = parse_cmd(&tokens);
+    if (!left)
+        return NULL;
+
+    if (is_pipe_token(tokens))
+        return create_pipe_node(tokens, left);
+
+    return left; // Return the command node if no pipe is found
+}
+
+static int process_redirections(t_ast_node *cmd_node, t_list **tokens)
+{
+    cmd_node->redir = get_redir(tokens);
+    if (!cmd_node->redir)
+        return 0; // Return failure if memory allocation fails
+    return 1; // Return success
+}
+
+static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
+{
+    cmd_node->cmd_arg = get_cmd_args(tokens);
+    if (!cmd_node->cmd_arg)
+        return 0; // Return failure if memory allocation fails
+    return 1; // Return success
+}
+
+static t_ast_node *create_command_node(void)
+{
+    t_ast_node *cmd_node = create_node(NODE_COMMAND);
+    if (!cmd_node)
+        return NULL;
+    return cmd_node;
 }
 
 t_ast_node *parse_cmd(t_list **tokens)
 {
-	t_ast_node *cmd_node;
+    t_ast_node *cmd_node = create_command_node();
+    if (!cmd_node)
+        return NULL;
 
-	cmd_node = create_node(NODE_COMMAND);
-	if (!cmd_node)
-		return (NULL);
-	while (((*tokens) != NULL && ((t_token *)(*tokens)->content)->type != TOKEN_PIPE))
-	{
-		if ((*tokens) != NULL && is_word_token(((t_token *)(*tokens)->content)->type))
-		{
-			// if (!cmd_node->cmd)
-			// {
-			// 	cmd_node->cmd = ft_strdup(((t_token *)(*tokens)->content)->token);
-			// 	if (!cmd_node->cmd)
-			// 		return (free(cmd_node), NULL);
-			// 	//*tokens = (*tokens)->next;
-			// 	//printf("Lee cmd: %s\n", cmd_node->cmd);
-			// }
-			// else
-			// {
-			cmd_node->cmd_arg = get_cmd_args(tokens);
-			// printf("cmd: %s\n", cmd_node->cmd_arg[0]);
-			if (!cmd_node->cmd_arg)
-				return (free_ast(cmd_node), NULL);
-			// }
-		}
-		if ((*tokens) != NULL && is_redirection_token(((t_token *)(*tokens)->content)->type))
-		{
-			cmd_node->redir = get_redir(tokens);
-			if (!cmd_node->redir)
-				return (free_ast(cmd_node), NULL);
-			// print_redir(cmd_node->redir);
-		}
-	}
-	return (cmd_node);
+    while ((*tokens) != NULL && !is_pipe_token((*tokens))) {
+        if (is_word_token(token_content(*tokens)->type)) {
+            if (!process_command_arguments(cmd_node, tokens))
+                return free_ast(cmd_node), NULL;
+        } else if (is_redirection_token(token_content(*tokens)->type)) {
+            if (!process_redirections(cmd_node, tokens))
+                return free_ast(cmd_node), NULL;
+        }
+    }
+    return cmd_node;
 }
 
 /* char	*get_cmd(t_list **tokens)
@@ -283,4 +292,3 @@ t_list *get_redir(t_list **tokens)
 	*tokens = tmp_list;
 	return redir;
 }
-
