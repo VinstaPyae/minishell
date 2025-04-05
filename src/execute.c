@@ -169,8 +169,13 @@ static void execute_command(char *cmd, char **args, char **env_array, t_minishel
 		if (errno == EACCES)
 		{
 			print_error_message(cmd, "Permission denied");
+			
 			free_array_list(env_array, -1); // Free env_array
 			free_arg(args);					// Free args
+			cleanup(&shell);
+			free_env_list(shell->envp);
+			if (shell)
+				free(shell);
 			exit(126);
 		}
 		else if (errno == ENOENT)
@@ -273,6 +278,14 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 	}
 	// Before searching paths
 	int result = search_and_execute(cmd, env_array, shell);
+	if (result == 127)
+	{
+		cleanup(&shell);
+		free_env_list(shell->envp);
+		if (shell)
+			free(shell);
+		free_arg(cmd); // Free cmd
+	}
 	free_array_list(env_array, -1); // Free env_array
 	exit(result);
 }
@@ -301,10 +314,15 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	pid_t pid;
 
 	cmd = trim_cmd(ast_cmd->cmd_arg);
-	if (!cmd || !cmd[0])
+	if (!cmd || !cmd[0] || cmd[0][0] == '\0')
 	{
+		if (cmd[0][0] == '\0')
+			print_error_message("Command", "'' not found");
+		else if (cmd && cmd[0])
+			print_error_message(cmd[0], "Command not found");
 		free_arg(cmd);
-		return (-1);
+		set_exit_status(shell, 127);
+		return (127);
 	}
 	g_signal_status = 2;
 	pid = fork();
@@ -524,11 +542,18 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 	g_signal_status = 2; // Mark that child processes are running
 	pid1 = create_child_process(pipe_node->left, shell, STDIN_FILENO, pipe_fds[1]);
 	if (pid1 < 0)
-		return (-1);
+    {
+        close(pipe_fds[0]); // Close both ends of the pipe on error
+        close(pipe_fds[1]);
+        return (-1);
+    }
 	close(pipe_fds[1]);
 	pid2 = create_child_process(pipe_node->right, shell, pipe_fds[0], STDOUT_FILENO);
 	if (pid2 < 0)
-		return (-1);
+    {
+        close(pipe_fds[0]); // Close the read end of the pipe on error
+        return (-1);
+    }
 	close(pipe_fds[0]);
 	ret = wait_for_child_processes(pid1, pid2);
 	g_signal_status = 0; // Reset signal status
