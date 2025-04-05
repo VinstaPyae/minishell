@@ -34,19 +34,19 @@
 // }
 
 
-char    *get_input(void)
+char *get_input(t_minishell *shell)
 {
     char *input;
 
-    input = readline("minishell$>");
+    input = readline("minishell$> ");
     if (!input)
     {
-        printf("exit\n");
-        exit(0);
+        handle_eof(shell);
+        return NULL;
     }
     if (*input)
         add_history(input);
-    return (input);
+    return input;
 }
 
 t_minishell *create_minshell(t_env *envp)
@@ -98,7 +98,7 @@ int main(int ac, char **av, char **env)
         //     // free_env_list(shell->envp);
         //     return (1);
         // }
-        shell->input = get_input();
+        shell->input = get_input(shell);
         // Check signal status after input
         if (g_signal_status == 130)
         {

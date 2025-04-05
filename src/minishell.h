@@ -113,6 +113,7 @@ int ft_strcmp(const char *s1, const char *s2);
 // utils_2
 char **trim_cmd(char **cmd_arg);
 char *trim_last_char(const char *s, char c);
+void handle_eof(t_minishell *shell);
 
 // lex_gram
 int check_pipe_grammar(t_list *l_token);

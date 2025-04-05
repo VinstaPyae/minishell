@@ -169,21 +169,29 @@ static void execute_command(char *cmd, char **args, char **env_array, t_minishel
 		if (errno == EACCES)
 		{
 			print_error_message(cmd, "Permission denied");
+			free_array_list(env_array, -1); // Free env_array
+			free_arg(args);					// Free args
 			exit(126);
 		}
 		else if (errno == ENOENT)
 		{
 			print_error_message(cmd, "No such file or directory");
+			free_array_list(env_array, -1); // Free env_array
+			free_arg(args);					// Free args
 			exit(127);
 		}
 		else if (errno == EISDIR)
 		{
 			print_error_message(cmd, "Is a directory");
+			free_array_list(env_array, -1); // Free env_array
+			free_arg(args);					// Free args
 			exit(126);
 		}
 		else
 		{
 			perror(cmd);
+			free_array_list(env_array, -1); // Free env_array
+			free_arg(args);					// Free args
 			exit(126);
 		}
 	}
@@ -250,17 +258,24 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 
 	handle_child_signals();
 	if (is_directory(cmd[0], shell))
+	{
+		free_arg(cmd); // Free cmd
 		exit(126);
+	}
 	env_array = get_env_array(shell);
 	if (!env_array)
+	{
+		free_arg(cmd); // Free cmd
 		exit(127);
+	}
 	if (cmd[0][0] == '/' || cmd[0][0] == '.')
 	{
 		execute_command(cmd[0], cmd, env_array, shell);
 	}
 	// Before searching paths
 	int result = search_and_execute(cmd, env_array, shell);
-	free_array_list(env_array, -1);
+	free_array_list(env_array, -1); // Free env_array
+	free_arg(cmd);					// Free cmd
 	exit(result);
 }
 

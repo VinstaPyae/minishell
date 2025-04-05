@@ -115,4 +115,21 @@ void setup_signal_handlers(void)
 	/* Ignore SIGTSTP (Ctrl-Z) so the shell is not stopped */
 	sigaction(SIGTSTP, &sa, NULL);
 }
+void handle_eof(t_minishell *shell)
+{
+	int saved_exit_status;
 
+	saved_exit_status = shell->exit_status;
+	if (isatty(STDIN_FILENO)) // Only print if we're in interactive mode
+		printf("exit\n");
+
+	// Cleanup before exiting
+	cleanup(&shell);
+	if (shell->envp)
+		free_env_list(shell->envp);
+	if (shell->input)
+		free(shell->input);
+	rl_clear_history();
+	free(shell);
+	exit(saved_exit_status);
+}
