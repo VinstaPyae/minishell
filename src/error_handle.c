@@ -169,9 +169,11 @@ void	free_arg(char **str)
 	while (str[i])
 	{
 		free(str[i]);
+        str[i] = NULL;
 		i++;
 	}
 	free(str);
+    str = NULL; // Avoid dangling pointer
 }
 
 void	remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *))

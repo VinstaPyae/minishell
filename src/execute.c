@@ -248,7 +248,6 @@ static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
 	}
 	free_array_list(path_dirs, -1);
 	print_error_message(cmd[0], "Command not found");
-	free_arg(cmd);
 	return (return_with_status(&shell, 127));
 }
 
@@ -275,7 +274,6 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 	// Before searching paths
 	int result = search_and_execute(cmd, env_array, shell);
 	free_array_list(env_array, -1); // Free env_array
-	free_arg(cmd);					// Free cmd
 	exit(result);
 }
 
