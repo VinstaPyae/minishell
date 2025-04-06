@@ -183,6 +183,10 @@ static void execute_command(char *cmd, char **args, char **env_array, t_minishel
 			print_error_message(cmd, "No such file or directory");
 			free_array_list(env_array, -1); // Free env_array
 			free_arg(args);					// Free args
+			cleanup(&shell);
+			free_env_list(shell->envp);
+			if (shell)
+				free(shell);
 			exit(127);
 		}
 		else if (errno == EISDIR)
@@ -190,6 +194,10 @@ static void execute_command(char *cmd, char **args, char **env_array, t_minishel
 			print_error_message(cmd, "Is a directory");
 			free_array_list(env_array, -1); // Free env_array
 			free_arg(args);					// Free args
+			cleanup(&shell);
+			free_env_list(shell->envp);
+			if (shell)
+				free(shell);
 			exit(126);
 		}
 		else
@@ -197,6 +205,10 @@ static void execute_command(char *cmd, char **args, char **env_array, t_minishel
 			perror(cmd);
 			free_array_list(env_array, -1); // Free env_array
 			free_arg(args);					// Free args
+			cleanup(&shell);
+			free_env_list(shell->envp);
+			if (shell)
+				free(shell);
 			exit(126);
 		}
 	}
@@ -264,12 +276,20 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 	if (is_directory(cmd[0], shell))
 	{
 		free_arg(cmd); // Free cmd
+		cleanup(&shell);
+		free_env_list(shell->envp);
+		if (shell)
+			free(shell);
 		exit(126);
 	}
 	env_array = get_env_array(shell);
 	if (!env_array)
 	{
 		free_arg(cmd); // Free cmd
+		cleanup(&shell);
+		free_env_list(shell->envp);
+		if (shell)
+			free(shell);
 		exit(127);
 	}
 	if (cmd[0][0] == '/' || cmd[0][0] == '.')
@@ -287,6 +307,10 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 		free_arg(cmd); // Free cmd
 	}
 	free_array_list(env_array, -1); // Free env_array
+	cleanup(&shell);
+	free_env_list(shell->envp);
+	if (shell)
+		free(shell);
 	exit(result);
 }
 
@@ -337,6 +361,10 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	{
 		execute_child_process(cmd, shell);
 		// Child never reaches here, but add exit just in case
+		cleanup(&shell);
+		free_env_list(shell->envp);
+		if (shell)
+			free(shell);
 		exit(127);
 	}
 	free_arg(cmd);
@@ -577,6 +605,10 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 		int ret = exe_cmd(&shell);
 		shell->ast = old_ast;
 		shell->exit_status = ret; // Ensure status is set
+		cleanup(&shell);
+		free_env_list(shell->envp);
+		if (shell)
+			free(shell);
 		return (ret);
 	}
 
@@ -584,9 +616,17 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 	{
 		int ret = execute_pipe(cmd_node, shell);
 		shell->exit_status = ret; // Ensure status is set
+		cleanup(&shell);
+		free_env_list(shell->envp);
+		if (shell)
+			free(shell);
 		return ret;
 	}
 	shell->exit_status = 1;
+	cleanup(&shell);
+	free_env_list(shell->envp);
+	if (shell)
+		free(shell);
 	return (1);
 }
 int execute_ast(t_minishell **shell)

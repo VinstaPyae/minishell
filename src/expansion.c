@@ -257,7 +257,6 @@ static void insert_expanded_tokens(t_list **current, char **expanded_value, t_to
     while (expanded_value[i]) {
         char *new_token_str = ft_strdup(expanded_value[i]);
         int flag = determine_space_flag(expanded_value[i + 1], token->space);
-        printf("flag space: (%d)\n", flag);
 
         t_list *new_token_node = create_token(new_token_str, TOKEN_WD, flag);
         if (!new_token_node) {
