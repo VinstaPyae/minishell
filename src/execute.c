@@ -1,5 +1,15 @@
 #include "minishell.h"
 
+void close_saved_fds(int saved_fd[2])
+{
+	dup2(saved_fd[1], STDOUT_FILENO);
+	dup2(saved_fd[0], STDIN_FILENO);
+    if (saved_fd[1] != -1)
+        close(saved_fd[1]);
+    if (saved_fd[0] != -1)
+        close(saved_fd[0]);
+}
+
 static char **allocate_paths(char *path_env)
 {
 	int count;
@@ -273,7 +283,7 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 	char **env_array;
 
 	handle_child_signals();
-	if (is_directory(cmd[0], shell))
+	if ((cmd[0][0] == '/' || cmd[0][0] == '.') && is_directory(cmd[0], shell))
 	{
 		free_arg(cmd); // Free cmd
 		cleanup(&shell);
@@ -388,7 +398,7 @@ int execute_builtin(t_minishell **shell, char *cmd)
 		return (exe_env(shell));
 	return (-1);
 }
-int builtin_cmd_check(t_minishell **shell)
+int builtin_cmd_check(t_minishell **shell, int fd[2])
 {
 	char *cmd;
 	int ret;
@@ -402,7 +412,7 @@ int builtin_cmd_check(t_minishell **shell)
 	if (ret == -1 && ft_strcmp(cmd, "exit") == 0)
 	{
 		free(cmd);
-		return (exe_exit(shell));
+		return (exe_exit(shell, fd));
 	}
 	free(cmd);
 	if (ret != -1)
@@ -410,7 +420,7 @@ int builtin_cmd_check(t_minishell **shell)
 	return (ret);
 }
 //////
-int exe_cmd(t_minishell **shell)
+int exe_cmd(t_minishell **shell, int fd[2])
 {
 	int ret;
 
@@ -424,7 +434,7 @@ int exe_cmd(t_minishell **shell)
 		if (handle_redirections((*shell)->ast->redir) == -1)
 			return (return_with_status(shell, 1));
 	}
-	ret = builtin_cmd_check(shell);
+	ret = builtin_cmd_check(shell,fd);
 	if (ret != -1)
 		return (return_with_status(shell, ret));
 	ret = execute_external_command((*shell)->ast, *shell);
@@ -602,7 +612,7 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 	{
 		t_ast_node *old_ast = shell->ast;
 		shell->ast = cmd_node;
-		int ret = exe_cmd(&shell);
+		int ret = exe_cmd(&shell, 0);
 		shell->ast = old_ast;
 		shell->exit_status = ret; // Ensure status is set
 		cleanup(&shell);
@@ -648,7 +658,7 @@ int execute_ast(t_minishell **shell)
 
 	if ((*shell)->ast->type == NODE_COMMAND)
 	{
-		result = exe_cmd(shell);
+		result = exe_cmd(shell, saved_fd);
 	}
 	else if ((*shell)->ast->type == NODE_PIPE)
 	{

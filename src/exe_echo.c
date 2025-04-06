@@ -220,7 +220,7 @@ static int ft_atoll(const char *str, long long *num)
 	return 1;
 }
 
-int exe_exit(t_minishell **shell)
+int exe_exit(t_minishell **shell, int fd[2])
 {
 	char **args = (*shell)->ast->cmd_arg;
 	int arg_count = 0;
@@ -241,6 +241,7 @@ int exe_exit(t_minishell **shell)
 			free_env_list((*shell)->envp);
 		free(*shell);
 		rl_clear_history();
+		close_saved_fds(fd);
 		exit(saved_exit_status);
 	}
 
@@ -254,6 +255,7 @@ int exe_exit(t_minishell **shell)
 			free_env_list((*shell)->envp);
 		free(*shell);
 		rl_clear_history();
+		close_saved_fds(fd);
 		exit(2);
 	}
 
@@ -270,6 +272,7 @@ int exe_exit(t_minishell **shell)
 			free_env_list((*shell)->envp);
 	free(*shell);
 	rl_clear_history();
+	close_saved_fds(fd);
 	exit((unsigned char)exit_num);
 }
 

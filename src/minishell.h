@@ -146,13 +146,14 @@ t_ast_node *parse_pipe(t_list *tokens);
 t_ast_node *parse_cmd(t_list **tokens);
 
 // execute_builtin
-int builtin_cmd_check(t_minishell **shell);
-int exe_cmd(t_minishell **shell);
+void close_saved_fds(int saved_fd[2]);
+int builtin_cmd_check(t_minishell **shell, int fd[2]);
+int exe_cmd(t_minishell **shell, int fd[2]);
 int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell);
 int execute_ast(t_minishell **shell);
 int n_option_checked(const char *str);
 int exe_echo(t_minishell **shell);
-int exe_exit(t_minishell **shell);
+int exe_exit(t_minishell **shell, int fd[2]);
 void split_key_value(char *str, char **key, char **value);
 t_env *init_env(char **envp);
 t_env *init_env(char **envp);
