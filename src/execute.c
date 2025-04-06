@@ -300,10 +300,10 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 	int result = search_and_execute(cmd, env_array, shell);
 	if (result == 127)
 	{
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
 		free_arg(cmd); // Free cmd
 	}
 	free_array_list(env_array, -1); // Free env_array
