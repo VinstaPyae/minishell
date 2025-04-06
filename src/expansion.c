@@ -240,15 +240,15 @@ static void update_token_with_expansion(t_token *token, char **expanded_value)
     token->type = TOKEN_WD;
 }
 
-static void update_token_space_flag(t_token *token)
+// New helper function to determine the space flag
+static int determine_space_flag(const char *token_str, int space)
 {
-    if ((ft_strlen(token->token) > 0 && ft_isspace(token->token[ft_strlen(token->token) - 1])) || token->space == 1) {
-        token->space = 1;
-    } else {
-        token->space = 0;
-    }
+    if ((ft_strlen(token_str) > 0 && ft_isspace(token_str[ft_strlen(token_str) - 1])) || space == 1)
+        return 1;
+    return 0;
 }
 
+// Updated function to replace ternary operator
 static void insert_expanded_tokens(t_list **current, char **expanded_value, t_token *token)
 {
     t_list *next_save = (*current)->next;
@@ -256,7 +256,8 @@ static void insert_expanded_tokens(t_list **current, char **expanded_value, t_to
 
     while (expanded_value[i]) {
         char *new_token_str = ft_strdup(expanded_value[i]);
-        int flag = (expanded_value[i + 1] || token->space == 1) ? 1 : 0;
+        int flag = determine_space_flag(expanded_value[i + 1], token->space);
+        printf("flag space: (%d)\n", flag);
 
         t_list *new_token_node = create_token(new_token_str, TOKEN_WD, flag);
         if (!new_token_node) {
@@ -305,8 +306,6 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
         update_token_with_expansion(token, expanded_value);
         if (expanded_value[1]) {
             insert_expanded_tokens(current, expanded_value, token);
-        } else {
-            update_token_space_flag(token);
         }
     } else {
         handle_empty_expansion(token);
@@ -325,6 +324,8 @@ void expand_tokens(t_minishell *shell)
 
         if (token->type == TOKEN_VARIABLE) {
             process_variable_token(token, &current, shell);
+            printf("expand: (%s)\n", token->token);
+            printf("space: (%d)\n", token->space);
         } else if (token->type == TOKEN_DQUOTE) {
             process_double_quote_token(token, shell);
         }
