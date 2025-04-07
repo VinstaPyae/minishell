@@ -101,7 +101,7 @@ static char *path_handle(t_minishell **shell)
     char *dir;
     if (!(*shell)->ast->cmd_arg[1] || ft_strncmp((*shell)->ast->cmd_arg[1], "~", 2) == 0)
     {
-        dir = getenv("HOME");
+        dir = ft_getenv((*shell)->envp, "HOME");
         if (!dir)
         {
             printf("cd: HOME not set\n");
@@ -111,7 +111,7 @@ static char *path_handle(t_minishell **shell)
     }
     else if (ft_strncmp((*shell)->ast->cmd_arg[1], "-", 2) == 0)
     {
-        dir = getenv("OLDPWD");
+        dir = ft_getenv((*shell)->envp, "OLDPWD");
         if (!dir)
         {
             printf("cd: OLDPWD not set\n");

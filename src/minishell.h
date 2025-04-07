@@ -146,6 +146,7 @@ t_ast_node *parse_pipe(t_list *tokens);
 t_ast_node *parse_cmd(t_list **tokens);
 
 // execute_builtin
+char *ft_getenv(t_env *env, const char *key);
 void close_saved_fds(int saved_fd[2]);
 int builtin_cmd_check(t_minishell **shell, int fd[2]);
 int exe_cmd(t_minishell **shell, int fd[2]);

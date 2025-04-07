@@ -1,5 +1,16 @@
 #include "minishell.h"
 
+char *ft_getenv(t_env *env, const char *key)
+{
+    while (env)
+    {
+        if (ft_strcmp(env->key, key) == 0)
+            return env->value;
+        env = env->next;
+    }
+    return NULL;
+}
+
 void close_saved_fds(int saved_fd[2])
 {
 	dup2(saved_fd[1], STDOUT_FILENO);
@@ -226,7 +237,6 @@ static void execute_command(char *cmd, char **args, char **env_array, t_minishel
 static int handle_no_path(char *cmd, t_minishell *shell)
 {
 	print_error_message(cmd, "No such file or directory");
-	free(cmd);
 	return (return_with_status(&shell, 127));
 }
 
@@ -246,11 +256,13 @@ static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
 {
 	char **path_dirs;
 	char *full_path;
-	int i;
+	char *path_value;
+    int i;
 
-	if (!getenv("PATH"))
-		return (handle_no_path(cmd[0], shell));
-	path_dirs = split_path(getenv("PATH"));
+    path_value = ft_getenv(shell->envp, "PATH");
+    if (!path_value)
+        return (handle_no_path(cmd[0], shell));
+    path_dirs = split_path(path_value);
 	if (!path_dirs)
 		return (return_with_status(&shell, 127));
 	i = 0;

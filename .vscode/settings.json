@@ -61,6 +61,7 @@
     "LEXER.C": "cpp",
     "libft.h": "c",
     "minishell.h": "c",
-    "typeinfo": "c"
+    "typeinfo": "c",
+    "type_traits": "c"
   }
 }
