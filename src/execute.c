@@ -183,7 +183,7 @@ static char **get_env_array(t_minishell *shell)
 	return (env_array);
 }
 
-static void execute_command(char *cmd, char **args, char **env_array, t_minishell *shell)
+static void execute_and_check_command(char *cmd, char **args, char **env_array, t_minishell *shell)
 {
 	if (execve(cmd, args, env_array) == -1)
 	{
@@ -244,7 +244,7 @@ static int check_and_execute(char *full_path, char **cmd, char **env_array, t_mi
 {
 	if (access(full_path, X_OK) == 0)
 	{
-		execute_command(full_path, cmd, env_array, shell);
+		execute_and_check_command(full_path, cmd, env_array, shell);
 		free(full_path);
 		return (1);
 	}
@@ -298,25 +298,25 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 	if ((cmd[0][0] == '/' || cmd[0][0] == '.') && is_directory(cmd[0], shell))
 	{
 		free_arg(cmd); // Free cmd
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
 		exit(126);
 	}
 	env_array = get_env_array(shell);
 	if (!env_array)
 	{
 		free_arg(cmd); // Free cmd
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
 		exit(127);
 	}
 	if (cmd[0][0] == '/' || cmd[0][0] == '.')
 	{
-		execute_command(cmd[0], cmd, env_array, shell);
+		execute_and_check_command(cmd[0], cmd, env_array, shell);
 	}
 	// Before searching paths
 	int result = search_and_execute(cmd, env_array, shell);
@@ -329,10 +329,10 @@ static void execute_child_process(char **cmd, t_minishell *shell)
 		free_arg(cmd); // Free cmd
 	}
 	free_array_list(env_array, -1); // Free env_array
-	cleanup(&shell);
-	free_env_list(shell->envp);
-	if (shell)
-		free(shell);
+	// cleanup(&shell);
+	// free_env_list(shell->envp);
+	// if (shell)
+	// 	free(shell);
 	exit(result);
 }
 
@@ -351,6 +351,10 @@ static int handle_parent_process(pid_t pid, t_minishell *shell)
 		set_exit_status(shell, 128 + WTERMSIG(status));
 		print_signal_message(WTERMSIG(status));
 	}
+	// printf("external command parent before cleanup\n");
+	// cleanup(&shell);
+	// free_env_list(shell->envp);
+	// printf("external parent command after cleanup\n");
 	return (shell->exit_status);
 }
 
@@ -383,10 +387,10 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	{
 		execute_child_process(cmd, shell);
 		// Child never reaches here, but add exit just in case
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
 		exit(127);
 	}
 	free_arg(cmd);
@@ -452,65 +456,7 @@ int exe_cmd(t_minishell **shell, int fd[2])
 	ret = execute_external_command((*shell)->ast, *shell);
 	return (return_with_status(shell, ret));
 }
-/*
-int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
-{
-	int pipe_fds[2];
-	pid_t pid1, pid2;
-	int status;
-	int ret = 0;
 
-	if (!pipe_node || pipe_node->type != NODE_PIPE)
-		return -1;
-
-	if (pipe(pipe_fds) == -1)
-	{
-		perror("pipe");
-		return -1;
-	}
-
-	pid1 = fork();
-	if (pid1 < 0)
-	{
-		perror("fork");
-		return -1;
-	}
-	if (pid1 == 0)
-	{
-		close(pipe_fds[0]);
-		dup2(pipe_fds[1], STDOUT_FILENO);
-		close(pipe_fds[1]);
-		exit(execute_ast_command(pipe_node->left, shell));
-	}
-
-	pid2 = fork();
-	if (pid2 < 0)
-	{
-		perror("fork");
-		return -1;
-	}
-	if (pid2 == 0)
-	{
-		close(pipe_fds[1]);
-		dup2(pipe_fds[0], STDIN_FILENO);
-		close(pipe_fds[0]);
-		exit(execute_ast_command(pipe_node->right, shell));
-	}
-
-	close(pipe_fds[0]);
-	close(pipe_fds[1]);
-
-	waitpid(pid1, &status, 0);
-	waitpid(pid2, &status, 0);
-
-	if (WIFEXITED(status))
-		ret = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		ret = 128 + WTERMSIG(status);
-
-	return ret;
-}
-*/
 void print_signal_message(int sig)
 {
 	if (isatty(STDERR_FILENO))
@@ -627,10 +573,6 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 		int ret = exe_cmd(&shell, 0);
 		shell->ast = old_ast;
 		shell->exit_status = ret; // Ensure status is set
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
 		return (ret);
 	}
 
@@ -638,17 +580,9 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 	{
 		int ret = execute_pipe(cmd_node, shell);
 		shell->exit_status = ret; // Ensure status is set
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
 		return ret;
 	}
 	shell->exit_status = 1;
-	cleanup(&shell);
-	free_env_list(shell->envp);
-	if (shell)
-		free(shell);
 	return (1);
 }
 int execute_ast(t_minishell **shell)
@@ -687,6 +621,8 @@ int execute_ast(t_minishell **shell)
 	dup2(saved_fd[0], STDIN_FILENO);
 	close(saved_fd[1]);
 	close(saved_fd[0]);
-
+	printf("before cleanup\n");
+	cleanup(shell);
+	printf("after cleanup\n");
 	return result;
 }
