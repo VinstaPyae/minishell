@@ -172,6 +172,15 @@ static int process_export_no_args(t_minishell *shell);
 int exe_export(t_minishell **shell);
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 
+
+// execute
+void print_error_message(char *cmd, char *message);
+void handle_child_signals(void);
+int handle_no_path(char *cmd, t_minishell *shell);
+char **get_env_array(t_minishell *shell);
+char **split_path(char *path_env);
+//
+
 // env
 void update_shlvl(t_env **env_list);
 
