@@ -11,14 +11,10 @@ char *ft_getenv(t_env *env, const char *key)
     return NULL;
 }
 
-void close_saved_fds(int saved_fd[2])
+void close_og_fd(t_minishell *shell)
 {
-	dup2(saved_fd[1], STDOUT_FILENO);
-	dup2(saved_fd[0], STDIN_FILENO);
-    if (saved_fd[1] != -1)
-        close(saved_fd[1]);
-    if (saved_fd[0] != -1)
-        close(saved_fd[0]);
+		close(shell->og_fd[1]);
+		close(shell->og_fd[0]);
 }
 
 static char **allocate_paths(char *path_env)
@@ -220,7 +216,8 @@ static pid_t create_child_process(t_ast_node *node, t_minishell *shell, int in_f
 			dup2(out_fd, STDOUT_FILENO);
 			close(out_fd);
 		}
-		exit(execute_ast_command(node, shell));
+		int ret = execute_ast_command(node, shell);
+		exit(ret);
 	}
 	return pid;
 }
@@ -301,7 +298,7 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 	{
 		t_ast_node *old_ast = shell->ast;
 		shell->ast = cmd_node;
-		int ret = exe_cmd(&shell, 0);
+		int ret = exe_cmd(&shell);
 		shell->ast = old_ast;
 		shell->exit_status = ret; // Ensure status is set
 		cleanup(&shell);
@@ -330,7 +327,6 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 }
 int execute_ast(t_minishell **shell)
 {
-	int saved_fd[2];
 	int result = 0;
 
 	if (!(*shell)->ast)
@@ -342,12 +338,12 @@ int execute_ast(t_minishell **shell)
 		return 1;
 	}
 
-	saved_fd[1] = dup(STDOUT_FILENO);
-	saved_fd[0] = dup(STDIN_FILENO);
+	(*shell)->og_fd[1] = dup(STDOUT_FILENO);
+	(*shell)->og_fd[0] = dup(STDIN_FILENO);
 
 	if ((*shell)->ast->type == NODE_COMMAND)
 	{
-		result = exe_cmd(shell, saved_fd);
+		result = exe_cmd(shell);
 	}
 	else if ((*shell)->ast->type == NODE_PIPE)
 	{
@@ -360,10 +356,10 @@ int execute_ast(t_minishell **shell)
 	}
 
 	(*shell)->exit_status = result;
-	dup2(saved_fd[1], STDOUT_FILENO);
-	dup2(saved_fd[0], STDIN_FILENO);
-	close(saved_fd[1]);
-	close(saved_fd[0]);
+	dup2((*shell)->og_fd[1], STDOUT_FILENO);
+	dup2((*shell)->og_fd[0], STDIN_FILENO);
+	close((*shell)->og_fd[1]);
+	close((*shell)->og_fd[0]);
 	printf("before cleanup\n");
 	cleanup(shell);
 	printf("after cleanup\n");

@@ -11,7 +11,7 @@
 # **************************************************************************** #
 
 NAME = minishell
-CC = cc
+CC = cc -g
 CFLAGS = #-Wall -Wextra -Werror
 LIBFT_DIR = libft
 LIBFT = $(LIBFT_DIR)/libft.a

@@ -128,6 +128,7 @@ static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
 		i++;
 	}
 	free_array_list(path_dirs, -1);
+	close_og_fd(shell);
 	print_error_message(cmd[0], "Command not found");
 	return (return_with_status(&shell, 127));
 }
@@ -238,7 +239,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	return (handle_parent_process(pid, shell));
 }
 
-int builtin_cmd_check(t_minishell **shell, int fd[2])
+int builtin_cmd_check(t_minishell **shell)
 {
 	char *cmd;
 	int ret;
@@ -252,7 +253,7 @@ int builtin_cmd_check(t_minishell **shell, int fd[2])
 	if (ret == -1 && ft_strcmp(cmd, "exit") == 0)
 	{
 		free(cmd);
-		return (exe_exit(shell, fd));
+		return (exe_exit(shell));
 	}
 	free(cmd);
 	if (ret != -1)
@@ -260,13 +261,14 @@ int builtin_cmd_check(t_minishell **shell, int fd[2])
 	return (ret);
 }
 
-int exe_cmd(t_minishell **shell, int fd[2])
+int exe_cmd(t_minishell **shell)
 {
 	int ret;
 
 	if (!(*shell)->ast)
 	{
 		ft_putstr_fd("Error: No command provided\n", STDERR_FILENO);
+		close_og_fd(*shell);
 		return (return_with_status(shell, 1));
 	}
 	if ((*shell)->ast->redir)
@@ -274,7 +276,7 @@ int exe_cmd(t_minishell **shell, int fd[2])
 		if (handle_redirections((*shell)->ast->redir) == -1)
 			return (return_with_status(shell, 1));
 	}
-	ret = builtin_cmd_check(shell,fd);
+	ret = builtin_cmd_check(shell);
 	if (ret != -1)
 		return (return_with_status(shell, ret));
 	ret = execute_external_command((*shell)->ast, *shell);

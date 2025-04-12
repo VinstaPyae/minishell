@@ -83,6 +83,7 @@ typedef struct s_minishell
     t_ast_node *ast;
     t_env *envp;
     int exit_status;
+    int og_fd[2];
 } t_minishell;
 
 // lex_handle
@@ -147,14 +148,14 @@ t_ast_node *parse_cmd(t_list **tokens);
 
 // execute_builtin
 char *ft_getenv(t_env *env, const char *key);
-void close_saved_fds(int saved_fd[2]);
-int builtin_cmd_check(t_minishell **shell, int fd[2]);
-int exe_cmd(t_minishell **shell, int fd[2]);
+void close_og_fd(t_minishell *shell);
+int builtin_cmd_check(t_minishell **shell);
+int exe_cmd(t_minishell **shell);
 int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell);
 int execute_ast(t_minishell **shell);
 int n_option_checked(const char *str);
 int exe_echo(t_minishell **shell);
-int exe_exit(t_minishell **shell, int fd[2]);
+int exe_exit(t_minishell **shell);
 void split_key_value(char *str, char **key, char **value);
 t_env *init_env(char **envp);
 t_env *init_env(char **envp);
