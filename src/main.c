@@ -125,7 +125,9 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
+        // print_ast_node(shell->ast); // Print AST for debugging
         execute_ast(&shell); // This should call exe_exit for the "exit" command
+        print_ast_node(shell->ast); // Print AST for debugging
     }
     printf("Main before cleanup\n");
     cleanup(&shell); // Final cleanup

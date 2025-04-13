@@ -194,6 +194,35 @@ void print_signal_message(int sig)
 	write(STDERR_FILENO, "\n", 1);
 }
 
+/* Wait for child and handle status */
+static int wait_for_child(pid_t pid)
+{
+	int status;
+	int ret = 0;
+
+	if (waitpid(pid, &status, 0) == -1)
+	{
+		perror("minishell: waitpid");
+		return -1;
+	}
+
+	if (WIFSIGNALED(status))
+	{
+		int sig = WTERMSIG(status);
+		ret = 128 + sig;
+		if (sig == SIGINT || sig == SIGQUIT)
+		{
+			print_signal_message(sig);
+		}
+	}
+	else if (WIFEXITED(status))
+	{
+		ret = WEXITSTATUS(status);
+	}
+
+	return ret;
+}
+
 /* Helper function to create a child process for pipe execution */
 static pid_t create_pipe_child(t_ast_node *node, t_minishell *shell, int in_fd, int out_fd)
 {
@@ -237,42 +266,16 @@ static pid_t create_pipe_child(t_ast_node *node, t_minishell *shell, int in_fd, 
 		printf("Creating child process for command: %s\n", node->cmd_arg[0]);
 		int ret = execute_ast_command(node, shell);
 		cleanup(&shell); // Cleanup after execution
+		printf("Child process finished executing command: %s\n", node->cmd_arg[0]);
+		print_ast_node(node); // Print AST node for debugging
 		free_env_list(shell->envp);
 		if (shell)
 			free(shell);
 		exit(ret);
 	}
-
+	printf("Created child process with PID: %d\n", pid);
+	print_ast_node(node); // Print AST node for debugging
 	return pid;
-}
-
-/* Wait for child and handle status */
-static int wait_for_child(pid_t pid)
-{
-	int status;
-	int ret = 0;
-
-	if (waitpid(pid, &status, 0) == -1)
-	{
-		perror("minishell: waitpid");
-		return -1;
-	}
-
-	if (WIFSIGNALED(status))
-	{
-		int sig = WTERMSIG(status);
-		ret = 128 + sig;
-		if (sig == SIGINT || sig == SIGQUIT)
-		{
-			print_signal_message(sig);
-		}
-	}
-	else if (WIFEXITED(status))
-	{
-		ret = WEXITSTATUS(status);
-	}
-
-	return ret;
 }
 
 /* Recursive pipe execution with proper fd handling */
