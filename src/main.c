@@ -115,7 +115,7 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-        printer_token(shell->l_token);
+        // printer_token(shell->l_token);
         expand_tokens(shell);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)

@@ -110,6 +110,8 @@ int wd_len(char *input);
 int variable_len(char *input);
 int ft_isspace(int c);
 int ft_strcmp(const char *s1, const char *s2);
+void print_ast_node(t_ast_node *node);
+void print_redirs(t_list *redir_list);
 
 // utils_2
 char **trim_cmd(char **cmd_arg);

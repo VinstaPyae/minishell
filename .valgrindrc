@@ -2,5 +2,6 @@
 --leak-check=full
 --track-origins=yes
 --trace-children=yes
+--track-fds=yes
 --suppressions=rl.supp
 --show-leak-kinds=all

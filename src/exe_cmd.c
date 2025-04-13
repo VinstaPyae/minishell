@@ -227,6 +227,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	}
 	if (pid == 0)
 	{
+		printf("execute_external_command in child process, cmd[0]: %s\n", cmd[0]);
 		execute_external_child_process(cmd, shell);
 		// Child never reaches here, but add exit just in case
 		cleanup(&shell);

@@ -84,7 +84,7 @@ void cleanup(t_minishell **shell)
     if ((*shell)->ast)
     {
         free_ast((*shell)->ast);
-        (*shell)->ast = NULL;
+        print_ast_node((*shell)->ast); // Print AST for debugging
     }
 
 	// free envp

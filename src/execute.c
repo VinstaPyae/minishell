@@ -2,19 +2,19 @@
 
 char *ft_getenv(t_env *env, const char *key)
 {
-    while (env)
-    {
-        if (ft_strcmp(env->key, key) == 0)
-            return env->value;
-        env = env->next;
-    }
-    return NULL;
+	while (env)
+	{
+		if (ft_strcmp(env->key, key) == 0)
+			return env->value;
+		env = env->next;
+	}
+	return NULL;
 }
 
 void close_og_fd(t_minishell *shell)
 {
-		close(shell->og_fd[1]);
-		close(shell->og_fd[0]);
+	close(shell->og_fd[1]);
+	close(shell->og_fd[0]);
 }
 
 static char **allocate_paths(char *path_env)
@@ -194,105 +194,160 @@ void print_signal_message(int sig)
 	write(STDERR_FILENO, "\n", 1);
 }
 
-static pid_t create_child_process(t_ast_node *node, t_minishell *shell, int in_fd, int out_fd)
+/* Helper function to create a child process for pipe execution */
+static pid_t create_pipe_child(t_ast_node *node, t_minishell *shell, int in_fd, int out_fd)
 {
 	pid_t pid;
 
 	pid = fork();
 	if (pid < 0)
 	{
-		perror("fork");
+		perror("minishell: fork");
 		return -1;
 	}
+
 	if (pid == 0)
 	{
+		/* Child process */
+		handle_child_signals();
+
+		/* Set up input redirection */
 		if (in_fd != STDIN_FILENO)
 		{
-			dup2(in_fd, STDIN_FILENO);
+			if (dup2(in_fd, STDIN_FILENO) == -1)
+			{
+				perror("minishell: dup2");
+				exit(EXIT_FAILURE);
+			}
 			close(in_fd);
 		}
+
+		/* Set up output redirection */
 		if (out_fd != STDOUT_FILENO)
 		{
-			dup2(out_fd, STDOUT_FILENO);
+			if (dup2(out_fd, STDOUT_FILENO) == -1)
+			{
+				perror("minishell: dup2");
+				exit(EXIT_FAILURE);
+			}
 			close(out_fd);
 		}
+
+		/* Execute the command */
+		printf("Creating child process for command: %s\n", node->cmd_arg[0]);
 		int ret = execute_ast_command(node, shell);
+		cleanup(&shell); // Cleanup after execution
+		free_env_list(shell->envp);
+		if (shell)
+			free(shell);
 		exit(ret);
 	}
+
 	return pid;
 }
-static int wait_for_child_processes(pid_t pid1, pid_t pid2)
+
+/* Wait for child and handle status */
+static int wait_for_child(pid_t pid)
 {
-	int status1;
-	int status2;
-	int ret;
-	ret = 0;
+	int status;
+	int ret = 0;
 
-	waitpid(pid1, &status1, 0);
-	waitpid(pid2, &status2, 0);
-
-	if (WIFSIGNALED(status2))
+	if (waitpid(pid, &status, 0) == -1)
 	{
-		int sig = WTERMSIG(status2);
+		perror("minishell: waitpid");
+		return -1;
+	}
+
+	if (WIFSIGNALED(status))
+	{
+		int sig = WTERMSIG(status);
 		ret = 128 + sig;
-		print_signal_message(sig);
+		if (sig == SIGINT || sig == SIGQUIT)
+		{
+			print_signal_message(sig);
+		}
 	}
-	else if (WIFSIGNALED(status1))
+	else if (WIFEXITED(status))
 	{
-		ret = 128 + WTERMSIG(status1);
-	}
-	else if (WIFEXITED(status2))
-	{
-		ret = WEXITSTATUS(status2);
+		ret = WEXITSTATUS(status);
 	}
 
-	return (ret);
+	return ret;
 }
 
+/* Recursive pipe execution with proper fd handling */
 int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 {
 	int pipe_fds[2];
-	pid_t pid1, pid2;
-	int ret;
+	pid_t left_pid;
+	int exit_status = 0;
 
-	ret = 0;
 	if (!pipe_node || pipe_node->type != NODE_PIPE)
-		return (-1);
+	{
+		return -1;
+	}
+
 	if (pipe(pipe_fds) == -1)
 	{
-		perror("pipe");
-		return (-1);
+		perror("minishell: pipe");
+		return -1;
 	}
-	g_signal_status = 2; // Mark that child processes are running
-	pid1 = create_child_process(pipe_node->left, shell, STDIN_FILENO, pipe_fds[1]);
-	if (pid1 < 0)
-    {
-        close(pipe_fds[0]); // Close both ends of the pipe on error
-        close(pipe_fds[1]);
-        return (-1);
-    }
-	close(pipe_fds[1]);
-	pid2 = create_child_process(pipe_node->right, shell, pipe_fds[0], STDOUT_FILENO);
-	if (pid2 < 0)
-    {
-        close(pipe_fds[0]); // Close the read end of the pipe on error
-        return (-1);
-    }
+
+	g_signal_status = 2; // Mark child processes running
+
+	/* Execute left side (writes to pipe) */
+	printf("Executing left side of pipe\n");
+	left_pid = create_pipe_child(pipe_node->left, shell, STDIN_FILENO, pipe_fds[1]);
+	if (left_pid < 0)
+	{
+		close(pipe_fds[0]);
+		close(pipe_fds[1]);
+		return -1;
+	}
+	printf("Left side PID: %d\n", left_pid);
+	// print_ast_node(pipe_node->left); // Print left side AST node for debugging
+	close(pipe_fds[1]); // Close write end in parent
+
+	/* Execute right side (reads from pipe) */
+	if (pipe_node->right->type == NODE_PIPE)
+	{
+		printf("Executing next pipe\n");
+		// Recursive case for multiple pipes
+		exit_status = execute_pipe(pipe_node->right, shell);
+	}
+	else
+	{
+		// Base case - execute final command
+		printf("Executing right side of pipe\n");
+		pid_t right_pid = create_pipe_child(pipe_node->right, shell, pipe_fds[0], STDOUT_FILENO);
+		if (right_pid < 0)
+		{
+			close(pipe_fds[0]);
+			return -1;
+		}
+		exit_status = wait_for_child(right_pid);
+		printf("Right side PID: %d\n", right_pid);
+		// print_ast_node(pipe_node->right); // Print right side AST node for debugging
+	}
 	close(pipe_fds[0]);
-	ret = wait_for_child_processes(pid1, pid2);
-	g_signal_status = 0; // Reset signal status
-	return (ret);
+	printf("Pipe closed\n");
+	// print_ast_node(pipe_node); // Print current AST node for debugging
+	/* Wait for left process */
+	int left_status = wait_for_child(left_pid);
+	// cleanup(&shell); // Cleanup after left process
+	(void)left_status; // We return rightmost command's status
+
+	g_signal_status = 0;
+	return exit_status;
 }
 
-/*
- * This function temporarily overrides shell->ast with the given command node.
- * That way, your built-in functions (which expect the command in (*shell)->ast)
- * work without modification.
- */
+/* Execute AST command with proper cleanup */
 int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 {
 	if (!cmd_node)
-		return (1);
+	{
+		return 1;
+	}
 
 	if (cmd_node->type == NODE_COMMAND)
 	{
@@ -300,68 +355,65 @@ int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell)
 		shell->ast = cmd_node;
 		int ret = exe_cmd(&shell);
 		shell->ast = old_ast;
-		shell->exit_status = ret; // Ensure status is set
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
-		return (ret);
-	}
-
-	if (cmd_node->type == NODE_PIPE)
-	{
-		int ret = execute_pipe(cmd_node, shell);
-		shell->exit_status = ret; // Ensure status is set
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
 		return ret;
 	}
-	shell->exit_status = 1;
-	cleanup(&shell);
-	free_env_list(shell->envp);
-	if (shell)
-		free(shell);
-	return (1);
+	else if (cmd_node->type == NODE_PIPE)
+	{
+		return execute_pipe(cmd_node, shell);
+	}
+
+	return 1;
 }
+
+/* Main execution function with full cleanup */
 int execute_ast(t_minishell **shell)
 {
 	int result = 0;
 
 	if (!(*shell)->ast)
+	{
 		return 1;
+	}
 
+	/* Save original file descriptors */
+	(*shell)->og_fd[0] = dup(STDIN_FILENO);
+	(*shell)->og_fd[1] = dup(STDOUT_FILENO);
+	if ((*shell)->og_fd[0] == -1 || (*shell)->og_fd[1] == -1)
+	{
+		perror("minishell: dup");
+		if ((*shell)->og_fd[0] != -1)
+			close((*shell)->og_fd[0]);
+		if ((*shell)->og_fd[1] != -1)
+			close((*shell)->og_fd[1]);
+		return 1;
+	}
+
+	/* Process heredocs */
 	if (process_heredocs((*shell)->ast) == -1)
 	{
 		(*shell)->exit_status = 130;
+		close((*shell)->og_fd[0]);
+		close((*shell)->og_fd[1]);
 		return 1;
 	}
 
-	(*shell)->og_fd[1] = dup(STDOUT_FILENO);
-	(*shell)->og_fd[0] = dup(STDIN_FILENO);
-
-	if ((*shell)->ast->type == NODE_COMMAND)
-	{
-		result = exe_cmd(shell);
-	}
-	else if ((*shell)->ast->type == NODE_PIPE)
-	{
-		result = execute_pipe((*shell)->ast, *shell);
-	}
-	else
-	{
-		(*shell)->exit_status = 1;
-		result = 1;
-	}
-
+	/* Execute the AST */
+	result = execute_ast_command((*shell)->ast, *shell);
 	(*shell)->exit_status = result;
-	dup2((*shell)->og_fd[1], STDOUT_FILENO);
-	dup2((*shell)->og_fd[0], STDIN_FILENO);
-	close((*shell)->og_fd[1]);
+
+	/* Restore original file descriptors */
+	if (dup2((*shell)->og_fd[0], STDIN_FILENO) == -1)
+	{
+		perror("minishell: dup2 stdin");
+	}
+	if (dup2((*shell)->og_fd[1], STDOUT_FILENO) == -1)
+	{
+		perror("minishell: dup2 stdout");
+	}
 	close((*shell)->og_fd[0]);
-	printf("before cleanup\n");
+	close((*shell)->og_fd[1]);
+
+	/* Cleanup */
 	cleanup(shell);
-	printf("after cleanup\n");
 	return result;
 }

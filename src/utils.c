@@ -144,3 +144,58 @@ int	ft_strcmp(const char *s1, const char *s2)
 	}
 	return ((unsigned char)*s1 - (unsigned char)*s2);
 }
+
+
+// Assuming you have t_node_type, t_list, t_ast_node, and t_redir defined
+
+void print_redirs(t_list *redir_list)
+{
+    printf("Redirections:\n");
+    while (redir_list)
+    {
+        t_redir *redir = (t_redir *)redir_list->content;
+        if (redir)
+        {
+            printf("  [fd: %d, type: %d, file: %s]\n", redir->fd, redir->type, redir->file);
+        }
+        redir_list = redir_list->next;
+    }
+}
+
+void print_ast_node(t_ast_node *node)
+{
+    if (!node)
+    {
+        printf("NULL node\n");
+        return;
+    }
+
+    printf("---- AST Node ----\n");
+
+    // Node type
+    printf("Type: %d\n", node->type); // Replace with string if you have a mapper
+
+    // Command arguments
+    printf("Command Args: ");
+    if (node->cmd_arg)
+    {
+        for (int i = 0; node->cmd_arg[i]; i++)
+            printf("[%s] ", node->cmd_arg[i]);
+        printf("\n");
+    }
+    else
+        printf("NULL\n");
+
+    // Redirections
+    if (node->redir)
+        print_redirs(node->redir);
+    else
+        printf("Redirections: NULL\n");
+
+    // Recursively print left and right
+    printf("Left:\n");
+    print_ast_node(node->left);
+    printf("Right:\n");
+    print_ast_node(node->right);
+	printf("------------------------\n");
+}
