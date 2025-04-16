@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build with make",
+            "type": "shell",
+            "command": "make",
+            "args": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "Task to build the project using Makefile."
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make",
+            "args": ["fclean"],
+            "problemMatcher": []
+        },
+        {
+            "label": "debug with cleanup",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+				"clean",
+                "build with make"
+            ]
+        }
+    ]
+}
