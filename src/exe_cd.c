@@ -96,12 +96,12 @@ static void update_env_vars(t_minishell **shell)
     }
 }
 
-static char *path_handle(t_minishell **shell)
+static char *path_handle(t_ast_node *ast, t_minishell *shell)
 {
     char *dir;
-    if (!(*shell)->ast->cmd_arg[1] || ft_strncmp((*shell)->ast->cmd_arg[1], "~", 2) == 0)
+    if (!ast->cmd_arg[1] || ft_strncmp(ast->cmd_arg[1], "~", 2) == 0)
     {
-        dir = ft_getenv((*shell)->envp, "HOME");
+        dir = ft_getenv((shell)->envp, "HOME");
         if (!dir)
         {
             printf("cd: HOME not set\n");
@@ -109,9 +109,9 @@ static char *path_handle(t_minishell **shell)
         }
         printf("You are in Home directory\n");
     }
-    else if (ft_strncmp((*shell)->ast->cmd_arg[1], "-", 2) == 0)
+    else if (ft_strncmp(ast->cmd_arg[1], "-", 2) == 0)
     {
-        dir = ft_getenv((*shell)->envp, "OLDPWD");
+        dir = ft_getenv((shell)->envp, "OLDPWD");
         if (!dir)
         {
             printf("cd: OLDPWD not set\n");
@@ -121,7 +121,7 @@ static char *path_handle(t_minishell **shell)
     }
     else
     {
-        dir = (*shell)->ast->cmd_arg[1];
+        dir = ast->cmd_arg[1];
         printf("You are in Other directory\n");
     }
     return (dir);
@@ -160,22 +160,22 @@ void ft_fprintf(int fd, const char *format, ...)
     }
     va_end(args);
 }
-int exe_cd(t_minishell **shell)
+int exe_cd(t_ast_node *ast, t_minishell *shell)
 {
     char *path;
     char *curr_dir;
 
-    if (!shell || !*shell || !(*shell)->ast)
+    if (!ast)
         return (1); // Error: Invalid shell/ast
 
     // Case: Too many arguments (e.g., `cd dir1 dir2`)
-    if ((*shell)->ast->cmd_arg[1] && (*shell)->ast->cmd_arg[2])
+    if (ast->cmd_arg[1] && ast->cmd_arg[2])
     {
         ft_fprintf(2, "cd: too many arguments\n");
         return (1); // Exit status 1
     }
 
-    path = path_handle(shell); // Resolve path (HOME/OLDPWD/custom dir)
+    path = path_handle(ast, shell); // Resolve path (HOME/OLDPWD/custom dir)
     if (!path)
         return (1); // Error: HOME/OLDPWD unset or invalid
 
@@ -194,7 +194,7 @@ int exe_cd(t_minishell **shell)
     }
 
     // Update PWD and OLDPWD in env
-    update_env_vars(shell);
+    update_env_vars(&shell);
     free(curr_dir);
     return (0); // Success: Exit status 0
 }

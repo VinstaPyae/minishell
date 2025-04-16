@@ -13,20 +13,20 @@ static int is_directory(char *cmd, t_minishell *shell)
 	return (0);
 }
 
-int execute_builtin(t_minishell **shell, char *cmd)
+int execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
 {
 	if (ft_strcmp(cmd, "echo") == 0)
-		return (exe_echo(shell));
+		return (exe_echo(ast));
 	if (ft_strcmp(cmd, "cd") == 0)
-		return (exe_cd(shell));
+		return (exe_cd(ast, shell));
 	if (ft_strcmp(cmd, "pwd") == 0)
-		return (exe_pwd(shell));
+		return (exe_pwd(&shell));
 	if (ft_strcmp(cmd, "export") == 0)
-		return (exe_export(shell));
+		return (exe_export(&shell));
 	if (ft_strcmp(cmd, "unset") == 0)
-		return (exe_unset(shell));
+		return (exe_unset(&shell));
 	if (ft_strcmp(cmd, "env") == 0)
-		return (exe_env(shell));
+		return (exe_env(&shell));
 	return (-1);
 }
 
@@ -37,7 +37,7 @@ static void execute_and_check_command(char *cmd, char **args, char **env_array, 
 		if (errno == EACCES)
 		{
 			print_error_message(cmd, "Permission denied");
-			
+
 			free_array_list(env_array, -1); // Free env_array
 			free_arg(args);					// Free args
 			cleanup(&shell);
@@ -99,14 +99,14 @@ static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
 	char **path_dirs;
 	char *full_path;
 	char *path_value;
-    int i;
+	int i;
 
-    path_value = ft_getenv(shell->envp, "PATH");
-    if (!path_value)
-        return (handle_no_path(cmd[0], shell));
-    path_dirs = split_path(path_value);
+	path_value = ft_getenv(shell->envp, "PATH");
+	if (!path_value)
+		return (handle_no_path(cmd[0], shell));
+	path_dirs = split_path(path_value);
 	if (!path_dirs)
-		return (return_with_status(&shell, 127));
+		return (return_with_status(shell, 127));
 	i = 0;
 	while (path_dirs[i])
 	{
@@ -129,8 +129,8 @@ static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
 	}
 	free_array_list(path_dirs, -1);
 	close_og_fd(shell);
-	print_error_message(cmd[0], "Command not found");
-	return (return_with_status(&shell, 127));
+	print_error_message(cmd[0], "Command not found? HoHoHOOOOOOO");
+	return (return_with_status(shell, 127));
 }
 
 static void execute_external_child_process(char **cmd, t_minishell *shell)
@@ -210,77 +210,84 @@ static int handle_parent_process(pid_t pid, t_minishell *shell)
 	return (shell->exit_status);
 }
 
-int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
+int execute_external_command(t_ast_node *ast_cmd, int *og_fd, t_minishell *shell)
 {
 	char **cmd;
 	pid_t pid;
+	int status;
 
 	cmd = trim_cmd(ast_cmd->cmd_arg);
 	g_signal_status = 2;
 	pid = fork();
 	if (pid < 0)
 	{
-		perror("fork");
+		perror("fork failed");
 		set_exit_status(shell, 1);
 		free_arg(cmd);
 		return (-1);
 	}
 	if (pid == 0)
 	{
-		printf("execute_external_command in child process, cmd[0]: %s\n", cmd[0]);
-		execute_external_child_process(cmd, shell);
-		// Child never reaches here, but add exit just in case
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
-		exit(127);
-	} 
+		(close(og_fd[0]), close(og_fd[1]));
+		// printf("execute_external_command in child process, cmd[0]: %s\n", cmd[0]);
+		// print_ast_node(ast_cmd); // Print AST node for debugging
+		if (ast_cmd->cmd_arg)
+			execute_external_child_process(cmd, shell);
+
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
+		// exit(127);
+	}
+	waitpid(pid, &status, 0);
 	free_arg(cmd);
-	return (handle_parent_process(pid, shell));
+	return (status);
 }
 
-int builtin_cmd_check(t_minishell **shell)
+int builtin_cmd_check(char *cmd, t_ast_node *ast, t_minishell *shell)
 {
-	char *cmd;
 	int ret;
 
-	if (!shell || !(*shell) || !(*shell)->ast || !(*shell)->ast->cmd_arg)
+	if (!ast || !ast->cmd_arg)
 		return (return_with_status(shell, 1));
-	cmd = ft_strtrim((*shell)->ast->cmd_arg[0], " ");
+	cmd = ft_strtrim(ast->cmd_arg[0], " ");
 	if (!cmd)
 		return (return_with_status(shell, 1));
-	ret = execute_builtin(shell, cmd);
+	ret = execute_builtin(ast, shell, cmd);
 	if (ret == -1 && ft_strcmp(cmd, "exit") == 0)
 	{
 		free(cmd);
-		return (exe_exit(shell));
+		return (exe_exit(&shell));
 	}
 	free(cmd);
 	if (ret != -1)
-		set_exit_status(*shell, ret);
+		set_exit_status(shell, ret);
 	return (ret);
 }
 
-int exe_cmd(t_minishell **shell)
+int exe_cmd(t_ast_node *node, int *og_fd, t_minishell *shell)
 {
 	int ret;
+	char **cmd;
 
-	if (!(*shell)->ast)
+	// printf("Node command: %s\n", node->cmd_arg[0]);
+	cmd = node->cmd_arg;
+	if (!cmd || !*cmd)
 	{
 		ft_putstr_fd("Error: No command provided\n", STDERR_FILENO);
-		close_og_fd(*shell);
+		reset_close_fd(og_fd,1,1);
 		return (return_with_status(shell, 1));
 	}
-	if ((*shell)->ast->redir)
+	if (node->redir)
 	{
-		if (handle_redirections((*shell)->ast->redir) == -1)
+		if (handle_redirections(node->redir) == -1)
 			return (return_with_status(shell, 1));
 	}
-	ret = builtin_cmd_check(shell);
+	ret = builtin_cmd_check(*cmd, node, shell);
 	if (ret != -1)
 		return (return_with_status(shell, ret));
-	ret = execute_external_command((*shell)->ast, *shell);
+	ret = execute_external_command(node, og_fd, shell);
 
 	return (return_with_status(shell, ret));
 }

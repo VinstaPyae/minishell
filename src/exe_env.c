@@ -68,5 +68,5 @@ int exe_env(t_minishell **shell)
     if (!path_exist)
         return return_error(shell, "env: No such file or directory\n", 127);
     print_env(*shell);
-    return return_with_status(shell, 0); // Update shell status and return success
+    return return_with_status((*shell), 0); // Update shell status and return success
 }

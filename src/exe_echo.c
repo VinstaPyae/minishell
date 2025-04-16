@@ -13,25 +13,25 @@ int n_option_checked(const char *str)
 }
 
 // echo builtin
-int exe_echo(t_minishell **shell)
+int exe_echo(t_ast_node *ast)
 {
 	int i;
 	int newline;
 
 	i = 1;
 	newline = 1;
-	if (!(*shell)->ast || !(*shell)->ast->cmd_arg[0])
+	if (!ast || !ast->cmd_arg[0])
 		return (1);
-	while ((*shell)->ast->cmd_arg[i] && n_option_checked((*shell)->ast->cmd_arg[i]))
+	while (ast->cmd_arg[i] && n_option_checked(ast->cmd_arg[i]))
 	{
 		newline = 0;
 		i++;
 	}
-	if ((*shell)->ast->cmd_arg)
+	if (ast->cmd_arg)
 	{
-		while ((*shell)->ast->cmd_arg[i])
+		while (ast->cmd_arg[i])
 		{
-			printf("%s", (*shell)->ast->cmd_arg[i]);
+			printf("%s", ast->cmd_arg[i]);
 			i++;
 		}
 	}

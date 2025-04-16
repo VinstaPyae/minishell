@@ -151,12 +151,11 @@ t_ast_node *parse_cmd(t_list **tokens);
 // execute_builtin
 char *ft_getenv(t_env *env, const char *key);
 void close_og_fd(t_minishell *shell);
-int builtin_cmd_check(t_minishell **shell);
-int exe_cmd(t_minishell **shell);
-int execute_ast_command(t_ast_node *cmd_node, t_minishell *shell);
-int execute_ast(t_minishell **shell);
+int builtin_cmd_check(char *cmd, t_ast_node *ast, t_minishell *shell);
+int exe_cmd(t_ast_node *left_node, int *og_fd, t_minishell *shell);
+int execute_ast(t_minishell *shell);
 int n_option_checked(const char *str);
-int exe_echo(t_minishell **shell);
+int exe_echo(t_ast_node *ast);
 int exe_exit(t_minishell **shell);
 void split_key_value(char *str, char **key, char **value);
 t_env *init_env(char **envp);
@@ -166,7 +165,7 @@ int exe_env(t_minishell **shell);
 char *ft_strndup(const char *s, size_t n);
 int exe_unset(t_minishell **shell);
 int exe_pwd(t_minishell **shell);
-int exe_cd(t_minishell **shell);
+int exe_cd(t_ast_node *ast, t_minishell *shell);
 void split_value(char *str, char **key, char **value);
 static void add_or_update_env_var(const char *key, const char *value, t_minishell *shell);
 static int is_valid_env_name(const char *name);
@@ -175,13 +174,14 @@ static int process_export_no_args(t_minishell *shell);
 int exe_export(t_minishell **shell);
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 
-
 // execute
 void print_error_message(char *cmd, char *message);
 void handle_child_signals(void);
 int handle_no_path(char *cmd, t_minishell *shell);
 char **get_env_array(t_minishell *shell);
 char **split_path(char *path_env);
+//int execute_left_command(t_ast_node *cmd_node, t_minishell *shell);
+void reset_close_fd(int *org_fd, int reset, int closee);
 //
 
 // env
@@ -209,7 +209,6 @@ void handle_sigint_heredoc(int signo);
 void print_signal_message(int sig);
 // status_utils
 void set_exit_status(t_minishell *shell, int status);
-int return_with_status(t_minishell **shell, int status);
+int return_with_status(t_minishell *shell, int status);
 int return_error(t_minishell **shell, const char *msg, int status);
 #endif
-
