@@ -224,101 +224,114 @@ static int wait_for_child(pid_t pid)
     return ret;
 }
 
-/* Helper function to create a child process for pipe execution */
-static pid_t create_pipe_child(t_ast_node *node, t_minishell *shell, int *pipe_fd, int *og_fd)
+/* Execute a pipe command */
+int execute_pipe(t_ast_node *pipe_node, int *og_fd, t_minishell *shell)
 {
-    pid_t pid;
-
-    if (!node && !node->left)
+    int pipe_fds[2];
+    pid_t left_pid, right_pid;
+    int status;
+    
+    if (!pipe_node)
+        return -1;
+    
+    /* Create the pipe */
+    if (pipe(pipe_fds) == -1)
     {
+        perror("minishell: pipe Failed");
         return -1;
     }
-    pid = fork();
-    if (pid < 0)
+    
+    g_signal_status = 2; /* Mark child processes running */
+    
+    /* Create left child (writes to pipe) */
+    left_pid = fork();
+    if (left_pid < 0)
     {
         perror("minishell: fork");
+        close(pipe_fds[0]);
+        close(pipe_fds[1]);
         return -1;
     }
-
-    if (pid == 0)
+    
+    if (left_pid == 0) /* Left child process */
     {
-        /* Child process */
         handle_child_signals();
-        reset_close_fd(og_fd, 0, 1);
-        /* Set up input redirection */
-        if (node->right)
+        
+        /* Close read end in left child */
+        close(pipe_fds[0]);
+        
+        /* Redirect stdout to pipe write end */
+        if (dup2(pipe_fds[1], STDOUT_FILENO) == -1)
         {
-            dup2(pipe_fd[1], STDOUT_FILENO);
+            perror("minishell: dup2");
+            exit(1);
         }
-	    close(pipe_fd[0]);
-        close(pipe_fd[1]);
-        // print_ast_node(node);
-        int ret = exe_cmd(node, og_fd, shell);
-        //printf("Child process finished executing command: %s\n", node->cmd_arg[0]);
-        // print_ast_node(node); // Print AST node for debugging
+        close(pipe_fds[1]);
+        
+        int ret = exe_cmd(pipe_node->left, og_fd, shell);
         cleanup(&shell);
         free_env_list(shell->envp);
         if (shell)
             free(shell);
         exit(ret);
     }
-    else
+    
+    /* Create right child (reads from pipe) */
+    right_pid = fork();
+    if (right_pid < 0)
     {
-        dup2(pipe_fd[0], STDIN_FILENO);
-        close(pipe_fd[1]);
-        close(pipe_fd[0]);
-    }
-    // printf("Created child process with PID: %d\n", pid);
-    // // print_ast_node(node); // Print AST node for debugging
-    return pid;
-}
-
-/* Recursive pipe execution with proper fd handling */
-int execute_pipe(t_ast_node *pipe_node, int *og_fd, t_minishell *shell)
-{
-    int pipe_fds[2];
-    pid_t left_pid;
-    pid_t right_pid;
-    int exit_status = 0;
-    if (!pipe_node)
-    {
-	return -1;
-    }
-
-    if (pipe(pipe_fds) == -1)
-    {
-        perror("minishell: pipe Failed");
+        perror("minishell: fork");
+        close(pipe_fds[0]);
+        close(pipe_fds[1]);
+        waitpid(left_pid, NULL, 0); /* Clean up the left child */
         return -1;
     }
-
-    g_signal_status = 2; // Mark child processes running
-
-    /* Execute left side (writes to pipe) */
-    printf("Executing left side of pipe\n");
-    left_pid = create_pipe_child(pipe_node->left, shell, pipe_fds, og_fd);
-    if (pipe_node->right->type == NODE_PIPE)
+    
+    if (right_pid == 0) /* Right child process */
     {
-        execute_pipe(pipe_node->right, og_fd, shell);
-        exit_status = wait_for_child(left_pid);
+        handle_child_signals();
+        
+        /* Close write end in right child */
+        close(pipe_fds[1]);
+        
+        /* Redirect stdin from pipe read end */
+        if (dup2(pipe_fds[0], STDIN_FILENO) == -1)
+        {
+            perror("minishell: dup2");
+            exit(1);
+        }
+        close(pipe_fds[0]);
+        
+        int ret;
+        if (pipe_node->right->type == NODE_PIPE)
+            ret = execute_pipe(pipe_node->right, og_fd, shell);
+        else
+            ret = exe_cmd(pipe_node->right, og_fd, shell);
+            
+        cleanup(&shell);
+        free_env_list(shell->envp);
+        if (shell)
+            free(shell);
+        exit(ret);
     }
-    else if (pipe_node->right->type == NODE_COMMAND)
-    {
-        right_pid = create_pipe_child(pipe_node->right, shell, pipe_fds, og_fd);
-        exit_status = wait_for_child(right_pid);
-    }
-    else
-    {
-        exit_status = wait_for_child(left_pid); 
-    }
-    // close(pipe_fds[0]);
-    // printf("Pipe closed\n");
-    // print_ast_node(pipe_node); // Print current AST node for debugging
-    // /* Wait for left process */
-    // int left_status = wait_for_child(left_pid);
-    // // cleanup(&shell); // Cleanup after left process
-    // (void)left_status; // We return rightmost command's status
+    
+    /* Parent closes both pipe ends */
+    close(pipe_fds[0]);
+    close(pipe_fds[1]);
+    
+    /* Wait for both children to finish */
+    waitpid(left_pid, NULL, 0);  /* We don't care about the left exit status */
+    waitpid(right_pid, &status, 0);
+    
     g_signal_status = 0;
-    return exit_status;
+    
+    /* Return the exit status of the right command */
+    if (WIFEXITED(status))
+        return WEXITSTATUS(status);
+    else if (WIFSIGNALED(status))
+        return 128 + WTERMSIG(status);
+        
+    return 1;
 }
 
 ///////////////////////////****************** //////////////////
