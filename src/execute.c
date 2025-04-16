@@ -336,18 +336,10 @@ int execute_pipe(t_ast_node *pipe_node, int *og_fd, t_minishell *shell)
 
 ///////////////////////////****************** //////////////////
 
-void reset_close_fd(int *org_fd, int reset, int closee)
+void reset_close_fd(int *org_fd)
 {
-    if (reset)
-    {
-        dup2(org_fd[0], STDIN_FILENO);
-        dup2(org_fd[1], STDOUT_FILENO);
-    }
-    if (closee)
-    {
-        close(org_fd[0]);
-        close(org_fd[1]);
-    }
+    close(org_fd[0]);
+    close(org_fd[1]);
 }
 
 int execute_ast(t_minishell *shell)
@@ -392,7 +384,7 @@ int execute_ast(t_minishell *shell)
             return 1;
         }
     }
-    reset_close_fd(og_fd, 1, 1);
+    reset_close_fd(og_fd);
     cleanup(&shell);
     return result;
 }

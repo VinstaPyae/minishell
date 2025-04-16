@@ -119,7 +119,7 @@ static int is_valid_env_name(const char *name)
 }
 
 // Function to process the arguments for export
-static int process_export_args(t_minishell *shell)
+static int process_export_args(t_ast_node *ast, t_minishell *shell)
 {
     int i;
     char *key = NULL;
@@ -127,10 +127,10 @@ static int process_export_args(t_minishell *shell)
     char **cmd;
     int error_flag = 0;
 
-    if (!shell || !shell->ast || !shell->ast->cmd_arg)
+    if (!shell || !ast || !ast->cmd_arg)
         return (1);
 
-    cmd = shell->ast->cmd_arg;
+    cmd = ast->cmd_arg;
     i = 1;
 
     while (cmd[i])
@@ -196,13 +196,13 @@ static int process_export_no_args(t_minishell *shell)
 }
 
 // Main export function
-int exe_export(t_minishell **shell)
+int exe_export(t_ast_node *ast, t_minishell *shell)
 {
-    if (!shell || !*shell || !(*shell)->ast)
+    if (!shell || !ast)
         return (1); // Early exit if shell or AST is invalid
 
-    if (!(*shell)->ast->cmd_arg[1])
-        return process_export_no_args(*shell);
+    if (!ast->cmd_arg[1])
+        return process_export_no_args(shell);
 
-    return process_export_args(*shell);
+    return process_export_args(ast, shell);
 }

@@ -169,9 +169,9 @@ int exe_cd(t_ast_node *ast, t_minishell *shell);
 void split_value(char *str, char **key, char **value);
 static void add_or_update_env_var(const char *key, const char *value, t_minishell *shell);
 static int is_valid_env_name(const char *name);
-static int process_export_args(t_minishell *shell);
+static int process_export_args(t_ast_node *ast, t_minishell *shell);
 static int process_export_no_args(t_minishell *shell);
-int exe_export(t_minishell **shell);
+int exe_export(t_ast_node *ast, t_minishell *shell);
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 
 // execute
@@ -181,7 +181,7 @@ int handle_no_path(char *cmd, t_minishell *shell);
 char **get_env_array(t_minishell *shell);
 char **split_path(char *path_env);
 //int execute_left_command(t_ast_node *cmd_node, t_minishell *shell);
-void reset_close_fd(int *org_fd, int reset, int closee);
+void reset_close_fd(int *org_fd);
 //
 
 // env

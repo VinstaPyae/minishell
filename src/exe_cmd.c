@@ -22,7 +22,7 @@ int execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
 	if (ft_strcmp(cmd, "pwd") == 0)
 		return (exe_pwd(&shell));
 	if (ft_strcmp(cmd, "export") == 0)
-		return (exe_export(&shell));
+		return (exe_export(ast, shell));
 	if (ft_strcmp(cmd, "unset") == 0)
 		return (exe_unset(&shell));
 	if (ft_strcmp(cmd, "env") == 0)
@@ -276,7 +276,7 @@ int exe_cmd(t_ast_node *node, int *og_fd, t_minishell *shell)
 	if (!cmd || !*cmd)
 	{
 		ft_putstr_fd("Error: No command provided\n", STDERR_FILENO);
-		reset_close_fd(og_fd,1,1);
+		reset_close_fd(og_fd);
 		return (return_with_status(shell, 1));
 	}
 	if (node->redir)
