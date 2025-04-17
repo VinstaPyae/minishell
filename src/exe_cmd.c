@@ -245,20 +245,14 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
 {
 	int ret;
-	char *cmd;
 
 	if (!ast || !ast->cmd_arg)
 		return (return_with_status(shell, 1));
-	cmd = ft_strtrim(ast->cmd_arg[0], " ");
-	if (!cmd)
-		return (return_with_status(shell, 1));
-	ret = execute_builtin(ast, shell, cmd);
-	if (ret == -1 && ft_strcmp(cmd, "exit") == 0)
+	ret = execute_builtin(ast, shell, ast->cmd_arg[0]);
+	if (ret == -1 && ft_strcmp(ast->cmd_arg[0], "exit") == 0)
 	{
-		free(cmd);
 		return (exe_exit(&shell));
 	}
-	free(cmd);
 	if (ret != -1)
 		set_exit_status(shell, ret);
 	return (ret);
@@ -278,9 +272,11 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 	ret = builtin_cmd_check(node, shell);
 	if (ret != -1)
 		return (return_with_status(shell, ret));
+	// print_ast_node(node); // Print AST node for debugging
 	cmd_err = search_cmd_path(node->cmd_arg[0], shell);
 	if (cmd_err != OK_CMD)
 		return (cmd_error_msg(cmd_err, node->cmd_arg[0], shell),return_with_status(shell, 127));
+	print_ast_node(node); // Print AST node for debugging
 	ret = execute_external_command(node, shell);
 	return (return_with_status(shell, ret));
 }

@@ -46,10 +46,32 @@ static int process_redirections(t_ast_node *cmd_node, t_list **tokens)
 
 static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
 {
+    char **tmp_arg;
+    char *trimmed;
+
+    /* get the argv array */
     cmd_node->cmd_arg = get_cmd_args(tokens);
     if (!cmd_node->cmd_arg)
-        return 0; // Return failure if memory allocation fails
-    return 1; // Return success
+        return 0;  // allocation failure
+
+    tmp_arg = cmd_node->cmd_arg;
+    if (ft_strchr(tmp_arg[0], ' ') != NULL)
+    {
+        /* first produce the trimmed copy */
+        trimmed = ft_strtrim(tmp_arg[0], " ");
+        if (!trimmed)
+            return 0;  // allocation failure
+
+        /* then free the old untrimmed string and replace it */
+        free(tmp_arg[0]);
+        tmp_arg[0] = trimmed;
+    }
+
+    /* do NOT free_arg(tmp_arg) here — that belongs in your cleanup path,
+    once you’re completely done with cmd_node->cmd_arg. */
+
+    return 1;  // success
+
 }
 
 static t_ast_node *create_command_node(void)

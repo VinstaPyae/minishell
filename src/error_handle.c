@@ -14,7 +14,7 @@ void cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell)
         write(2, cmd, ft_strlen(cmd));
         write(2, ": Permission denied\n", 25);
     }
-    if (ft_strchr(cmd, '/'))
+    else if (ft_strchr(cmd, '/'))
     {
         write(2, "minishell: ", 11);
         write(2, cmd, ft_strlen(cmd));
