@@ -196,7 +196,7 @@ void print_signal_message(int sig)
 }
 
 /* Wait for child and handle status */
-static int wait_for_child(pid_t pid)
+int wait_for_child(pid_t pid)
 {
     int status;
     int ret = 0;
@@ -345,15 +345,12 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
     if (!ast_root)
     {
         perror("minishell: No AST to execute");
-        return 1;
+        return (return_with_status(shell, 1));
     }
 
     /* Process heredocs */
     if (process_heredocs(ast_root) == -1)
-    {
-        (shell)->exit_status = 130;
-        return 1;
-    }
+        return (return_with_status(shell, 130));
 //     print_ast_node(ast_nd); // Print AST node for debugging
     if (ast_root && ast_root->type == NODE_PIPE)
     {
@@ -361,7 +358,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
         if (result == -1)
         {
             perror("minishell: execute_pipe");
-            return 1;
+            return (return_with_status(shell, 1));
         }
     }
     else if (ast_root && ast_root->type == NODE_COMMAND)
@@ -370,7 +367,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
         if (result == -1)
         {
             perror("minishell: execute_ast_command");
-            return 1;
+            return (return_with_status(shell, 1));
         }
     }
     cleanup(&shell);

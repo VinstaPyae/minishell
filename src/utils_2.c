@@ -119,7 +119,10 @@ void handle_eof(t_minishell *shell)
 {
 	int saved_exit_status;
 
-	saved_exit_status = shell->exit_status;
+	if(g_signal_status == 130)
+		saved_exit_status = 130;
+	else
+		saved_exit_status = shell->exit_status;
 	if (isatty(STDIN_FILENO)) // Only print if we're in interactive mode
 		printf("exit\n");
 

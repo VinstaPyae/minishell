@@ -221,13 +221,15 @@ int exe_exit(t_minishell **shell)
 	while (args[arg_count])
 		arg_count++;
 
+	if(g_signal_status == 130)
+		(*shell)->exit_status = 130; // Reset after handling
 	// Save exit status before freeing *shell
 	saved_exit_status = (*shell)->exit_status;
+	printf("Exit status: %d\n", saved_exit_status);
 
 	// No arguments: exit with last status
 	if (arg_count == 1)
 	{
-		close_og_fd((*shell));
 		cleanup(shell); // Final cleanup
 		if ((*shell)->envp)
 			free_env_list((*shell)->envp);
@@ -242,7 +244,6 @@ int exe_exit(t_minishell **shell)
 		ft_putstr_fd("exit: ", STDERR_FILENO);
 		ft_putstr_fd(args[1], STDERR_FILENO);
 		ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
-		close_og_fd((*shell));
 		cleanup(shell); // Final cleanup
 		if ((*shell)->envp)
 			free_env_list((*shell)->envp);
@@ -255,19 +256,15 @@ int exe_exit(t_minishell **shell)
 
 	if (arg_count > 2)
 	{
-		close_og_fd((*shell));
 		ft_putstr_fd("exit: too many arguments\n", STDERR_FILENO);
-		(*shell)->exit_status = 1;
-		printf("Exit Status: %d\n", (*shell)->exit_status);
 		return (1); // Don't exit shell
 	}
-	close_og_fd((*shell));
 	cleanup(shell); // Final cleanup
 	if ((*shell)->envp)
 			free_env_list((*shell)->envp);
 	if (*shell)
 		free(*shell);
 	rl_clear_history();
-	exit((unsigned char)exit_num);
+	exit(saved_exit_status);
 }
 

@@ -1,30 +1,34 @@
 #include "minishell.h"
 
-void cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell)
+int cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell)
 {
     if (cmd_err == CMD_IS_DIR)
     {
         write(2, "minishell: ", 11);
         write(2, cmd, ft_strlen(cmd));
         write(2, ": Is a directory\n", 17);
+        return (return_with_status(shell, 126));
     }
     else if (cmd_err == CMD_NO_PERM)
     {
         write(2, "minishell: ", 11);
         write(2, cmd, ft_strlen(cmd));
-        write(2, ": Permission denied\n", 25);
+        write(2, ": Permission denied\n", 21);
+        return (return_with_status(shell, 126));
     }
     else if (ft_strchr(cmd, '/'))
     {
         write(2, "minishell: ", 11);
         write(2, cmd, ft_strlen(cmd));
         write(2, ": No such file or directory\n", 28);
+        return (return_with_status(shell, 127));
     }
     else
     {
         write(2, "minishell: ", 11);
         write(2, cmd, ft_strlen(cmd));
         write(2, ": Command not found\n", 20);
+        return (return_with_status(shell, 127));
     }
 }
 
@@ -87,6 +91,11 @@ void cleanup(t_minishell **shell)
         (*shell)->ast = NULL;
     }
 
+    if ((*shell)->path)
+    {
+        free((*shell)->path);
+        (*shell)->path = NULL;
+    }
 	// free envp
 	// if ((*shell)->envp)
 	// {

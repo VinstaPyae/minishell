@@ -199,6 +199,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	if (pid == 0)
 	{
 		//signal
+		handle_child_signals();
 		shell->env_path = get_env_array(shell);
 		//og fd close
 		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
@@ -212,8 +213,8 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		exit(127);
 	}
 	//handle exit status
-	waitpid(pid, &status, 0);
-	return (status);
+	status = wait_for_child(pid);
+	return (return_with_status(shell, status));
 }
 
 int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
@@ -249,7 +250,7 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 	// print_ast_node(node); // Print AST node for debugging
 	cmd_err = search_cmd_path(node->cmd_arg[0], shell);
 	if (cmd_err != OK_CMD)
-		return (cmd_error_msg(cmd_err, node->cmd_arg[0], shell),return_with_status(shell, 127));
+		return (cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
 	ret = execute_external_command(node, shell);
 	return (return_with_status(shell, ret));
 }

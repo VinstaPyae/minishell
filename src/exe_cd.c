@@ -122,7 +122,7 @@ static char *path_handle(t_ast_node *ast, t_minishell *shell)
     else
     {
         dir = ast->cmd_arg[1];
-        printf("You are in Other directory\n");
+        //printf("You are in Other directory\n");
     }
     return (dir);
 }

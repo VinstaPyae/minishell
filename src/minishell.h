@@ -207,13 +207,14 @@ char **get_env_array(t_minishell *shell);
 char **split_path(char *path_env);
 //int execute_left_command(t_ast_node *cmd_node, t_minishell *shell);
 void reset_close_fd(int *org_fd);
+int wait_for_child(pid_t pid);
 //
 
 // env
 void update_shlvl(t_env **env_list);
 
 // error_handle
-void cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell);
+int cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell);
 void cleanup(t_minishell **shell);
 void free_ast(t_ast_node *node);
 void free_arg(char **str);
