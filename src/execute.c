@@ -225,7 +225,7 @@ static int wait_for_child(pid_t pid)
 }
 
 /* Execute a pipe command */
-int execute_pipe(t_ast_node *pipe_node, int *og_fd, t_minishell *shell)
+int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 {
     int pipe_fds[2];
     pid_t left_pid, right_pid;
@@ -268,7 +268,7 @@ int execute_pipe(t_ast_node *pipe_node, int *og_fd, t_minishell *shell)
         }
         close(pipe_fds[1]);
         
-        int ret = exe_cmd(pipe_node->left, og_fd, shell);
+        int ret = exe_cmd(pipe_node->left, shell);
         cleanup(&shell);
         free_env_list(shell->envp);
         if (shell)
@@ -303,11 +303,7 @@ int execute_pipe(t_ast_node *pipe_node, int *og_fd, t_minishell *shell)
         close(pipe_fds[0]);
         
         int ret;
-        if (pipe_node->right->type == NODE_PIPE)
-            ret = execute_pipe(pipe_node->right, og_fd, shell);
-        else
-            ret = exe_cmd(pipe_node->right, og_fd, shell);
-            
+        ret = execute_ast(pipe_node->right, shell);
         cleanup(&shell);
         free_env_list(shell->envp);
         if (shell)
@@ -342,49 +338,41 @@ void reset_close_fd(int *org_fd)
     close(org_fd[1]);
 }
 
-int execute_ast(t_minishell *shell)
+int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 {
-    int og_fd[2];
-    t_ast_node *ast_nd;
-    ast_nd = (shell)->ast;
     int result = 0;
 
-    if (!ast_nd)
+    if (!ast_root)
     {
         perror("minishell: No AST to execute");
         return 1;
     }
-    og_fd[0] = dup(STDIN_FILENO);
-    og_fd[1] = dup(STDOUT_FILENO);
 
     /* Process heredocs */
-    if (process_heredocs(ast_nd) == -1)
+    if (process_heredocs(ast_root) == -1)
     {
         (shell)->exit_status = 130;
-        close((shell)->og_fd[0]);
-        close((shell)->og_fd[1]);
         return 1;
     }
 //     print_ast_node(ast_nd); // Print AST node for debugging
-    if (ast_nd && ast_nd->type == NODE_PIPE)
+    if (ast_root && ast_root->type == NODE_PIPE)
     {
-        result = execute_pipe(ast_nd, og_fd, shell);
+        result = execute_pipe(ast_root, shell);
         if (result == -1)
         {
             perror("minishell: execute_pipe");
             return 1;
         }
     }
-    else if (ast_nd && ast_nd->type == NODE_COMMAND)
+    else if (ast_root && ast_root->type == NODE_COMMAND)
     {
-        result = exe_cmd(ast_nd, og_fd, shell);
+        result = exe_cmd(ast_root, shell);
         if (result == -1)
         {
             perror("minishell: execute_ast_command");
             return 1;
         }
     }
-    reset_close_fd(og_fd);
     cleanup(&shell);
     return result;
 }

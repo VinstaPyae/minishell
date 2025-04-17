@@ -210,7 +210,7 @@ static int handle_parent_process(pid_t pid, t_minishell *shell)
 	return (shell->exit_status);
 }
 
-int execute_external_command(t_ast_node *ast_cmd, int *og_fd, t_minishell *shell)
+int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
 	char **cmd;
 	pid_t pid;
@@ -228,7 +228,6 @@ int execute_external_command(t_ast_node *ast_cmd, int *og_fd, t_minishell *shell
 	}
 	if (pid == 0)
 	{
-		(close(og_fd[0]), close(og_fd[1]));
 		// printf("execute_external_command in child process, cmd[0]: %s\n", cmd[0]);
 		// print_ast_node(ast_cmd); // Print AST node for debugging
 		if (ast_cmd->cmd_arg)
@@ -266,7 +265,7 @@ int builtin_cmd_check(char *cmd, t_ast_node *ast, t_minishell *shell)
 	return (ret);
 }
 
-int exe_cmd(t_ast_node *node, int *og_fd, t_minishell *shell)
+int exe_cmd(t_ast_node *node, t_minishell *shell)
 {
 	int ret;
 	char **cmd;
@@ -276,7 +275,6 @@ int exe_cmd(t_ast_node *node, int *og_fd, t_minishell *shell)
 	if (!cmd || !*cmd)
 	{
 		ft_putstr_fd("Error: No command provided\n", STDERR_FILENO);
-		reset_close_fd(og_fd);
 		return (return_with_status(shell, 1));
 	}
 	if (node->redir)
@@ -287,7 +285,7 @@ int exe_cmd(t_ast_node *node, int *og_fd, t_minishell *shell)
 	ret = builtin_cmd_check(*cmd, node, shell);
 	if (ret != -1)
 		return (return_with_status(shell, ret));
-	ret = execute_external_command(node, og_fd, shell);
+	ret = execute_external_command(node, shell);
 
 	return (return_with_status(shell, ret));
 }
