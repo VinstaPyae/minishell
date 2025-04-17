@@ -77,6 +77,7 @@ int main(int ac, char **av, char **env)
 
     (void)ac;
     (void)av;
+   
     setup_signal_handlers(); // Add this line
 
     envp = init_env(env);
@@ -127,7 +128,7 @@ int main(int ac, char **av, char **env)
         }
         // print_ast_node(shell->ast); // Print AST for debugging
         shell->exit_status = execute_ast(shell->ast, shell); // This should call exe_exit for the "exit" command
-        printf("Exit status: %d\n", shell->exit_status);
+        //printf("Exit status: %d\n", shell->exit_status);
         // print_ast_node(shell->ast); // Print AST for debugging
     }
     printf("Main before cleanup\n");

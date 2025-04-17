@@ -225,7 +225,7 @@ int exe_exit(t_minishell **shell)
 		(*shell)->exit_status = 130; // Reset after handling
 	// Save exit status before freeing *shell
 	saved_exit_status = (*shell)->exit_status;
-	printf("Exit status: %d\n", saved_exit_status);
+	//printf("Exit status: %d\n", saved_exit_status);
 
 	// No arguments: exit with last status
 	if (arg_count == 1)
@@ -265,6 +265,6 @@ int exe_exit(t_minishell **shell)
 	if (*shell)
 		free(*shell);
 	rl_clear_history();
-	exit(saved_exit_status);
+	exit((unsigned char)exit_num);
 }
 

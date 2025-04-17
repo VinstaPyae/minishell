@@ -255,7 +255,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     
     if (left_pid == 0) /* Left child process */
     {
-        handle_child_signals();
+        //handle_child_signals();
         
         /* Close read end in left child */
         close(pipe_fds[0]);
@@ -317,17 +317,17 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     
     /* Wait for both children to finish */
     waitpid(left_pid, NULL, 0);  /* We don't care about the left exit status */
-    waitpid(right_pid, &status, 0);
+    int right_status = wait_for_child(right_pid);
     
     g_signal_status = 0;
     
-    /* Return the exit status of the right command */
-    if (WIFEXITED(status))
-        return WEXITSTATUS(status);
-    else if (WIFSIGNALED(status))
-        return 128 + WTERMSIG(status);
+    // /* Return the exit status of the right command */
+    // if (WIFEXITED(status))
+    //     return WEXITSTATUS(status);
+    // else if (WIFSIGNALED(status))
+    //     return 128 + WTERMSIG(status);
         
-    return 1;
+    return (return_with_status(shell, right_status));
 }
 
 ///////////////////////////****************** //////////////////
