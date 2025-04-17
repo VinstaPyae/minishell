@@ -1,5 +1,16 @@
 #include "minishell.h"
 
+t_env	*search_env_list(t_env *env_list, const char *name)
+{
+	while (env_list)
+	{
+		if (ft_strcmp(env_list->key, name) == 0)
+			return (env_list);
+		env_list = env_list->next;
+	}
+	return (NULL);
+}
+
 char *ft_strndup(const char *s, size_t n)
 {
     char *dup;

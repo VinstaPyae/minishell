@@ -68,6 +68,15 @@ typedef enum e_token_type
     TOKEN_VARIABLE
 } t_token_type;
 
+typedef enum e_error_cmd
+{
+    OK_CMD,
+    CMD_NOT_FOUND,
+    CMD_IS_DIR,
+    CMD_NO_PERM,
+    CMD_NO_FILE,
+} t_error_cmd;
+
 typedef struct s_env
 {
     char *key;
@@ -82,9 +91,19 @@ typedef struct s_minishell
     t_list *l_token;
     t_ast_node *ast;
     t_env *envp;
+    char **env_path;
+    char *path;
     int exit_status;
     int og_fd[2];
 } t_minishell;
+
+typedef struct s_lee
+{
+    int a;
+    int b;
+    int c;
+    int d;
+} t_lee;
 
 // lex_handle
 int lex_token_pipe(char *str, int *i, t_list **l_token);
@@ -148,10 +167,13 @@ t_list *get_redir(t_list **tokens);
 t_ast_node *parse_pipe(t_list *tokens);
 t_ast_node *parse_cmd(t_list **tokens);
 
+// exe_check_cmd
+t_error_cmd search_cmd_path(char *cmd, t_minishell *shell);
+
 // execute_builtin
 char *ft_getenv(t_env *env, const char *key);
 void close_og_fd(t_minishell *shell);
-int builtin_cmd_check(char *cmd, t_ast_node *ast, t_minishell *shell);
+int builtin_cmd_check(t_ast_node *ast, t_minishell *shell);
 int exe_cmd(t_ast_node *left_node, t_minishell *shell);
 int execute_ast(t_ast_node *ast_root, t_minishell *shell);
 int n_option_checked(const char *str);
@@ -174,6 +196,9 @@ static int process_export_no_args(t_minishell *shell);
 int exe_export(t_ast_node *ast, t_minishell *shell);
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 
+// exe env
+t_env	*search_env_list(t_env *env_list, const char *name);
+
 // execute
 void print_error_message(char *cmd, char *message);
 void handle_child_signals(void);
@@ -188,6 +213,7 @@ void reset_close_fd(int *org_fd);
 void update_shlvl(t_env **env_list);
 
 // error_handle
+void cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell);
 void cleanup(t_minishell **shell);
 void free_ast(t_ast_node *node);
 void free_arg(char **str);

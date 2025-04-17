@@ -1,32 +1,32 @@
 #include "minishell.h"
 
-/* void cleanup(t_minishell **shell)
+void cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell)
 {
-    if (!shell || !*shell) // Check if shell or *shell is NULL
-        return;
-
-    if ((*shell)->input)
+    if (cmd_err == CMD_IS_DIR)
     {
-        free((*shell)->input);
-        (*shell)->input = NULL;
+        write(2, "minishell: ", 11);
+        write(2, cmd, ft_strlen(cmd));
+        write(2, ": Is a directory\n", 17);
     }
-
-    if ((*shell)->l_token)
+    else if (cmd_err == CMD_NO_PERM)
     {
-        ft_lstclear(&(*shell)->l_token, c_token_destroy);
-        (*shell)->l_token = NULL;
+        write(2, "minishell: ", 11);
+        write(2, cmd, ft_strlen(cmd));
+        write(2, ": Permission denied\n", 25);
     }
-
-    if ((*shell)->ast)
+    if (ft_strchr(cmd, '/'))
     {
-        free_ast((*shell)->ast); // Free the AST tree
-        (*shell)->ast = NULL;
+        write(2, "minishell: ", 11);
+        write(2, cmd, ft_strlen(cmd));
+        write(2, ": No such file or directory\n", 28);
     }
-
-    free(*shell); // Free the shell structure
-    *shell = NULL; // Set the pointer to NULL to avoid dangling references
-} */
-#include <stdlib.h>
+    else
+    {
+        write(2, "minishell: ", 11);
+        write(2, cmd, ft_strlen(cmd));
+        write(2, ": Command not found\n", 20);
+    }
+}
 
 void free_env_list(t_env *head)
 {

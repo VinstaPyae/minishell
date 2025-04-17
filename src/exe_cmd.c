@@ -133,7 +133,7 @@ static int search_and_execute(char **cmd, char **env_array, t_minishell *shell)
 	return (return_with_status(shell, 127));
 }
 
-static void execute_external_child_process(char **cmd, t_minishell *shell)
+static int execute_external_child_process(char **cmd, t_minishell *shell)
 {
 	char **env_array;
 
@@ -141,31 +141,31 @@ static void execute_external_child_process(char **cmd, t_minishell *shell)
 	if (!cmd || !cmd[0] || cmd[0][0] == '\0')
 	{
 		print_error_message("Command", "'' not found");
-		free_arg(cmd); // Free cmd
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
-		exit(127);
+		// free_arg(cmd); // Free cmd
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
+		return (return_with_status(shell, 127));
 	}
 	if ((cmd[0][0] == '/' || cmd[0][0] == '.') && is_directory(cmd[0], shell))
 	{
-		free_arg(cmd); // Free cmd
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
-		exit(126);
+		// free_arg(cmd); // Free cmd
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
+		return (return_with_status(shell, 126));
 	}
 	env_array = get_env_array(shell);
 	if (!env_array)
 	{
-		free_arg(cmd); // Free cmd
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
-		exit(127);
+		// free_arg(cmd); // Free cmd
+		// cleanup(&shell);
+		// free_env_list(shell->envp);
+		// if (shell)
+		// 	free(shell);
+		return (return_with_status(shell, 127));
 	}
 	if (cmd[0][0] == '/' || cmd[0][0] == '.')
 	{
@@ -184,11 +184,7 @@ static void execute_external_child_process(char **cmd, t_minishell *shell)
 		free_arg(cmd); // Free cmd
 	}
 	free_array_list(env_array, -1); // Free env_array
-	cleanup(&shell);
-	free_env_list(shell->envp);
-	if (shell)
-		free(shell);
-	exit(result);
+	return (return_with_status(shell, result));
 }
 
 static int handle_parent_process(pid_t pid, t_minishell *shell)
@@ -230,23 +226,26 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	{
 		// printf("execute_external_command in child process, cmd[0]: %s\n", cmd[0]);
 		// print_ast_node(ast_cmd); // Print AST node for debugging
-		if (ast_cmd->cmd_arg)
+		if (cmd && *cmd)
+		{
 			execute_external_child_process(cmd, shell);
-
-		// cleanup(&shell);
-		// free_env_list(shell->envp);
-		// if (shell)
-		// 	free(shell);
-		// exit(127);
+			free_arg(cmd); // Free cmd
+			free_env_list(shell->envp);
+			cleanup(&shell);
+			if (shell)
+				free(shell);
+		}
+		exit(127);
 	}
 	waitpid(pid, &status, 0);
 	free_arg(cmd);
 	return (status);
 }
 
-int builtin_cmd_check(char *cmd, t_ast_node *ast, t_minishell *shell)
+int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
 {
 	int ret;
+	char *cmd;
 
 	if (!ast || !ast->cmd_arg)
 		return (return_with_status(shell, 1));
@@ -268,24 +267,20 @@ int builtin_cmd_check(char *cmd, t_ast_node *ast, t_minishell *shell)
 int exe_cmd(t_ast_node *node, t_minishell *shell)
 {
 	int ret;
-	char **cmd;
+	t_error_cmd cmd_err;
 
 	// printf("Node command: %s\n", node->cmd_arg[0]);
-	cmd = node->cmd_arg;
-	if (!cmd || !*cmd)
-	{
-		ft_putstr_fd("Error: No command provided\n", STDERR_FILENO);
-		return (return_with_status(shell, 1));
-	}
 	if (node->redir)
 	{
 		if (handle_redirections(node->redir) == -1)
 			return (return_with_status(shell, 1));
 	}
-	ret = builtin_cmd_check(*cmd, node, shell);
+	ret = builtin_cmd_check(node, shell);
 	if (ret != -1)
 		return (return_with_status(shell, ret));
+	cmd_err = search_cmd_path(node->cmd_arg[0], shell);
+	if (cmd_err != OK_CMD)
+		return (cmd_error_msg(cmd_err, node->cmd_arg[0], shell),return_with_status(shell, 127));
 	ret = execute_external_command(node, shell);
-
 	return (return_with_status(shell, ret));
 }
