@@ -67,12 +67,13 @@ static t_error_cmd check_path(char *cmd, t_minishell *shell)
 	return (CMD_NOT_FOUND);
 }
 
+
+
 t_error_cmd search_cmd_path(char *cmd, t_minishell *shell)
 {
 	t_env *env;
 	struct stat sb;
 
-	//handle_child_signals();
 	if (ft_strchr(cmd, '/'))
 	{
 			if (stat(cmd, &sb) != 0)

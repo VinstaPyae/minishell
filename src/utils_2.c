@@ -61,12 +61,14 @@ void handle_sigint(int signo)
 		return;
 	}
 	// Only print newline and redisplay if at prompt
-	write(1, "\n", 1);
+	write(STDOUT_FILENO, "\n", 1);
 	rl_replace_line("", 0);
 	rl_on_new_line();
 	rl_redisplay();
 	g_signal_status = 130;
 }
+
+
 
 // Add these two helper functions
 int check_sigint(void)
@@ -87,21 +89,26 @@ void handle_sigint_heredoc(int signo)
 	rl_done = 1;
 }
 
-void handle_sigquit(int signo)
-{
-	(void)signo;
-	if (g_signal_status == 2)
-	{ // Child is running
-		// Do nothing, let the default action occur in the child
-		return;
-	}
-	// Do nothing for SIGQUIT at the shell level
-}
+// void handle_sigquit(int signo)
+// {
+//     (void)signo;
+//     if (g_signal_status == 2)
+//     { // Child is running
+//         // Do nothing, let the default action occur in the child
+//         return;
+//     }
+    
+//     // For the parent shell, completely ignore SIGQUIT
+//     // But also handle the terminal display issue
+//     rl_on_new_line();
+//     rl_redisplay();
+// }
 
 void setup_signal_handlers(void)
 {
 	struct sigaction sa;
 
+	signal(SIGQUIT, SIG_IGN);
 	/* Handle SIGINT (Ctrl-C) */
 	sa.sa_handler = handle_sigint;
 	sigemptyset(&sa.sa_mask);
@@ -109,8 +116,8 @@ void setup_signal_handlers(void)
 	sigaction(SIGINT, &sa, NULL);
 
 	/* Ignore SIGQUIT (Ctrl-\) */
-	sa.sa_handler = handle_sigquit;
-	sigaction(SIGQUIT, &sa, NULL);
+	// sa.sa_handler = handle_sigquit;
+	// sigaction(SIGQUIT, &sa, NULL);
 
 	/* Ignore SIGTSTP (Ctrl-Z) so the shell is not stopped */
 	sigaction(SIGTSTP, &sa, NULL);

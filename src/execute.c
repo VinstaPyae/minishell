@@ -342,6 +342,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 {
     int result = 0;
 
+    //(signal(SIGINT, SIG_IGN), signal(SIGQUIT, SIG_IGN));
     if (!ast_root)
     {
         perror("minishell: No AST to execute");
@@ -370,6 +371,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
             return (return_with_status(shell, 1));
         }
     }
+    setup_signal_handlers(); // Restore signal handlers for parent process
     cleanup(&shell);
     return result;
 }

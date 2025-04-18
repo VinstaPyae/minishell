@@ -164,24 +164,46 @@ int execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
 // 	return (return_with_status(shell, result));
 // }
 
-static int handle_parent_process(pid_t pid, t_minishell *shell)
-{
-	int status;
+// static int handle_parent_process(pid_t pid, t_minishell *shell)
+// {
+// 	int status;
 
-	waitpid(pid, &status, WUNTRACED);
-	printf("external command parent before cleanup\n");
-	g_signal_status = 0;
-	if (WIFEXITED(status))
-	{
-		set_exit_status(shell, WEXITSTATUS(status));
-	}
-	else if (WIFSIGNALED(status))
-	{
-		set_exit_status(shell, 128 + WTERMSIG(status));
-		print_signal_message(WTERMSIG(status));
-	}
-	return (shell->exit_status);
-}
+// 	waitpid(pid, &status, WUNTRACED);
+// 	printf("external command parent before cleanup\n");
+// 	g_signal_status = 0;
+// 	if (WIFEXITED(status))
+// 	{
+// 		set_exit_status(shell, WEXITSTATUS(status));
+// 	}
+// 	else if (WIFSIGNALED(status))
+// 	{
+// 		set_exit_status(shell, 128 + WTERMSIG(status));
+// 		print_signal_message(WTERMSIG(status));
+// 	}
+// 	return (shell->exit_status);
+// }
+
+// void restore_parent_signals(void)
+// {
+//     struct sigaction sa;
+
+//     sa.sa_handler = handle_sigint;
+//     sigemptyset(&sa.sa_mask);
+//     sa.sa_flags = SA_RESTART;
+//     sigaction(SIGINT, &sa, NULL);
+//     sigaction(SIGQUIT, &sa, NULL);
+// }
+
+// void	reset_signals(void)
+// {
+// 	struct sigaction	sa_default;
+
+// 	sa_default.sa_handler = SIG_DFL;
+// 	sigemptyset(&sa_default.sa_mask);
+// 	sa_default.sa_flags = 0;
+// 	sigaction(SIGINT, &sa_default, NULL);
+// 	sigaction(SIGQUIT, &sa_default, NULL);
+// }
 
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
@@ -189,6 +211,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	int status;
 
 	g_signal_status = 2;
+	(signal(SIGINT, SIG_IGN), signal(SIGQUIT, SIG_IGN));
 	pid = fork();
 	if (pid < 0)
 	{
@@ -198,7 +221,6 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	}
 	if (pid == 0)
 	{
-		//signal
 		handle_child_signals();
 		shell->env_path = get_env_array(shell);
 		//og fd close
@@ -212,8 +234,10 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 			free(shell);
 		exit(127);
 	}
-	//handle exit status
+	
 	status = wait_for_child(pid);
+	
+    g_signal_status = 0;  // Reset signal status
 	return (return_with_status(shell, status));
 }
 
@@ -252,5 +276,6 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 	if (cmd_err != OK_CMD)
 		return (cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
 	ret = execute_external_command(node, shell);
+	
 	return (return_with_status(shell, ret));
 }

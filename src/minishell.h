@@ -222,7 +222,7 @@ void free_redir(void *redir);
 void free_env_list(t_env *head);
 void remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
 
-void handle_sigquit(int signo);
+//void handle_sigquit(int signo);
 void handle_sigint(int signo);
 void setup_signal_handlers(void);
 // debug

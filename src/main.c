@@ -38,6 +38,7 @@ char *get_input(t_minishell *shell)
 {
     char *input;
 
+    
     input = readline("minishell$> ");
     if (!input)
     {
@@ -78,7 +79,8 @@ int main(int ac, char **av, char **env)
     (void)ac;
     (void)av;
    
-    setup_signal_handlers(); // Add this line
+    g_signal_status = 0;
+    setup_signal_handlers();
 
     envp = init_env(env);
 
@@ -89,6 +91,7 @@ int main(int ac, char **av, char **env)
     }
     shell = create_minshell(envp);
     printf("Calling minishell!\n");
+
     while (1)
     {
         // shell = create_minshell(envp);
@@ -99,6 +102,9 @@ int main(int ac, char **av, char **env)
         //     // free_env_list(shell->envp);
         //     return (1);
         // }
+         // Add this line
+
+        //printf("Signal status: %d\n", g_signal_status);
         shell->input = get_input(shell);
         // Check signal status after input
         if (g_signal_status == 130)
@@ -130,7 +136,11 @@ int main(int ac, char **av, char **env)
         shell->exit_status = execute_ast(shell->ast, shell); // This should call exe_exit for the "exit" command
         //printf("Exit status: %d\n", shell->exit_status);
         // print_ast_node(shell->ast); // Print AST for debugging
+        //printf("Hello from main after execute_ast\n");
+        
+
     }
+
     printf("Main before cleanup\n");
     cleanup(&shell); // Final cleanup
     if (shell->envp)
