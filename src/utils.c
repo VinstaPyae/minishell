@@ -17,9 +17,9 @@ int	variable_len(char *input)
 	i = 1;
 	if ((input[i] >= '0' && input[i] <= '9') || input[i] == '?')
 		return (i + 1);
-	while (input[i] && (ft_isalnum(input[i]) || ft_isalpha(input[i]) || input[i] == '_'))
+	while (input[i] && (ft_isalnum(input[i]) || ft_isalpha(input[i]) || input[i] == '_' || input[i] == '$'))
 	{
-		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"' || input[i] == '$'))
+		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"'))
 			break;
 		i++;
 	}
