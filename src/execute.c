@@ -316,9 +316,8 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     close(pipe_fds[1]);
     
     /* Wait for both children to finish */
-    waitpid(left_pid, NULL, 0);  /* We don't care about the left exit status */
     int right_status = wait_for_child(right_pid);
-    
+    waitpid(left_pid, NULL, 0);  /* We don't care about the left exit status */
     g_signal_status = 0;
     
     // /* Return the exit status of the right command */
