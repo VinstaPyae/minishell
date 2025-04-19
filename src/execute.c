@@ -268,7 +268,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
         }
         close(pipe_fds[1]);
         
-        int ret = exe_cmd(pipe_node->left, shell);
+        int ret = execute_ast(pipe_node->left, shell);
         cleanup(&shell);
         free_env_list(shell->envp);
         if (shell)

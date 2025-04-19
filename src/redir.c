@@ -43,35 +43,35 @@ void print_redir(t_list *redir)
 }
 
 // Modified process_heredocs function
-// int process_heredocs(t_ast_node *node)
-// {
-//     if (!node)
-//         return (0);
+int process_heredocs(t_ast_node *node)
+{
+    if (!node)
+        return (0);
 
-//     if (node->redir)
-//     {
-//         t_list *current = node->redir;
-//         while (current)
-//         {
-//             t_redir *redir = (t_redir *)current->content;
-//             if (redir->type == TOKEN_HDC)
-//             {
-//                 redir->fd = handle_heredoc(redir->file);
-//                 if (redir->fd == -1)
-//                     return (-1);
-//             }
-//             current = current->next;
-//         }
-//     }
+    if (node->redir)
+    {
+        t_list *current = node->redir;
+        while (current)
+        {
+            t_redir *redir = (t_redir *)current->content;
+            if (redir->type == TOKEN_HDC)
+            {
+                redir->fd = handle_heredoc(redir->file);
+                if (redir->fd == -1)
+                    return (-1);
+            }
+            current = current->next;
+        }
+    }
 
-//     if (node->type == NODE_PIPE)
-//     {
-//         if (process_heredocs(node->left) == -1 || process_heredocs(node->right) == -1)
-//             return (-1);
-//     }
+    if (node->type == NODE_PIPE)
+    {
+        if (process_heredocs(node->left) == -1 || process_heredocs(node->right) == -1)
+            return (-1);
+    }
 
-//     return (0);
-// }
+    return (0);
+}
 
 // Modified handle_heredoc function
 int handle_heredoc(char *delimiter)
@@ -168,12 +168,11 @@ int handle_redirections(t_list *redir_list)
         }
         else if (redir->type == TOKEN_HDC)
         {
-            fd = handle_heredoc(redir->file);
-            if (fd != -1)
+            if (redir->fd != -1)
             {
-                dup2(fd, STDIN_FILENO);
-                close(fd); // Close after duplication
-                fd = -1;   // Mark as closed
+                dup2(redir->fd, STDIN_FILENO);
+                close(redir->fd); // Close after duplication
+                redir->fd = -1;   // Mark as closed
             }
             else
                 return (perror("heredoc not processed"), -1);

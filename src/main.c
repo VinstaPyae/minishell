@@ -133,6 +133,12 @@ int main(int ac, char **av, char **env)
             continue;
         }
         // print_ast_node(shell->ast); // Print AST for debugging
+        if (process_heredocs(shell->ast) == -1)
+        {
+            shell->exit_status = 1;
+            cleanup(&shell);
+            return 1;
+        }
         shell->exit_status = execute_ast(shell->ast, shell); // This should call exe_exit for the "exit" command
         //printf("Exit status: %d\n", shell->exit_status);
         // print_ast_node(shell->ast); // Print AST for debugging
