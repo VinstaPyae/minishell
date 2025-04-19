@@ -350,8 +350,8 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
     }
 
     /* Process heredocs */
-    if (process_heredocs(ast_root) == -1)
-        return (return_with_status(shell, 130));
+    // if (process_heredocs(ast_root) == -1)
+    //     return (return_with_status(shell, 130));
 //     print_ast_node(ast_nd); // Print AST node for debugging
     if (ast_root && ast_root->type == NODE_PIPE)
     {

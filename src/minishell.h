@@ -30,6 +30,13 @@ typedef enum e_redir_type
     APPEND
 } t_redir_type;
 
+typedef enum e_fd_type
+{
+    FD_IN,
+    FD_OUT,
+    FD_ERR
+} t_fd_type;
+
 typedef struct s_redir
 {
     int fd;

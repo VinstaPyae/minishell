@@ -224,6 +224,11 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		handle_child_signals();
 		shell->env_path = get_env_array(shell);
 		//og fd close
+		if (ast_cmd->redir)
+        {
+            if (handle_redirections(ast_cmd->redir) == -1)
+                exit(EXIT_FAILURE);
+        }
 		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
 		perror("execve failed");
 		free(shell->path);
@@ -253,7 +258,7 @@ int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
 		return (exe_exit(&shell));
 	}
 	if (ret != -1)
-		set_exit_status(shell, ret);
+	set_exit_status(shell, ret);
 	return (ret);
 }
 
@@ -262,12 +267,13 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 	int ret;
 	t_error_cmd cmd_err;
 
-	// printf("Node command: %s\n", node->cmd_arg[0]);
-	if (node->redir)
-	{
-		if (handle_redirections(node->redir) == -1)
-			return (return_with_status(shell, 1));
-	}
+	shell->og_fd[FD_IN] = dup(STDIN_FILENO);
+	shell->og_fd[FD_OUT] = dup(STDOUT_FILENO);
+	// if (node->redir)
+	// {
+	// 	if (handle_redirections(node->redir) == -1)
+	// 		return (return_with_status(shell, 1));
+	// }
 	ret = builtin_cmd_check(node, shell);
 	if (ret != -1)
 		return (return_with_status(shell, ret));
@@ -276,6 +282,9 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 	if (cmd_err != OK_CMD)
 		return (cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
 	ret = execute_external_command(node, shell);
-	
+	dup2(shell->og_fd[FD_IN], STDIN_FILENO);
+	dup2(shell->og_fd[FD_OUT], STDOUT_FILENO);
+	close(shell->og_fd[FD_IN]);
+	close(shell->og_fd[FD_OUT]);
 	return (return_with_status(shell, ret));
 }
