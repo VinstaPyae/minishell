@@ -79,7 +79,7 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 	if (node->redir)
 	{
 		if (handle_redirections(node->redir) == -1)
-			return (return_with_status(shell, 1));
+			return (reset_close_fd(shell->og_fd) ,return_with_status(shell, 1));
 	}
 	ret = builtin_cmd_check(node, shell);
 	if (ret != -1)
