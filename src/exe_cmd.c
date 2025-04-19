@@ -224,11 +224,6 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		handle_child_signals();
 		shell->env_path = get_env_array(shell);
 		//og fd close
-		if (ast_cmd->redir)
-        {
-            if (handle_redirections(ast_cmd->redir) == -1)
-                exit(EXIT_FAILURE);
-        }
 		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
 		perror("execve failed");
 		free(shell->path);
@@ -269,22 +264,19 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 
 	shell->og_fd[FD_IN] = dup(STDIN_FILENO);
 	shell->og_fd[FD_OUT] = dup(STDOUT_FILENO);
-	// if (node->redir)
-	// {
-	// 	if (handle_redirections(node->redir) == -1)
-	// 		return (return_with_status(shell, 1));
-	// }
+	if (node->redir)
+	{
+		if (handle_redirections(node->redir) == -1)
+			return (return_with_status(shell, 1));
+	}
 	ret = builtin_cmd_check(node, shell);
 	if (ret != -1)
-		return (return_with_status(shell, ret));
+		return (reset_close_fd(shell->og_fd), return_with_status(shell, ret));
 	// print_ast_node(node); // Print AST node for debugging
 	cmd_err = search_cmd_path(node->cmd_arg[0], shell);
 	if (cmd_err != OK_CMD)
-		return (cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
+		return (reset_close_fd(shell->og_fd), cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
 	ret = execute_external_command(node, shell);
-	dup2(shell->og_fd[FD_IN], STDIN_FILENO);
-	dup2(shell->og_fd[FD_OUT], STDOUT_FILENO);
-	close(shell->og_fd[FD_IN]);
-	close(shell->og_fd[FD_OUT]);
+	reset_close_fd(shell->og_fd);
 	return (return_with_status(shell, ret));
 }

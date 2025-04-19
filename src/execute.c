@@ -334,8 +334,10 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 
 void reset_close_fd(int *org_fd)
 {
-    close(org_fd[0]);
-    close(org_fd[1]);
+    dup2(org_fd[FD_IN], STDIN_FILENO);
+    dup2(org_fd[FD_OUT], STDOUT_FILENO);
+    close(org_fd[FD_IN]);
+    close(org_fd[FD_OUT]);
 }
 
 int execute_ast(t_ast_node *ast_root, t_minishell *shell)
@@ -348,11 +350,6 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
         perror("minishell: No AST to execute");
         return (return_with_status(shell, 1));
     }
-
-    /* Process heredocs */
-    // if (process_heredocs(ast_root) == -1)
-    //     return (return_with_status(shell, 130));
-//     print_ast_node(ast_nd); // Print AST node for debugging
     if (ast_root && ast_root->type == NODE_PIPE)
     {
         result = execute_pipe(ast_root, shell);
