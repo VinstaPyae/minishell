@@ -255,7 +255,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     
     if (left_pid == 0) /* Left child process */
     {
-        //handle_child_signals();
+        handle_child_signals();
         
         /* Close read end in left child */
         close(pipe_fds[0]);
