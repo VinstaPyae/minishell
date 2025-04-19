@@ -136,10 +136,12 @@ int main(int ac, char **av, char **env)
         if (process_heredocs(shell->ast) == -1)
         {
             shell->exit_status = 1;
+            close_heredoc_fds(shell->ast);
             cleanup(&shell);
             return 1;
         }
         shell->exit_status = execute_ast(shell->ast, shell); // This should call exe_exit for the "exit" command
+        close_heredoc_fds(shell->ast);
         //printf("Exit status: %d\n", shell->exit_status);
         // print_ast_node(shell->ast); // Print AST for debugging
         //printf("Hello from main after execute_ast\n");

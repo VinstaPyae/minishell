@@ -87,7 +87,7 @@ int process_heredocs(t_ast_node *node)
             {
                 redir->fd = handle_heredoc(redir->file);
                 if (redir->fd == -1)
-                    return (-1);
+                    return (close_heredoc_fds(node),-1);
             }
             current = current->next;
         }
@@ -96,7 +96,7 @@ int process_heredocs(t_ast_node *node)
     if (node->type == NODE_PIPE)
     {
         if (process_heredocs(node->left) == -1 || process_heredocs(node->right) == -1)
-            return (-1);
+            return (close_heredoc_fds(node),-1);
     }
 
     return (0);

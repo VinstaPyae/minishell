@@ -36,11 +36,11 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	{
 		handle_child_signals();
 		shell->env_path = get_env_array(shell);
+		close_heredoc_fds(ast_cmd);
 		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
 		perror("execve failed");
 		free(shell->path);
 		reset_close_fd(shell->og_fd);
-		close_heredoc_fds(ast_cmd);
 		free_env_list(shell->envp);
 		cleanup(&shell);
 		if (shell)

@@ -346,6 +346,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
     //(signal(SIGINT, SIG_IGN), signal(SIGQUIT, SIG_IGN));
     if (!ast_root)
     {
+        close_heredoc_fds(ast_root);
         perror("minishell: No AST to execute");
         return (return_with_status(shell, 1));
     }
@@ -354,6 +355,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
         result = execute_pipe(ast_root, shell);
         if (result == -1)
         {
+            close_heredoc_fds(ast_root);
             perror("minishell: execute_pipe");
             return (return_with_status(shell, 1));
         }
@@ -363,6 +365,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
         result = exe_cmd(ast_root, shell);
         if (result == -1)
         {
+            close_heredoc_fds(ast_root);
             perror("minishell: execute_ast_command");
             return (return_with_status(shell, 1));
         }
