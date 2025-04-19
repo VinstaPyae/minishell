@@ -368,6 +368,7 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
         }
     }
     setup_signal_handlers(); // Restore signal handlers for parent process
+    close_heredoc_fds(ast_root); // Close heredoc file descriptors
     cleanup(&shell);
     return result;
 }

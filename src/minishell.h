@@ -162,6 +162,7 @@ void print_redir(t_list *redir);
 int handle_redirections(t_list *redir_list);
 int process_heredocs(t_ast_node *node);
 int handle_heredoc(char *delimiter);
+void close_heredoc_fds(t_ast_node *node);
 
 // expansion
 void expand_tokens(t_minishell *shell);

@@ -230,6 +230,7 @@ int exe_exit(t_minishell **shell)
 	// No arguments: exit with last status
 	if (arg_count == 1)
 	{
+		reset_close_fd((*shell)->og_fd); // Reset file descriptors
 		cleanup(shell); // Final cleanup
 		if ((*shell)->envp)
 			free_env_list((*shell)->envp);
@@ -244,6 +245,7 @@ int exe_exit(t_minishell **shell)
 		ft_putstr_fd("exit: ", STDERR_FILENO);
 		ft_putstr_fd(args[1], STDERR_FILENO);
 		ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
+		reset_close_fd((*shell)->og_fd); // Reset file descriptors
 		cleanup(shell); // Final cleanup
 		if ((*shell)->envp)
 			free_env_list((*shell)->envp);
@@ -256,9 +258,11 @@ int exe_exit(t_minishell **shell)
 
 	if (arg_count > 2)
 	{
+		reset_close_fd((*shell)->og_fd); // Reset file descriptors
 		ft_putstr_fd("exit: too many arguments\n", STDERR_FILENO);
 		return (1); // Don't exit shell
 	}
+	reset_close_fd((*shell)->og_fd); // Reset file descriptors
 	cleanup(shell); // Final cleanup
 	if ((*shell)->envp)
 			free_env_list((*shell)->envp);

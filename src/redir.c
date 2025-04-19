@@ -31,6 +31,35 @@ t_list *create_redir(char *file, int type)
     return (redir);
 }
 
+void close_heredoc_fds(t_ast_node *node)
+{
+    if (!node)
+        return;
+
+    // Close heredoc FDs in the current node's redirections
+    if (node->redir)
+    {
+        t_list *current = node->redir;
+        while (current)
+        {
+            t_redir *redir = (t_redir *)current->content;
+            if (redir->type == TOKEN_HDC && redir->fd != -1)
+            {
+                close(redir->fd);
+                redir->fd = -1; // Mark as closed
+            }
+            current = current->next;
+        }
+    }
+
+    // Recursively process pipe nodes
+    if (node->type == NODE_PIPE)
+    {
+        close_heredoc_fds(node->left);
+        close_heredoc_fds(node->right);
+    }
+}
+
 void print_redir(t_list *redir)
 {
     t_list *current = redir;

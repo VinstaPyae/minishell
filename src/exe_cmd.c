@@ -27,6 +27,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	pid = fork();
 	if (pid < 0)
 	{
+		reset_close_fd(shell->og_fd);
 		perror("fork failed");
 		set_exit_status(shell, 1);
 		return (-1);
@@ -35,11 +36,11 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	{
 		handle_child_signals();
 		shell->env_path = get_env_array(shell);
-		//og fd close
 		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
 		perror("execve failed");
 		free(shell->path);
-		//duup2 redir stdin and out
+		reset_close_fd(shell->og_fd);
+		close_heredoc_fds(ast_cmd);
 		free_env_list(shell->envp);
 		cleanup(&shell);
 		if (shell)
@@ -90,5 +91,6 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 		return (reset_close_fd(shell->og_fd), cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
 	ret = execute_external_command(node, shell);
 	reset_close_fd(shell->og_fd);
+	close_heredoc_fds(node);
 	return (return_with_status(shell, ret));
 }
