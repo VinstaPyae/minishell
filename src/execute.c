@@ -239,6 +239,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     /* Create the pipe */
     if (pipe(pipe_fds) == -1)
     {
+        close_heredoc_fds(pipe_node); // Add this
         perror("minishell: pipe Failed");
         return -1;
     }
@@ -258,6 +259,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     if (left_pid == 0) /* Left child process */
     {
         handle_child_signals();
+        close_heredoc_fds(pipe_node->right);
         /* Close read end in left child */
         close(pipe_fds[0]);
         /* Redirect stdout to pipe write end */
@@ -289,7 +291,7 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     if (right_pid == 0) /* Right child process */
     {
         handle_child_signals();
-        
+        close_heredoc_fds(pipe_node->left);
         /* Close write end in right child */
         close(pipe_fds[1]);
         /* Redirect stdin from pipe read end */
@@ -308,12 +310,14 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
             free(shell);
         exit(ret);
     }
-    
+
     /* Parent closes both pipe ends */
     close(pipe_fds[0]);
     close(pipe_fds[1]);
+    
     int left_status = wait_for_child(left_pid, shell);
     int right_status = wait_for_child(right_pid, shell);
+
      /* We don't care about the left exit status */
     g_signal_status = 0;
     
