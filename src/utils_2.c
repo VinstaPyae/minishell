@@ -57,7 +57,7 @@ void handle_sigint(int signo)
 	(void)signo;
 	if (g_signal_status == 2)
 	{ // Child is running
-		g_signal_status = 1;
+		//g_signal_status = 1;
 		return;
 	}
 	// Only print newline and redisplay if at prompt

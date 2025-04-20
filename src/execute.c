@@ -196,7 +196,7 @@ void print_signal_message(int sig)
 }
 
 /* Wait for child and handle status */
-int wait_for_child(pid_t pid)
+int wait_for_child(pid_t pid, t_minishell *shell)
 {
     int status;
     int ret = 0;
@@ -211,12 +211,11 @@ int wait_for_child(pid_t pid)
     {
         int sig = WTERMSIG(status);
         ret = 128 + sig;
-        //printf("g_signal_status: %d\n", g_signal_status);
-        // Print message only if SIGINT was received during command execution
-        if ((sig == SIGINT || sig == SIGQUIT) && g_signal_status == 1)
+        // Print message only once per command
+        if ((sig == SIGINT || sig == SIGQUIT) && !shell->signal_printed)
         {
             print_signal_message(sig);
-            g_signal_status = 0; // Reset to prevent duplicate messages
+            shell->signal_printed = 1; // Prevent duplicates
         }
     }
     else if (WIFEXITED(status))
@@ -313,8 +312,8 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     /* Parent closes both pipe ends */
     close(pipe_fds[0]);
     close(pipe_fds[1]);
-    int left_status = wait_for_child(left_pid);
-    int right_status = wait_for_child(right_pid);
+    int left_status = wait_for_child(left_pid, shell);
+    int right_status = wait_for_child(right_pid, shell);
      /* We don't care about the left exit status */
     g_signal_status = 0;
     
@@ -370,8 +369,5 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
     setup_signal_handlers(); // Restore signal handlers for parent process
     close_heredoc_fds(ast_root); // Close heredoc file descriptors
     cleanup(&shell);
-    /* Reset signal status after full command execution */
-    if (g_signal_status == 1)
-        g_signal_status = 0;
     return result;
 }

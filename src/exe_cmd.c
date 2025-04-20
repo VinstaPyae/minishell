@@ -48,7 +48,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		exit(127);
 	}
 	
-	status = wait_for_child(pid);
+	status = wait_for_child(pid, shell);
 	
     g_signal_status = 0;  // Reset signal status
 	return (return_with_status(shell, status));

@@ -102,6 +102,7 @@ typedef struct s_minishell
     char *path;
     int exit_status;
     int og_fd[2];
+    int signal_printed; // Flag to track signal message
 } t_minishell;
 
 typedef struct s_lee
@@ -221,7 +222,7 @@ char **get_env_array(t_minishell *shell);
 char **split_path(char *path_env);
 //int execute_left_command(t_ast_node *cmd_node, t_minishell *shell);
 void reset_close_fd(int *org_fd);
-int wait_for_child(pid_t pid);
+int wait_for_child(pid_t pid,t_minishell *shell);
 //
 
 // env
