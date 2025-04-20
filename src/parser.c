@@ -46,26 +46,26 @@ static int process_redirections(t_ast_node *cmd_node, t_list **tokens)
 
 static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
 {
-    char **tmp_arg;
-    char *trimmed;
+    // char **tmp_arg;
+    // char *trimmed;
 
     /* get the argv array */
     cmd_node->cmd_arg = get_cmd_args(tokens);
     if (!cmd_node->cmd_arg)
         return 0;  // allocation failure
 
-    tmp_arg = cmd_node->cmd_arg;
-    if (ft_strchr(tmp_arg[0], ' ') != NULL)
-    {
-        /* first produce the trimmed copy */
-        trimmed = ft_strtrim(tmp_arg[0], " ");
-        if (!trimmed)
-            return 0;  // allocation failure
+    // tmp_arg = cmd_node->cmd_arg;
+    // if (ft_strchr(tmp_arg[0], ' ') != NULL)
+    // {
+    //     /* first produce the trimmed copy */
+    //     trimmed = ft_strtrim(tmp_arg[0], " ");
+    //     if (!trimmed)
+    //         return 0;  // allocation failure
 
-        /* then free the old untrimmed string and replace it */
-        free(tmp_arg[0]);
-        tmp_arg[0] = trimmed;
-    }
+    //     /* then free the old untrimmed string and replace it */
+    //     free(tmp_arg[0]);
+    //     tmp_arg[0] = trimmed;
+    // }
 
     /* do NOT free_arg(tmp_arg) here — that belongs in your cleanup path,
     once you’re completely done with cmd_node->cmd_arg. */
@@ -173,7 +173,7 @@ char **get_cmd_args(t_list **tokens)
     while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
            token_content(tmp_list)->type != TOKEN_PIPE)
     {
-        arg = get_argument(&tmp_list);
+        arg = ft_strdup(token_content(tmp_list)->token);
         if (!arg)
             return (free_arg(cmd_arg), NULL);
         cmd_arg[i++] = arg;

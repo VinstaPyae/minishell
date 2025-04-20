@@ -124,6 +124,7 @@ int main(int ac, char **av, char **env)
         }
         // printer_token(shell->l_token);
         expand_tokens(shell);
+        printer_token(shell->l_token);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {
@@ -132,7 +133,7 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-        // print_ast_node(shell->ast); // Print AST for debugging
+        print_ast_node(shell->ast); // Print AST for debugging
         if (process_heredocs(shell->ast, shell) == -1)
         {
             shell->exit_status = 1;

@@ -139,21 +139,20 @@ static int process_export_args(t_ast_node *ast, t_minishell *shell)
         printf("cmd: (%s)\n", cmd[i]);
 
         // Trim the last character if necessary
-        if (cmd[i + 1])
-        {
-            char *trimmed = trim_last_char(cmd[i], ' ');
-            if (!trimmed)
-            {
-                perror("malloc failed in trim_last_char");
-                error_flag = 1;
-                i++;
-                continue;
-            }
-            free(cmd[i]); // Free the original cmd[i] before overwriting
-            cmd[i] = trimmed;
-            printf("cmd: (%s)\n", cmd[i]);
-        }
-
+        // if (cmd[i + 1])
+        // {
+        //     char *trimmed = trim_last_char(cmd[i], ' ');
+        //     if (!trimmed)
+        //     {
+        //         perror("malloc failed in trim_last_char");
+        //         error_flag = 1;
+        //         i++;
+        //         continue;
+        //     }
+        //     free(cmd[i]); // Free the original cmd[i] before overwriting
+        //     cmd[i] = trimmed;
+        //     printf("cmd: (%s)\n", cmd[i]);
+        // }
         // Split the string into key and value
         split_value(cmd[i], &key, &value);
 
