@@ -101,52 +101,84 @@ int process_heredocs(t_ast_node *node, t_minishell *shell)
 
     return (0);
 }
-char *str_append_and_free(char *s1, const char *s2)
+char *append_expanded_heredoc(char *result, char *var_name, t_minishell *shell)
 {
-	char *joined;
-	size_t len1 = s1 ? strlen(s1) : 0;
-	size_t len2 = strlen(s2);
-    
-	joined = malloc(len1 + len2 + 1);
-	if (!joined) return NULL;
-    
-	if (s1)
-	    strcpy(joined, s1);
-	else
-	    joined[0] = '\0';
-	strcat(joined, s2);
-    
-	free(s1);
-	return joined;
-}
-    
-    // Main function
-char *expand_heredoc(char *input, t_minishell *shell)
-{
-	int i = 0;
-	char *result = ft_strdup(""); // Start with an empty string
-    
-	while (input[i])
-    {
-	    if (input[i] == '$')
-        {
-		    int len = var_len(&input[i]);
-		    if (len > 1)
-            {
-		        char *var_name = strndup(&input[i], len); // skip $
-                printf("var_name: (%s)\n", var_name);
-                char *value = extract_variable_name(var_name, &i); // Extract variable name
-		        printf("value: (%s)\n", value);
-                result = append_expanded_variable(result, value, shell); // Append expanded variable
-		        continue;
-		    }
-	    }
+    char *name = var_name + 1;   // skip the '$'
+    char *expanded;
+    char *value;
+
+    if (strcmp(name, "?") == 0) {
+        // special case: exit status
+        expanded = ft_itoa(shell->exit_status);
+    } else {
+        // lookup in envp
+        value = ft_getenv(shell->envp, name);
+        if (value)
+            expanded = ft_strdup(value);
         else
-            result = append_normal_character(result, input[i]); // Append normal character
-        i++;
-	}
-    
-	return result;
+            expanded = ft_strdup("");   // safe: expand undefined vars to empty
+    }
+
+    // join onto the growing result
+    char *temp = ft_strjoin(result, expanded);
+    free(result);
+    free(expanded);
+    free(var_name);
+    return temp;
+}
+
+
+char *extract_heredoc_name(const char *input, int *i) {
+    int start = *i;
+    int j = start + 1; // Start after '$'
+
+    // Handle $? and $digit immediately
+    if (input[j] == '?') {
+        j++;
+    } else if (ft_isdigit(input[j])) {
+        j++; // $1, $2, etc. (only capture the digit)
+    } else {
+        // Check if valid variable start (letter or underscore)
+        if (ft_isalpha(input[j]) || input[j] == '_') {
+            j++;
+            // Continue until non-alphanumeric/underscore
+            while (ft_isalnum(input[j]) || input[j] == '_') {
+                j++;
+            }
+        } else {
+            // Not a valid variable; treat as literal '$'
+            j = start + 1;
+        }
+    }
+
+    char *var_name = ft_substr(input, start, j - start);
+    *i = j; // Update index to end of variable
+    return var_name;
+}
+    // Main function
+char *expand_heredoc(char *input, t_minishell *shell) {
+    int i = 0;
+    char *result = ft_strdup(""); // Start empty
+
+    while (input[i]) {
+        if (input[i] == '$') {
+            char *var_name = extract_heredoc_name(input, &i);
+            printf("var_name: (%s)\n", var_name);
+
+            // Expand if valid variable (length > 1, e.g., "$VAR")
+            if (ft_strlen(var_name) > 1) {
+                result = append_expanded_heredoc(result, var_name, shell);
+            } else {
+                // Append lone '$' as literal
+                result = append_normal_character(result, '$');
+            }
+        } else {
+            // Append normal character
+            result = append_normal_character(result, input[i]);
+            i++;
+        }
+    }
+    return result;
 }
 
 // Modified handle_heredoc function
