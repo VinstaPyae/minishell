@@ -32,6 +32,8 @@ int exe_echo(t_ast_node *ast)
 		while (ast->cmd_arg[i])
 		{
 			printf("%s", ast->cmd_arg[i]);
+			if (ast->cmd_arg[i + 1])
+				printf(" ");
 			i++;
 		}
 	}
