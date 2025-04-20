@@ -124,7 +124,7 @@ int main(int ac, char **av, char **env)
         }
         // printer_token(shell->l_token);
         expand_tokens(shell);
-        printer_token(shell->l_token);
+        //printer_token(shell->l_token);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {
@@ -133,13 +133,18 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-        print_ast_node(shell->ast); // Print AST for debugging
+        //print_ast_node(shell->ast); // Print AST for debugging
         if (process_heredocs(shell->ast, shell) == -1)
         {
-            shell->exit_status = 1;
+            // Check if the heredoc was interrupted by SIGINT
+            if (g_signal_status == 130)
+                shell->exit_status = 130;
+            else
+                shell->exit_status = 1;
+            g_signal_status = 0; // Reset signal status
             close_heredoc_fds(shell->ast);
             cleanup(&shell);
-            return 1;
+            continue; // Continue to next loop iteration instead of exiting
         }
         shell->exit_status = execute_ast(shell->ast, shell); // This should call exe_exit for the "exit" command
         close_heredoc_fds(shell->ast);

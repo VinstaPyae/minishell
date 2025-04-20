@@ -23,7 +23,7 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	int status;
 
 	g_signal_status = 2;
-	(signal(SIGINT, SIG_IGN), signal(SIGQUIT, SIG_IGN));
+	//(signal(SIGINT, SIG_IGN), signal(SIGQUIT, SIG_IGN));
 	pid = fork();
 	if (pid < 0)
 	{
