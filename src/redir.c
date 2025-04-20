@@ -72,7 +72,7 @@ void print_redir(t_list *redir)
 }
 
 // Modified process_heredocs function
-int process_heredocs(t_ast_node *node)
+int process_heredocs(t_ast_node *node, t_minishell *shell)
 {
     if (!node)
         return (0);
@@ -85,7 +85,7 @@ int process_heredocs(t_ast_node *node)
             t_redir *redir = (t_redir *)current->content;
             if (redir->type == TOKEN_HDC)
             {
-                redir->fd = handle_heredoc(redir->file);
+                redir->fd = handle_heredoc(redir->file, shell);
                 if (redir->fd == -1)
                     return (close_heredoc_fds(node),-1);
             }
@@ -95,15 +95,62 @@ int process_heredocs(t_ast_node *node)
 
     if (node->type == NODE_PIPE)
     {
-        if (process_heredocs(node->left) == -1 || process_heredocs(node->right) == -1)
+        if (process_heredocs(node->left, shell) == -1 || process_heredocs(node->right, shell) == -1)
             return (close_heredoc_fds(node),-1);
     }
 
     return (0);
 }
+char *str_append_and_free(char *s1, const char *s2)
+{
+	char *joined;
+	size_t len1 = s1 ? strlen(s1) : 0;
+	size_t len2 = strlen(s2);
+    
+	joined = malloc(len1 + len2 + 1);
+	if (!joined) return NULL;
+    
+	if (s1)
+	    strcpy(joined, s1);
+	else
+	    joined[0] = '\0';
+	strcat(joined, s2);
+    
+	free(s1);
+	return joined;
+}
+    
+    // Main function
+char *expand_heredoc(char *input, t_minishell *shell)
+{
+	int i = 0;
+	char *result = ft_strdup(""); // Start with an empty string
+    
+	while (input[i])
+    {
+	    if (input[i] == '$')
+        {
+		    int len = var_len(&input[i]);
+		    if (len > 1)
+            {
+		        char *var_name = strndup(&input[i], len); // skip $
+                printf("var_name: (%s)\n", var_name);
+                char *value = extract_variable_name(var_name, &i); // Extract variable name
+		        printf("value: (%s)\n", value);
+                result = append_expanded_variable(result, value, shell); // Append expanded variable
+		        continue;
+		    }
+	    }
+        else
+            result = append_normal_character(result, input[i]); // Append normal character
+        i++;
+	}
+    
+	return result;
+}
 
 // Modified handle_heredoc function
-int handle_heredoc(char *delimiter)
+int handle_heredoc(char *delimiter, t_minishell *shell)
 {
     int pipefd[2];
     if (pipe(pipefd) == -1)
@@ -123,6 +170,7 @@ int handle_heredoc(char *delimiter)
     rl_event_hook = check_sigint;
 
     char *line;
+    char *expanded_line = NULL;
     int eof_warning = 0;
     while (1)
     {
@@ -136,19 +184,24 @@ int handle_heredoc(char *delimiter)
             }
             break;
         }
+        expanded_line = expand_heredoc(line, shell);
+        // printf("Expanded line: %s\n", expanded_line);
         if (g_signal_status == 130)
         {
             free(line);
+            free(expanded_line);
             break;
         }
         if (strcmp(line, delimiter) == 0)
         {
             free(line);
+            free(expanded_line);
             break;
         }
-        write(pipefd[1], line, strlen(line));
+        write(pipefd[1], expanded_line, strlen(expanded_line));
         write(pipefd[1], "\n", 1);
         free(line);
+        free(expanded_line);
     }
 
     close(pipefd[1]);

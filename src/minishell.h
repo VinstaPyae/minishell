@@ -160,12 +160,18 @@ int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
 void print_redir(t_list *redir);
 int handle_redirections(t_list *redir_list);
-int process_heredocs(t_ast_node *node);
-int handle_heredoc(char *delimiter);
+int process_heredocs(t_ast_node *node, t_minishell *shell);
+int handle_heredoc(char *delimiter, t_minishell *shell);
 void close_heredoc_fds(t_ast_node *node);
 
 // expansion
 void expand_tokens(t_minishell *shell);
+char	*expand_quote_variable(char *var, t_minishell *shell);
+char *extract_variable_name(const char *input, int *i);
+char *append_expanded_variable(char *result, char *var_name, t_minishell *shell);
+char *append_normal_character(char *result, char c);
+int	var_len(char *input);
+char *get_env_value(t_env *env, char *key);
 
 // parser
 t_ast_node *create_node(t_node_type type);

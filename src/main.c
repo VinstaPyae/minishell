@@ -133,7 +133,7 @@ int main(int ac, char **av, char **env)
             continue;
         }
         // print_ast_node(shell->ast); // Print AST for debugging
-        if (process_heredocs(shell->ast) == -1)
+        if (process_heredocs(shell->ast, shell) == -1)
         {
             shell->exit_status = 1;
             close_heredoc_fds(shell->ast);

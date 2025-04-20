@@ -256,10 +256,8 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     if (left_pid == 0) /* Left child process */
     {
         handle_child_signals();
-        
         /* Close read end in left child */
         close(pipe_fds[0]);
-        
         /* Redirect stdout to pipe write end */
         if (dup2(pipe_fds[1], STDOUT_FILENO) == -1)
         {
@@ -275,7 +273,6 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
             free(shell);
         exit(ret);
     }
-    
     /* Create right child (reads from pipe) */
     right_pid = fork();
     if (right_pid < 0)
@@ -293,7 +290,6 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
         
         /* Close write end in right child */
         close(pipe_fds[1]);
-        
         /* Redirect stdin from pipe read end */
         if (dup2(pipe_fds[0], STDIN_FILENO) == -1)
         {
@@ -314,10 +310,9 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
     /* Parent closes both pipe ends */
     close(pipe_fds[0]);
     close(pipe_fds[1]);
-    
-    /* Wait for both children to finish */
+    waitpid(left_pid, NULL, 0);
     int right_status = wait_for_child(right_pid);
-    waitpid(left_pid, NULL, 0);  /* We don't care about the left exit status */
+     /* We don't care about the left exit status */
     g_signal_status = 0;
     
     // /* Return the exit status of the right command */

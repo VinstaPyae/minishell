@@ -155,7 +155,7 @@ char	*expand_quote_variable(char *var, t_minishell *shell)
 }
 
 // Helper function to extract variable name from input
-static char *extract_variable_name(const char *input, int *i)
+char *extract_variable_name(const char *input, int *i)
 {
     int j = *i + 1;
 
@@ -173,7 +173,7 @@ static char *extract_variable_name(const char *input, int *i)
 }
 
 // Helper function to append expanded variable to the result
-static char *append_expanded_variable(char *result, char *var_name, t_minishell *shell)
+char *append_expanded_variable(char *result, char *var_name, t_minishell *shell)
 {
     char *expanded = expand_quote_variable(var_name, shell); // Expand variable
     free(var_name); // Free variable name after use
@@ -186,7 +186,7 @@ static char *append_expanded_variable(char *result, char *var_name, t_minishell 
 }
 
 // Helper function to append a normal character to the result
-static char *append_normal_character(char *result, char c)
+char *append_normal_character(char *result, char c)
 {
     char char_str[2] = {c, '\0'}; // Convert character to string
     char *temp = ft_strjoin(result, char_str); // Append character to result
