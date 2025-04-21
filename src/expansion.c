@@ -356,7 +356,9 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
     while (split_value && split_value[i])
     {
         printf("split value----------: (%s)\n", split_value[i]);
-        if (i == 0 && split_value[i + 1])
+        if (ft_strcmp(split_value[i], "") == 0)
+            update_token_with_expansion(token, split_value[i], 0);
+        else if (i == 0 && split_value[i + 1])
             update_token_with_expansion(token, split_value[i], 1);
         else if (i == 0 && !split_value[i + 1])
             update_token_with_expansion(token, split_value[i], token->space);

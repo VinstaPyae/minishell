@@ -175,7 +175,9 @@ char **get_cmd_args(t_list **tokens)
     {
         if (token_content(tmp_list)->space == 0 && tmp_list->next != NULL && tmp_list != *tokens)
             arg = join_tokens(&tmp_list, ft_strdup(token_content(tmp_list)->token));
-        else 
+        else if (ft_strcmp(token_content(tmp_list)->token, ft_strdup("")) == 0 && tmp_list->next != NULL)
+            arg = join_tokens(&tmp_list, ft_strdup(token_content(tmp_list)->token));
+        else
             arg = ft_strdup(token_content(tmp_list)->token);
 
         if (!arg)

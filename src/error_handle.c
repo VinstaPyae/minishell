@@ -206,6 +206,20 @@ void	remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *))
     }
 }
 
+t_list	*destroy_token_node(t_list *node)
+{
+	t_list	*next;
+	t_token	*content;
+
+	if (!node)
+		return (NULL);
+	next = node->next;
+	content = (t_token *)node->content;
+	c_token_destroy(content);
+	free(node);
+	return (next);
+}
+
 
 /*void	cleanup(t_list **tokens, char **input, t_ast_node **ast)
 {
