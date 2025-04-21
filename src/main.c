@@ -131,7 +131,6 @@ int main(int ac, char **av, char **env)
     free(shell);
     rl_clear_history(); // Clear readline history
     printf("Main after cleanup\n");
-    handle_child_signals();
     return (0);
 }
 
