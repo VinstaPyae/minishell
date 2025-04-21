@@ -112,8 +112,12 @@ int main(int ac, char **av, char **env)
             shell->exit_status = 130;
             g_signal_status = 0; // Reset after handling
         }
-        if (!shell->input)
-            break;
+        if (!shell->input || ft_strlen(shell->input) == 0)
+        {
+            free(shell->input);
+            shell->input = NULL;
+            continue;
+        }
         shell->l_token = lexer(shell);
         if (!shell->l_token)
         {
@@ -124,7 +128,6 @@ int main(int ac, char **av, char **env)
         }
         // printer_token(shell->l_token);
         expand_tokens(shell);
-        printer_token(shell->l_token);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)
         {
@@ -133,7 +136,7 @@ int main(int ac, char **av, char **env)
             cleanup(&shell);
             continue;
         }
-        print_ast_node(shell->ast); // Print AST for debugging
+        // print_ast_node(shell->ast); // Print AST for debugging
         if (process_heredocs(shell->ast, shell) == -1)
         {
             // Check if the heredoc was interrupted by SIGINT

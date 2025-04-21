@@ -48,14 +48,14 @@ static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
 {
     char **tmp_arg;
     char *trimmed;
+    t_list *tmp_list = *tokens;
 
     /* get the argv array */
     cmd_node->cmd_arg = get_cmd_args(tokens);
     if (!cmd_node->cmd_arg)
         return 0;  // allocation failure
-
     tmp_arg = cmd_node->cmd_arg;
-    if (ft_strchr(tmp_arg[0], ' ') != NULL)
+    if (ft_strchr(tmp_arg[0], ' ') != NULL && token_content(tmp_list)->type != TOKEN_DQUOTE)
     {
         /* first produce the trimmed copy */
         trimmed = ft_strtrim(tmp_arg[0], " ");
@@ -175,7 +175,7 @@ char **get_cmd_args(t_list **tokens)
     {
         if (token_content(tmp_list)->space == 0 && tmp_list->next != NULL && tmp_list != *tokens)
             arg = join_tokens(&tmp_list, ft_strdup(token_content(tmp_list)->token));
-        else
+        else 
             arg = ft_strdup(token_content(tmp_list)->token);
 
         if (!arg)

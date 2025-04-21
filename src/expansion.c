@@ -345,11 +345,6 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
         free_arg(split_value);
         split_value = create_single_result(ft_strdup(result));
     }
-    if (split_value[1] == NULL)
-    {
-        free_arg(split_value);
-        split_value = create_single_result(ft_strdup(result));
-    }
     free_arg(expanded_value);
     free(result);
     result = NULL;
