@@ -317,6 +317,8 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
     t_list  *insert_pos;
     t_list  *next_save;
     int i = 0;
+    int space = 0;
+    int space1 = 0;
 
     result = NULL;
     expanded_value = expand_variable(token->token, shell);
@@ -354,7 +356,8 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
     i = 0;
     insert_pos = *current;
     next_save = (*current)->next;
-    
+    space1 = token->space;
+    printf("space----------: (%d)\n", space);
     while (split_value && split_value[i])
     {
         printf("split value----------: (%s)\n", split_value[i]);
@@ -365,7 +368,11 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
         else
         {
             printf("insert split value----------: (%s)\n", split_value[i]);
-            t_list *new_node = create_token(ft_strdup(split_value[i]), TOKEN_WD, 1);
+            if (split_value[i + 1])
+                space = 1;
+            else
+                space = space1;
+            t_list *new_node = create_token(ft_strdup(split_value[i]), TOKEN_WD, space);
             if (!new_node)
                 break;
             // Insert new_node after insert_pos

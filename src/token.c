@@ -30,9 +30,9 @@ void	printer_token(t_list *l_token)
 	{
 		while (l_token->next != NULL)
 		{
-			printf("Token: Type = %d, Value = (%s) \n", token_content(l_token)->type, token_content(l_token)->token);
+			printf("Token: Type = %d, Value = (%s), Space = (%d) \n", token_content(l_token)->type, token_content(l_token)->token, token_content(l_token)->space);
 			l_token = l_token->next;
 		}
-		printf("Token: Type = %d, Value = (%s) \n", token_content(l_token)->type, token_content(l_token)->token);
+		printf("Token: Type = %d, Value = (%s), Space = (%d) \n", token_content(l_token)->type, token_content(l_token)->token, token_content(l_token)->space);
 	}
 }
