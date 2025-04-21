@@ -161,6 +161,7 @@ char **get_cmd_args(t_list **tokens)
     char **cmd_arg;
     char *arg;
     int i;
+    char *tmp = ft_strdup("");
 
     if (!tokens || !(*tokens))
         return (NULL);
@@ -175,7 +176,7 @@ char **get_cmd_args(t_list **tokens)
     {
         if (token_content(tmp_list)->space == 0 && tmp_list->next != NULL && tmp_list != *tokens)
             arg = join_tokens(&tmp_list, ft_strdup(token_content(tmp_list)->token));
-        else if (ft_strcmp(token_content(tmp_list)->token, ft_strdup("")) == 0 && tmp_list->next != NULL)
+        else if (ft_strcmp(token_content(tmp_list)->token, tmp) == 0 && tmp_list->next != NULL)
             arg = join_tokens(&tmp_list, ft_strdup(token_content(tmp_list)->token));
         else
             arg = ft_strdup(token_content(tmp_list)->token);
@@ -185,6 +186,7 @@ char **get_cmd_args(t_list **tokens)
         cmd_arg[i++] = arg;
         tmp_list = tmp_list->next;
     }
+    free(tmp); // Free the temporary string
     cmd_arg[i] = NULL;
     *tokens = tmp_list;
     return cmd_arg;

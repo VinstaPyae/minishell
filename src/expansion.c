@@ -339,13 +339,23 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
     }
     printf("result----------: (%s)\n", result);
     i = 0;
-    split_value = split_expanded_value(result);
-    if (!split_value[1])
-    {
-        free_arg(split_value);
-        split_value = create_single_result(ft_strdup(result));
-    }
     free_arg(expanded_value);
+    split_value = split_expanded_value(result);
+    if (split_value)
+    {
+        // Check if split_value has zero words (split_value[0] is NULL)
+        if (split_value[0] == NULL)
+        {
+            free_arg(split_value);
+            split_value = create_single_result(ft_strdup("")); // Handle empty token
+        }
+        // Check if there's exactly one word (split_value[1] is NULL)
+        else if (split_value[1] == NULL)
+        {
+            free_arg(split_value);
+            split_value = create_single_result(ft_strdup(result));
+        }
+    }
     free(result);
     result = NULL;
     i = 0;
@@ -380,8 +390,9 @@ static void process_variable_token(t_token *token, t_list **current, t_minishell
         }
         i++;
     }
-    *current = insert_pos; // Update current to point to the last inserted node
     free_arg(split_value);
+    free(result);
+    *current = insert_pos; // Update current to point to the last inserted node
 }
 
 void expand_tokens(t_minishell *shell)
