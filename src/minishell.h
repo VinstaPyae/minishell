@@ -102,7 +102,7 @@ typedef struct s_minishell
     char *path;
     int exit_status;
     int og_fd[2];
-    int signal_printed; // Flag to track signal message
+    //int signal_printed; // Flag to track signal message
 } t_minishell;
 
 typedef struct s_lee
@@ -187,7 +187,7 @@ t_error_cmd search_cmd_path(char *cmd, t_minishell *shell);
 
 // execute_builtin
 char *ft_getenv(t_env *env, const char *key);
-void close_og_fd(t_minishell *shell);
+//void close_og_fd(t_minishell *shell);
 int builtin_cmd_check(t_ast_node *ast, t_minishell *shell);
 int exe_cmd(t_ast_node *left_node, t_minishell *shell);
 int execute_ast(t_ast_node *ast_root, t_minishell *shell);
@@ -219,7 +219,7 @@ void print_error_message(char *cmd, char *message);
 void handle_child_signals(void);
 int handle_no_path(char *cmd, t_minishell *shell);
 char **get_env_array(t_minishell *shell);
-char **split_path(char *path_env);
+//char **split_path(char *path_env);
 //int execute_left_command(t_ast_node *cmd_node, t_minishell *shell);
 void reset_close_fd(int *org_fd);
 int wait_for_child(pid_t pid,t_minishell *shell);
@@ -236,7 +236,6 @@ void free_arg(char **str);
 void free_redir(void *redir);
 void free_env_list(t_env *head);
 void remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
-t_list	*destroy_token_node(t_list *node);
 
 //void handle_sigquit(int signo);
 void handle_sigint(int signo);

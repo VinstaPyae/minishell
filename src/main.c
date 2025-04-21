@@ -103,7 +103,6 @@ int main(int ac, char **av, char **env)
         //     return (1);
         // }
          // Add this line
-        shell->signal_printed = 0; // Reset signal tracking
         //printf("Signal status: %d\n", g_signal_status);
         shell->input = get_input(shell);
         // Check signal status after input
