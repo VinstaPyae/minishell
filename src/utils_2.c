@@ -114,12 +114,6 @@ void setup_signal_handlers(void)
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART; // Restart interrupted syscalls like readline
 	sigaction(SIGINT, &sa, NULL);
-
-	/* Ignore SIGQUIT (Ctrl-\) */
-	// sa.sa_handler = handle_sigquit;
-	// sigaction(SIGQUIT, &sa, NULL);
-
-	/* Ignore SIGTSTP (Ctrl-Z) so the shell is not stopped */
 	sigaction(SIGTSTP, &sa, NULL);
 }
 void handle_eof(t_minishell *shell)

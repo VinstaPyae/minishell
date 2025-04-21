@@ -35,8 +35,8 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	if (pid == 0)
 	{
 		handle_child_signals();
-		shell->env_path = get_env_array(shell);
 		close_heredoc_fds(ast_cmd);
+		shell->env_path = get_env_array(shell);
 		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
 		perror("execve failed");
 		free(shell->path);
@@ -87,7 +87,7 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 		return (reset_close_fd(shell->og_fd), return_with_status(shell, ret));
 	// print_ast_node(node); // Print AST node for debugging
 	if (ft_strcmp(node->cmd_arg[0], "") == 0)
-		return (reset_close_fd(shell->og_fd), return_with_status(shell, shell->exit_status));
+		return (return_with_status(shell, shell->exit_status));
 	cmd_err = search_cmd_path(node->cmd_arg[0], shell);
 	if (cmd_err != OK_CMD)
 		return (reset_close_fd(shell->og_fd), cmd_error_msg(cmd_err, node->cmd_arg[0], shell));

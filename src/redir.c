@@ -276,7 +276,7 @@ int handle_redirections(t_list *redir_list)
         {
             fd = open(redir->file, O_RDONLY);
             if (fd == -1)
-                return (perror("open"), -1);
+                return (perror(redir->file), -1);
             dup2(fd, STDIN_FILENO);
             close(fd);
         }
