@@ -1,5 +1,4 @@
 #include "minishell.h"
-#include <signal.h>
 
 char *ft_getenv(t_env *env, const char *key)
 {
@@ -11,26 +10,6 @@ char *ft_getenv(t_env *env, const char *key)
     }
     return (NULL);
 }
-
-// static char **allocate_paths(char *path_env)
-// {
-// 	char	**path_dirs;
-// 	int	count;
-
-//     	count = 1;
-//     	if (!path_env) // Handle NULL case
-//         	return (NULL);
-//     	while (*path_env)
-//     	{
-// 		if(*path_env == ':')
-//         		count++;
-// 		path_env++;
-// 	}
-// 	path_dirs = malloc((count + 1) * sizeof(char *));
-// 	if(!path_dirs)
-// 		return (NULL);
-// 	return (path_dirs);
-// }
 
 char	*create_env_entry(char	*key,char	*value)
 {

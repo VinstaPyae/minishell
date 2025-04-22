@@ -37,6 +37,26 @@ t_minishell *create_minshell(t_env *envp)
     return (shell);
 }
 
+int check_expand_tokens(t_list *l_token)
+{
+    t_token *token;
+    char *str;
+
+    token = token_content(l_token);
+    str = ft_strdup("");
+    if (token->type == TOKEN_DQUOTE || token->type == TOKEN_SQUOTE)
+    {
+        printf("token: (%s)\n", token->token);
+        if (ft_strcmp(token->token, str) == 0)
+        {
+            free(str);
+            return (-1);
+        }
+    }
+    free(str);
+    return (0);
+}
+
 int main(int ac, char **av, char **env)
 {
     t_minishell *shell;
@@ -93,6 +113,13 @@ int main(int ac, char **av, char **env)
         }
         // printer_token(shell->l_token);
         expand_tokens(shell);
+        // printer_token(shell->l_token);
+        // if (check_expand_tokens(shell->l_token) == -1)
+        // {
+        //     cmd_error_msg(CMD_NOT_FOUND, "''", shell);
+        //     cleanup(&shell);
+        //     continue;
+        // }
         // printer_token(shell->l_token);
         shell->ast = parse_pipe(shell->l_token);
         if (!shell->ast)

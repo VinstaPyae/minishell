@@ -19,14 +19,82 @@ static int process_redirections(t_ast_node *cmd_node, t_list **tokens)
 	return 1; // Return success
 }
 
+// Helper to count elements in a NULL-terminated char**
+int count_strs(char **arr)
+{
+    int i = 0;
+    while (arr && arr[i])
+        i++;
+    return i;
+}
+
+// Function to join two char** arrays
+char **join_args(char **arg, char **new)
+{
+    int arg_len = count_strs(arg);
+    int new_len = count_strs(new);
+    int total_len = arg_len + new_len;
+    char **joined = malloc(sizeof(char *) * (total_len + 1));
+    int i = 0;
+
+    if (!joined)
+        return NULL;
+
+    // Copy arg strings
+    while (i < arg_len)
+    {
+        joined[i] = strdup(arg[i]);
+        if (!joined[i]) // handle strdup failure
+        {
+            free_arg(joined);
+            return NULL;
+        }
+        i++;
+    }
+
+    // Copy new strings
+    int j = 0;
+    while (j < new_len)
+    {
+        joined[i] = strdup(new[j]);
+        if (!joined[i])
+        {
+            free_arg(joined);
+            return NULL;
+        }
+        i++;
+        j++;
+    }
+
+    // Null-terminate
+    joined[i] = NULL;
+
+    // Optionally free old arrays if not needed
+    free_arg(arg);
+    free_arg(new);
+
+    return joined;
+}
+
 static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
 {
 	char **tmp_arg;
 	char *trimmed;
+	char **new_arg;
+	char **arg;
 	t_list *tmp_list;
 
 	tmp_list = *tokens;
-	cmd_node->cmd_arg = get_cmd_args(tokens);
+	arg = cmd_node->cmd_arg;
+	if (arg)
+	{
+		new_arg = get_cmd_args(tokens);
+		if (!new_arg)
+			return 0;
+		cmd_node->cmd_arg = join_args(arg, new_arg);
+	}
+	else
+		cmd_node->cmd_arg = get_cmd_args(tokens);
 	if (!cmd_node->cmd_arg)
 		return 0; // Allocation failure
 

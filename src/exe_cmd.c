@@ -88,7 +88,7 @@ int exe_cmd(t_ast_node *node, t_minishell *shell)
 	if (ret != -1)
 		return (reset_close_fd(shell->og_fd), return_with_status(shell, ret));
 	// print_ast_node(node); // Print AST node for debugging
-	if (ft_strcmp(node->cmd_arg[0], "") == 0)
+	if (ft_strcmp(node->cmd_arg[0], "") == 0 && node->cmd_arg[1] == NULL)
 		return (reset_close_fd(shell->og_fd), return_with_status(shell, shell->exit_status));
 	cmd_err = search_cmd_path(node->cmd_arg[0], shell);
 	if (cmd_err != OK_CMD)
