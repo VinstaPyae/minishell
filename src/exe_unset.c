@@ -48,7 +48,6 @@ int exe_unset(t_minishell **shell)
 
     if (!shell || !*shell || !(*shell)->ast || !(*shell)->ast->cmd_arg[1])
     {
-        print_error("exe_unset", __FILE__, __LINE__, "invalid arguments");
         return (1);
     }
 

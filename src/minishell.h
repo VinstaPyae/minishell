@@ -241,7 +241,7 @@ void remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
 void handle_sigint(int signo);
 void setup_signal_handlers(void);
 // debug
-void print_error(const char *func_name, const char *file, int line, const char *format, ...);
+// void print_error(const char *func_name, const char *file, int line, const char *format, ...);
 void ft_fprintf(int fd, const char *format, ...);
 void free_array_list(char **path_dirs, int index);
 
