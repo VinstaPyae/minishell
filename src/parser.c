@@ -99,7 +99,7 @@ static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
 		return 0; // Allocation failure
 
 	tmp_arg = cmd_node->cmd_arg;
-	if (ft_strchr(tmp_arg[0], ' ') != NULL && token_content(tmp_list)->type != TOKEN_DQUOTE)
+	if (ft_strchr(tmp_arg[0], ' ') != NULL && token_content(tmp_list)->type != TOKEN_DQUOTE && token_content(tmp_list)->type != TOKEN_SQUOTE)
 	{
 		trimmed = ft_strtrim(tmp_arg[0], " ");
 		if (!trimmed)
