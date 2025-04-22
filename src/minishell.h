@@ -171,7 +171,6 @@ char	*expand_quote_variable(char *var, t_minishell *shell);
 char *extract_variable_name(const char *input, int *i);
 char *append_expanded_variable(char *result, char *var_name, t_minishell *shell);
 char *append_normal_character(char *result, char c);
-int	var_len(char *input);
 char *get_env_value(t_env *env, char *key);
 
 // parser
@@ -204,10 +203,6 @@ int exe_unset(t_minishell **shell);
 int exe_pwd(t_minishell **shell);
 int exe_cd(t_ast_node *ast, t_minishell *shell);
 void split_value(char *str, char **key, char **value);
-static void add_or_update_env_var(const char *key, const char *value, t_minishell *shell);
-static int is_valid_env_name(const char *name);
-static int process_export_args(t_ast_node *ast, t_minishell *shell);
-static int process_export_no_args(t_minishell *shell);
 int exe_export(t_ast_node *ast, t_minishell *shell);
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 
@@ -222,7 +217,7 @@ char **get_env_array(t_minishell *shell);
 //char **split_path(char *path_env);
 //int execute_left_command(t_ast_node *cmd_node, t_minishell *shell);
 void reset_close_fd(int *org_fd);
-int wait_for_child(pid_t pid,t_minishell *shell);
+int wait_for_child(pid_t pid);
 //
 
 // env

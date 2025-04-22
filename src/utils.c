@@ -26,24 +26,6 @@ int	variable_len(char *input)
 	return (i);
 }
 
-int	var_len(char *input)
-{
-	int	i;
-
-	if (!input || input[0] != '$') // Check if input is valid and starts with '$'
-        	return (0);
-	i = 1;
-	if ((input[i] >= '0' && input[i] <= '9') || input[i] == '?')
-		return (i + 1);
-	while (input[i] && (ft_isalnum(input[i]) || ft_isalpha(input[i]) || input[i] == '_'))
-	{
-		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"' || input[i] == '$'))
-			break;
-		i++;
-	}
-	return (i);
-}
-
 int	ot_len(char *input)
 {
 	if (*input == '\'' || *input == '"' || *input == '|' || *input == '$')

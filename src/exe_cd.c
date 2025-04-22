@@ -171,7 +171,8 @@ int exe_cd(t_ast_node *ast, t_minishell *shell)
     // Case: Too many arguments (e.g., `cd dir1 dir2`)
     if (ast->cmd_arg[1] && ast->cmd_arg[2])
     {
-        ft_fprintf(2, "cd: too many arguments\n");
+        // ft_fprintf(2, "cd: too many arguments\n");
+        ft_putstr_fd("cd: too many arguments\n", 2);
         return (1); // Exit status 1
     }
 
@@ -182,13 +183,15 @@ int exe_cd(t_ast_node *ast, t_minishell *shell)
     curr_dir = getcwd(NULL, 0); // Save current dir for OLDPWD
     if (!curr_dir)
     {
-        ft_fprintf(2, "cd: error retrieving current directory\n");
+        // ft_fprintf(2, "cd: error retrieving current directory\n");
+        ft_putstr_fd("cd: error retrieving current directory\n", 2);
         return (1); // Exit status 1
     }
 
     if (chdir(path) != 0) // Try changing directory
     {
-        ft_fprintf(2, "cd: %s: %s\n", path, strerror(errno));
+        // ft_fprintf(2, "cd: %s: %s\n", path, strerror(errno));
+        printf("cd: %s: %s\n", path, strerror(errno));
         free(curr_dir);
         return (1); // Exit status 1
     }

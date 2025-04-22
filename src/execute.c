@@ -12,25 +12,25 @@ char *ft_getenv(t_env *env, const char *key)
     return (NULL);
 }
 
-static char **allocate_paths(char *path_env)
-{
-	char	**path_dirs;
-	int	count;
+// static char **allocate_paths(char *path_env)
+// {
+// 	char	**path_dirs;
+// 	int	count;
 
-    	count = 1;
-    	if (!path_env) // Handle NULL case
-        	return (NULL);
-    	while (*path_env)
-    	{
-		if(*path_env == ':')
-        		count++;
-		path_env++;
-	}
-	path_dirs = malloc((count + 1) * sizeof(char *));
-	if(!path_dirs)
-		return (NULL);
-	return (path_dirs);
-}
+//     	count = 1;
+//     	if (!path_env) // Handle NULL case
+//         	return (NULL);
+//     	while (*path_env)
+//     	{
+// 		if(*path_env == ':')
+//         		count++;
+// 		path_env++;
+// 	}
+// 	path_dirs = malloc((count + 1) * sizeof(char *));
+// 	if(!path_dirs)
+// 		return (NULL);
+// 	return (path_dirs);
+// }
 
 char	*create_env_entry(char	*key,char	*value)
 {
@@ -145,13 +145,13 @@ void	print_signal_message(int	sig)
 }
 void reset_close_fd(int *org_fd)
 {
-    dup2(org_fd[FD_IN], STDIN_FILENO);
-    dup2(org_fd[FD_OUT], STDOUT_FILENO);
+    // dup2(org_fd[FD_IN], STDIN_FILENO);
+    // dup2(org_fd[FD_OUT], STDOUT_FILENO);
     close(org_fd[FD_IN]);
     close(org_fd[FD_OUT]);
 }
 /* Wait for child and handle status */
-int wait_for_child(pid_t pid, t_minishell *shell)
+int wait_for_child(pid_t pid)
 {
 	int	status;
 	int	ret;
@@ -282,8 +282,8 @@ int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
         return (-1);
     }
     (close(pipe_fds[0]), close(pipe_fds[1]));
-    left_status = wait_for_child(left_pid, shell);
-    right_status = wait_for_child(right_pid, shell);
+    left_status = wait_for_child(left_pid);
+    right_status = wait_for_child(right_pid);
     g_signal_status = 0;
     return (return_with_status(shell, right_status));
 }

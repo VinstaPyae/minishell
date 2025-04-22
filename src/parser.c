@@ -2,12 +2,18 @@
 
 static int is_pipe_token(t_list *tokens)
 {
-	return (tokens != NULL && token_content(tokens)->type == TOKEN_PIPE);
+	int result;
+
+	result = (tokens != NULL && token_content(tokens)->type == TOKEN_PIPE);
+	return result;
 }
 
 static int process_redirections(t_ast_node *cmd_node, t_list **tokens)
 {
-	cmd_node->redir = get_redir(tokens);
+	t_list *redir;
+
+	redir = get_redir(tokens);
+	cmd_node->redir = redir;
 	if (!cmd_node->redir)
 		return 0; // Return failure if memory allocation fails
 	return 1; // Return success
@@ -17,8 +23,9 @@ static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
 {
 	char **tmp_arg;
 	char *trimmed;
-	t_list *tmp_list = *tokens;
+	t_list *tmp_list;
 
+	tmp_list = *tokens;
 	cmd_node->cmd_arg = get_cmd_args(tokens);
 	if (!cmd_node->cmd_arg)
 		return 0; // Allocation failure
@@ -47,10 +54,11 @@ static t_ast_node *create_command_node(void)
 
 static int count_arguments(t_list *tokens)
 {
-	int count = 1; // Start at 1 for the first argument
+	int count;
 
+	count = 1; // Start at 1 for the first argument
 	while (tokens != NULL && is_word_token(token_content(tokens)->type) &&
-		   token_content(tokens)->type != TOKEN_PIPE)
+			token_content(tokens)->type != TOKEN_PIPE)
 	{
 		if (token_content(tokens)->space > 0 && tokens->next != NULL)
 			count++; // Count separate arguments
@@ -64,11 +72,14 @@ static char *join_tokens(t_list **tmp_list, char *arg)
 	char *tmp;
 
 	while ((*tmp_list)->next != NULL && token_content(*tmp_list)->space == 0 &&
-		   is_word_token(token_content((*tmp_list)->next)->type))
+			is_word_token(token_content((*tmp_list)->next)->type))
 	{
 		tmp = ft_strjoin(arg, token_content((*tmp_list)->next)->token);
 		if (!tmp)
-			return (free(arg), NULL);
+		{
+			free(arg);
+			return NULL;
+		}
 		free(arg);
 		arg = tmp;
 		*tmp_list = (*tmp_list)->next;
@@ -76,29 +87,35 @@ static char *join_tokens(t_list **tmp_list, char *arg)
 	return arg;
 }
 
-static char *get_argument(t_list **tmp_list)
-{
-	char *arg;
+// static char *get_argument(t_list **tmp_list)
+// {
+// 	char *arg;
 
-	if (token_content(*tmp_list)->space > 0 && (*tmp_list)->next != NULL &&
-		is_word_token(token_content((*tmp_list)->next)->type))
-		arg = ft_strjoin(token_content(*tmp_list)->token, " ");
-	else
-		arg = ft_strdup(token_content(*tmp_list)->token);
-	if (!arg)
-		return NULL;
-	arg = join_tokens(tmp_list, arg);
-	return arg;
-}
+// 	if (token_content(*tmp_list)->space > 0 && (*tmp_list)->next != NULL &&
+// 		is_word_token(token_content((*tmp_list)->next)->type))
+// 		arg = ft_strjoin(token_content(*tmp_list)->token, " ");
+// 	else
+// 		arg = ft_strdup(token_content(*tmp_list)->token);
+// 	if (!arg)
+// 		return NULL;
+// 	arg = join_tokens(tmp_list, arg);
+// 	return arg;
+// }
+
 static int validate_redirection(t_list *tmp_list)
 {
-	return (tmp_list != NULL && is_word_token(((t_token *)tmp_list->content)->type) &&
-			((t_token *)tmp_list->content)->type != TOKEN_PIPE);
+	int result;
+
+	result = (tmp_list != NULL && is_word_token(((t_token *)tmp_list->content)->type) &&
+			  ((t_token *)tmp_list->content)->type != TOKEN_PIPE);
+	return result;
 }
 
 static t_list *process_redirection(t_list **redir, t_token *current_token, t_list *tmp_list)
 {
-	t_list *new_redir = create_redir(((t_token *)tmp_list->content)->token, current_token->type);
+	t_list *new_redir;
+
+	new_redir = create_redir(((t_token *)tmp_list->content)->token, current_token->type);
 	if (!new_redir)
 	{
 		ft_lstclear(redir, free); // Clear the redirection list on failure
@@ -113,7 +130,6 @@ static t_list *handle_invalid_redirection(t_list **redir)
 	ft_lstclear(redir, free); // Clear the redirection list
 	return NULL;
 }
-
 static t_ast_node *create_pipe_node(t_list *tokens, t_ast_node *left)
 {
 	t_ast_node *pipe_node;
@@ -121,26 +137,37 @@ static t_ast_node *create_pipe_node(t_list *tokens, t_ast_node *left)
 	tokens = tokens->next; // Move to the next token after the pipe
 	pipe_node = create_node(NODE_PIPE);
 	if (!pipe_node)
-		return (free_ast(left), NULL);
+	{
+		free_ast(left);
+		return NULL;
+	}
 
 	pipe_node->left = left;
 	pipe_node->right = parse_pipe(tokens);
 
 	if (!pipe_node->right)
-		return (free_ast(pipe_node->left), free(pipe_node), NULL);
+	{
+		free_ast(pipe_node->left);
+		free(pipe_node);
+		return NULL;
+	}
 
 	return pipe_node;
 }
 
 t_list *get_redir(t_list **tokens)
 {
-	t_list *redir = NULL;
-	t_list *tmp_list = *tokens;
+	t_list *redir;
+	t_list *tmp_list;
+	t_token *current_token;
+
+	redir = NULL;
+	tmp_list = *tokens;
 
 	while (tmp_list != NULL && is_redirection_token(((t_token *)tmp_list->content)->type) &&
 		   ((t_token *)tmp_list->content)->type != TOKEN_PIPE)
 	{
-		t_token *current_token = (t_token *)tmp_list->content;
+		current_token = (t_token *)tmp_list->content;
 		tmp_list = tmp_list->next; // Advance to the next token (file name)
 
 		if (validate_redirection(tmp_list))
@@ -152,20 +179,34 @@ t_list *get_redir(t_list **tokens)
 	*tokens = tmp_list; // Update the tokens pointer to the new position
 	return redir;
 }
+
 char **get_cmd_args(t_list **tokens)
 {
 	t_list *tmp_list;
 	char **cmd_arg;
 	char *arg;
+	char *tmp;
 	int i;
-	char *tmp = ft_strdup("");
+	int arg_count;
+
+	tmp = ft_strdup("");
+	if (!tmp)
+		return NULL;
 
 	if (!tokens || !(*tokens))
-		return (NULL);
-	int arg_count = count_arguments(*tokens);
+	{
+		free(tmp);
+		return NULL;
+	}
+
+	arg_count = count_arguments(*tokens);
 	cmd_arg = malloc((arg_count + 1) * sizeof(char *));
 	if (!cmd_arg)
-		return (NULL);
+	{
+		free(tmp);
+		return NULL;
+	}
+
 	i = 0;
 	tmp_list = *tokens;
 	while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
@@ -179,10 +220,16 @@ char **get_cmd_args(t_list **tokens)
 			arg = ft_strdup(token_content(tmp_list)->token);
 
 		if (!arg)
-			return (free_arg(cmd_arg), NULL);
+		{
+			free_arg(cmd_arg);
+			free(tmp);
+			return NULL;
+		}
+
 		cmd_arg[i++] = arg;
 		tmp_list = tmp_list->next;
 	}
+
 	free(tmp); // Free the temporary string
 	cmd_arg[i] = NULL;
 	*tokens = tmp_list;
@@ -191,9 +238,12 @@ char **get_cmd_args(t_list **tokens)
 
 t_ast_node *create_node(t_node_type type)
 {
-	t_ast_node *node = malloc(sizeof(t_ast_node));
+	t_ast_node *node;
+
+	node = malloc(sizeof(t_ast_node));
 	if (!node)
-		return (NULL);
+		return NULL;
+
 	node->type = type;
 	node->cmd_arg = NULL; // Arguments list is initially NULL
 	node->redir = NULL;
@@ -232,12 +282,18 @@ t_ast_node *parse_cmd(t_list **tokens)
 		if (is_word_token(token_content(*tokens)->type))
 		{
 			if (!process_command_arguments(cmd_node, tokens))
-				return free_ast(cmd_node), NULL;
+			{
+				free_ast(cmd_node);
+				return NULL;
+			}
 		}
 		else if (is_redirection_token(token_content(*tokens)->type))
 		{
 			if (!process_redirections(cmd_node, tokens))
-				return free_ast(cmd_node), NULL;
+			{
+				free_ast(cmd_node);
+				return NULL;
+			}
 		}
 	}
 	return cmd_node;

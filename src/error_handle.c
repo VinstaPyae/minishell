@@ -48,21 +48,21 @@ void free_env_list(t_env *head)
     }
 }
 
-static void cleanup_ast(t_minishell *shell)
-{
-    if (shell->ast)
-    {
-        free_ast(shell->ast);
-        shell->ast = NULL;
-    }
-    if (shell->l_token)
-    {
-        ft_lstclear(&shell->l_token, c_token_destroy);
-        shell->l_token = NULL;
-    }
-    free(shell->input);
-    shell->input = NULL;
-}
+// static void cleanup_ast(t_minishell *shell)
+// {
+//     if (shell->ast)
+//     {
+//         free_ast(shell->ast);
+//         shell->ast = NULL;
+//     }
+//     if (shell->l_token)
+//     {
+//         ft_lstclear(&shell->l_token, c_token_destroy);
+//         shell->l_token = NULL;
+//     }
+//     free(shell->input);
+//     shell->input = NULL;
+// }
 
 
 void cleanup(t_minishell **shell)

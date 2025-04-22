@@ -249,21 +249,21 @@ static void handle_empty_expansion(t_token *token)
     token->type = TOKEN_WD;
 }
 
-static void free_expanded_value(char **expanded_value)
-{
-    int j;
+// static void free_expanded_value(char **expanded_value)
+// {
+//     int j;
 
-    if (!expanded_value)
-        return;
+//     if (!expanded_value)
+//         return;
 
-    j = 0;
-    while (expanded_value[j])
-    {
-        free(expanded_value[j]);
-        j++;
-    }
-    free(expanded_value);
-}
+//     j = 0;
+//     while (expanded_value[j])
+//     {
+//         free(expanded_value[j]);
+//         j++;
+//     }
+//     free(expanded_value);
+// }
 
 static void process_double_quote_token(t_token *token, t_minishell *shell)
 {
