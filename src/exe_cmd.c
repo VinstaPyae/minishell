@@ -42,9 +42,9 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
 		//reset_close_fd(shell->og_fd);
 		perror("execve failed");
-		free(shell->path);
-		free_env_list(shell->envp);
+		free_array_list(shell->env_path, 0);
 		cleanup(&shell);
+		free_env_list(shell->envp);
 		if (shell)
 			free(shell);
 		exit(127);
@@ -61,7 +61,7 @@ int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
 	int ret;
 
 	if (!ast || !ast->cmd_arg)
-		return (return_with_status(shell, 1));
+		return (return_with_status(shell, 0));
 	ret = execute_builtin(ast, shell, ast->cmd_arg[0]);
 	if (ret == -1 && ft_strcmp(ast->cmd_arg[0], "exit") == 0)
 	{
