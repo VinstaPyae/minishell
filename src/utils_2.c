@@ -61,6 +61,7 @@ void handle_sigint(int signo)
 		return;
 	}
 	// Only print newline and redisplay if at prompt
+	//write(STDOUT_FILENO, "Holy Relic", 12);
 	write(STDOUT_FILENO, "\n", 1);
 	rl_replace_line("", 0);
 	rl_on_new_line();
