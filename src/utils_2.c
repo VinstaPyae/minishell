@@ -1,49 +1,5 @@
 #include "minishell.h"
 
-char	**trim_cmd(char	**cmd_arg)
-{
-	char	**cmd;
-	int	i;
-
-	i = 0;
-	if (!cmd_arg || !cmd_arg[0])
-		return (NULL);
-	while (cmd_arg[i])
-		i++;
-	cmd = malloc((i + 1) * sizeof(char *));
-	if (!cmd)
-		return (NULL);
-	i = 0;
-	while (cmd_arg[i])
-	{
-		cmd[i] = ft_strtrim(cmd_arg[i], " ");
-		if (!cmd[i])
-			free_arg(cmd);
-		i++;
-	}
-	cmd[i] = NULL;
-	return (cmd);
-}
-
-char	*trim_last_char(const char *s, char c)
-{
-	size_t	len;
-	char	*trimmed;
-
-	if (!s)
-		return (NULL);
-	len = ft_strlen(s);
-	if (len > 0 && s[len - 1] == c)
-		len--; // Reduce the length by one
-	trimmed = (char *)malloc(len + 1);
-	if (!trimmed)
-		return (NULL);
-	ft_memcpy(trimmed, s, len);
-	trimmed[len] = '\0';
-
-	return trimmed;
-}
-
 volatile sig_atomic_t g_signal_status;
 
 void	handle_sigint(int	signo)
