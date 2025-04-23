@@ -33,7 +33,7 @@ char *trim_last_char(const char *s, char c)
 	if (!s)
 		return NULL;
 
-	len = strlen(s);
+	len = ft_strlen(s);
 
 	// If the string is not empty and the last character matches 'c'
 	if (len > 0 && s[len - 1] == c)

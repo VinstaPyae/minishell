@@ -56,7 +56,7 @@ char **join_args(char **arg, char **new)
     // Copy arg strings
     while (i < arg_len)
     {
-        joined[i] = strdup(arg[i]);
+        joined[i] = ft_strdup(arg[i]);
         if (!joined[i]) // handle strdup failure
         {
             free_arg(joined);
@@ -69,7 +69,7 @@ char **join_args(char **arg, char **new)
     int j = 0;
     while (j < new_len)
     {
-        joined[i] = strdup(new[j]);
+        joined[i] = ft_strdup(new[j]);
         if (!joined[i])
         {
             free_arg(joined);

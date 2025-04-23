@@ -9,7 +9,7 @@ char *init_pwd(void)
     if (!pwd)
     {
         if (getcwd(buffer, sizeof(buffer)) != NULL)
-            pwd = strdup(buffer); // You need to free this later.
+            pwd = ft_strdup(buffer); // You need to free this later.
         else
             pwd = ft_strdup("/"); // Default fallback value.
     }

@@ -104,17 +104,16 @@ static char *path_handle(t_ast_node *ast, t_minishell *shell)
         dir = ft_getenv((shell)->envp, "HOME");
         if (!dir)
         {
-            printf("cd: HOME not set\n");
+            printf("minishell: cd: HOME not set\n");
             return (NULL);
         }
-        printf("You are in Home directory\n");
     }
     else if (ft_strncmp(ast->cmd_arg[1], "-", 2) == 0)
     {
         dir = ft_getenv((shell)->envp, "OLDPWD");
         if (!dir)
         {
-            printf("cd: OLDPWD not set\n");
+            printf("minishell: cd: OLDPWD not set\n");
             return (NULL);
         }
         printf("%s\n", dir);
@@ -126,40 +125,7 @@ static char *path_handle(t_ast_node *ast, t_minishell *shell)
     }
     return (dir);
 }
-void ft_fprintf(int fd, const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
 
-    while (*format)
-    {
-        if (*format == '%')
-        {
-            format++;
-            if (*format == 's')
-            {
-                char *str = va_arg(args, char *);
-                ft_putstr_fd(str, fd);
-            }
-            else if (*format == 'd')
-            {
-                int num = va_arg(args, int);
-                ft_putnbr_fd(num, fd);
-            }
-            else if (*format == 'c')
-            {
-                char c = (char)va_arg(args, int);
-                ft_putchar_fd(c, fd);
-            }
-            else if (*format == '%')
-                ft_putchar_fd('%', fd);
-            format++;
-        }
-        else
-            ft_putchar_fd(*format++, fd);
-    }
-    va_end(args);
-}
 int exe_cd(t_ast_node *ast, t_minishell *shell)
 {
     char *path;
@@ -172,7 +138,7 @@ int exe_cd(t_ast_node *ast, t_minishell *shell)
     if (ast->cmd_arg[1] && ast->cmd_arg[2])
     {
         // ft_fprintf(2, "cd: too many arguments\n");
-        ft_putstr_fd("cd: too many arguments\n", 2);
+        ft_putstr_fd("minishell: cd: too many arguments\n", 2);
         return (1); // Exit status 1
     }
 
@@ -184,14 +150,14 @@ int exe_cd(t_ast_node *ast, t_minishell *shell)
     if (!curr_dir)
     {
         // ft_fprintf(2, "cd: error retrieving current directory\n");
-        ft_putstr_fd("cd: error retrieving current directory\n", 2);
+        ft_putstr_fd("minishell: cd: error retrieving current directory\n", 2);
         return (1); // Exit status 1
     }
 
     if (chdir(path) != 0) // Try changing directory
     {
         // ft_fprintf(2, "cd: %s: %s\n", path, strerror(errno));
-        printf("cd: %s: %s\n", path, strerror(errno));
+        printf("minishell: cd: %s: %s\n", path, strerror(errno));
         free(curr_dir);
         return (1); // Exit status 1
     }

@@ -107,7 +107,7 @@ char *append_expanded_heredoc(char *result, char *var_name, t_minishell *shell)
     char *expanded;
     char *value;
 
-    if (strcmp(name, "?") == 0) {
+    if (ft_strcmp(name, "?") == 0) {
         // special case: exit status
         expanded = ft_itoa(shell->exit_status);
     } else {
@@ -211,7 +211,9 @@ int handle_heredoc(char *delimiter, t_minishell *shell)
         {
             if (!eof_warning)
             {
-                fprintf(stderr, "minishell: warning: here-document delimited by end-of-file (wanted `%s')\n", delimiter);
+                write(2, "minishell: warning: here-document delimited by end-of-file (wanted `", 68);
+                write(2, delimiter, ft_strlen(delimiter));
+                write(2, "')\n", 3);
                 eof_warning = 1;
             }
             break;
@@ -224,13 +226,13 @@ int handle_heredoc(char *delimiter, t_minishell *shell)
             free(expanded_line);
             break;
         }
-        if (strcmp(line, delimiter) == 0)
+        if (ft_strcmp(line, delimiter) == 0)
         {
             free(line);
             free(expanded_line);
             break;
         }
-        write(pipefd[1], expanded_line, strlen(expanded_line));
+        write(pipefd[1], expanded_line, ft_strlen(expanded_line));
         write(pipefd[1], "\n", 1);
         free(line);
         free(expanded_line);
