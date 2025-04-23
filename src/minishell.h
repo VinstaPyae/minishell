@@ -139,7 +139,6 @@ int variable_len(char *input);
 int ft_isspace(int c);
 int ft_strcmp(const char *s1, const char *s2);
 void print_ast_node(t_ast_node *node);
-void print_redirs(t_list *redir_list);
 
 // utils_2
 char **trim_cmd(char **cmd_arg);
@@ -156,15 +155,29 @@ int check_append_grammar(t_list *l_token);
 int check_heredoc_grammar(t_list *l_token, t_token *next);
 // int check_word_grammar(t_list *l_token);
 
-// redir
+// redir1
 t_list *create_redir(char *file, int type);
+void close_heredoc_fds(t_ast_node *node);
+void print_redir(t_list *redir);
+int process_heredocs(t_ast_node *node, t_minishell *shell);
+char *append_expanded_heredoc(char *result, char *var_name, t_minishell *shell);
+
+// redir2
+void write_expanded_line_to_pipe(char *expanded_line, int pipefd);
+char *process_heredoc_line(char *line, char *delimiter, t_minishell *shell, int *should_break);
+char *expand_heredoc(char *input, t_minishell *shell);
+char *extract_heredoc_name(const char *input, int *i);
+void process_eof_warning(char *delimiter);
+
+//redir3
+int handle_output_redirection(t_redir *redir);
+int handle_input_redirection(t_redir *redir);
+
+//redir
 int is_word_token(t_token_type type);
 int is_redirection_token(t_token_type type);
-void print_redir(t_list *redir);
 int handle_redirections(t_list *redir_list);
-int process_heredocs(t_ast_node *node, t_minishell *shell);
 int handle_heredoc(char *delimiter, t_minishell *shell);
-void close_heredoc_fds(t_ast_node *node);
 
 //expan_hep1
 char *get_env_value(t_env *env, char *key);
