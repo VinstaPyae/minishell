@@ -213,9 +213,9 @@ static int ft_atoll(const char *str, long long *num)
 	return 1;
 }
 
-int exe_exit(t_minishell **shell)
+int exe_exit(t_minishell **shell, t_ast_node *ast)
 {
-	char **args = (*shell)->ast->cmd_arg;
+	char **args = ast->cmd_arg;
 	int arg_count = 0;
 	int saved_exit_status;
 	long long exit_num;

@@ -15,6 +15,8 @@ int execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
 		return (exe_unset(&shell));
 	if (ft_strcmp(cmd, "env") == 0)
 		return (exe_env(&shell));
+	if (ft_strcmp(cmd, "exit") == 0)
+		return (exe_exit(&shell, ast));
 	return (-1);
 }
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
@@ -63,12 +65,8 @@ int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
 	if (!ast || !ast->cmd_arg)
 		return (return_with_status(shell, 0));
 	ret = execute_builtin(ast, shell, ast->cmd_arg[0]);
-	if (ret == -1 && ft_strcmp(ast->cmd_arg[0], "exit") == 0)
-	{
-		return (exe_exit(&shell));
-	}
 	if (ret != -1)
-	set_exit_status(shell, ret);
+		set_exit_status(shell, ret);
 	return (ret);
 }
 

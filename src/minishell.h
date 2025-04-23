@@ -192,7 +192,7 @@ int exe_cmd(t_ast_node *left_node, t_minishell *shell);
 int execute_ast(t_ast_node *ast_root, t_minishell *shell);
 int n_option_checked(const char *str);
 int exe_echo(t_ast_node *ast);
-int exe_exit(t_minishell **shell);
+int exe_exit(t_minishell **shell, t_ast_node *ast);
 void split_key_value(char *str, char **key, char **value);
 t_env *init_env(char **envp);
 t_env *init_env(char **envp);
