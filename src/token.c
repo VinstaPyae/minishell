@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   token.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 02:14:36 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 02:14:36 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 t_list	*create_token(char *str, int type, int s)
@@ -13,7 +25,7 @@ t_list	*create_token(char *str, int type, int s)
 	c_token->space = s;
 	token = ft_lstnew(c_token);
 	if (token == NULL)
-		return (free(c_token),NULL);
+		return (free(c_token), NULL);
 	token->next = NULL;
 	return (token);
 }
@@ -23,32 +35,19 @@ t_token	*token_content(t_list *token)
 	return ((t_token *)token->content);
 }
 
-
-void	printer_token(t_list *l_token)
+int	handle_input_and_signals(t_minishell *shell)
 {
-	if (l_token != NULL)
+	shell->input = get_input(shell);
+	if (g_signal_status == 130)
 	{
-		while (l_token->next != NULL)
-		{
-			printf("Token: Type = %d, Value = (%s), Space = (%d) \n", token_content(l_token)->type, token_content(l_token)->token, token_content(l_token)->space);
-			l_token = l_token->next;
-		}
-		printf("Token: Type = %d, Value = (%s), Space = (%d) \n", token_content(l_token)->type, token_content(l_token)->token, token_content(l_token)->space);
+		shell->exit_status = 130;
+		g_signal_status = 0;
 	}
-}
-int handle_input_and_signals(t_minishell *shell)
-{
-    shell->input = get_input(shell);
-    if (g_signal_status == 130)
-    {
-        shell->exit_status = 130;
-        g_signal_status = 0; // Reset after handling
-    }
-    if (!shell->input || ft_strlen(shell->input) == 0)
-    {
-        free(shell->input);
-        shell->input = NULL;
-        return 0; // Skip processing
-    }
-    return 1; // Continue processing
+	if (!shell->input || ft_strlen(shell->input) == 0)
+	{
+		free(shell->input);
+		shell->input = NULL;
+		return (0);
+	}
+	return (1);
 }

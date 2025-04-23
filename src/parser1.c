@@ -1,22 +1,33 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser1.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 02:58:50 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 02:58:51 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
-int is_pipe_token(t_list *tokens)
+int	is_pipe_token(t_list *tokens)
 {
-	int result;
+	int	result;
 
 	result = (tokens != NULL && token_content(tokens)->type == TOKEN_PIPE);
-	return result;
+	return (result);
 }
 
-int process_redirections(t_ast_node *cmd_node, t_list **tokens)
+int	process_redirections(t_ast_node *cmd_node, t_list **tokens)
 {
-	t_list *redir;
-	t_list *temp;
+	t_list	*redir;
+	t_list	*temp;
 
 	redir = get_redir(tokens);
 	if (!redir)
-		return 0; // Return failure if memory allocation fails
-
+		return (0);
 	if (cmd_node->redir)
 	{
 		temp = cmd_node->redir;
@@ -28,47 +39,44 @@ int process_redirections(t_ast_node *cmd_node, t_list **tokens)
 	{
 		cmd_node->redir = redir;
 	}
-	return 1; // Return success
+	return (1);
 }
 
-
-// Helper to count elements in a NULL-terminated char**
-int count_strs(char **arr)
+int	count_strs(char **arr)
 {
-    int i = 0;
-    while (arr && arr[i])
-        i++;
-    return i;
+	int	i;
+
+	i = 0;
+	while (arr && arr[i])
+		i++;
+	return (i);
 }
 
-// Function to join two char** arrays
-// Helper function to duplicate strings from source to destination
-int duplicate_strings(char **dest, char **src, int *index)
+int	duplicate_strings(char **dest, char **src, int *index)
 {
-    int i;
+	int	i;
 
-    i = 0;
-    while (src && src[i])
-    {
-        dest[*index] = ft_strdup(src[i]);
-        if (!dest[*index])
-        {
-            free_arg(dest);
-            return 0;
-        }
-        (*index)++;
-        i++;
-    }
-    return 1;
+	i = 0;
+	while (src && src[i])
+	{
+		dest[*index] = ft_strdup(src[i]);
+		if (!dest[*index])
+		{
+			free_arg(dest);
+			return (0);
+		}
+		(*index)++;
+		i++;
+	}
+	return (1);
 }
 
-// Helper function to calculate total length of joined arrays
-int calculate_total_length(char **arg, char **new)
+int	calculate_total_length(char **arg, char **new)
 {
-    int arg_len;
-    int new_len;
+	int	arg_len;
+	int	new_len;
 
-    arg_len = count_strs(arg);
-    new_len = count_strs(new);
-    return arg_len + new_len;
+	arg_len = count_strs(arg);
+	new_len = count_strs(new);
+	return (arg_len + new_len);
 }

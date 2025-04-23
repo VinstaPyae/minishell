@@ -26,7 +26,7 @@ int process_tokens_and_ast(t_minishell *shell)
         return 0; // Skip further processing
     }
     expand_tokens(shell);
-    printer_token(shell->l_token);
+    // printer_token(shell->l_token);
     shell->ast = parse_pipe(shell->l_token);
     if (!shell->ast)
     {

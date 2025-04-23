@@ -1,12 +1,24 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_2.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 02:11:02 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 03:03:26 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
-volatile sig_atomic_t g_signal_status;
+volatile sig_atomic_t	g_signal_status;
 
-void	handle_sigint(int	signo)
+void	handle_sigint(int signo)
 {
 	(void)signo;
 	if (g_signal_status == 2)
-		return;
+		return ;
 	write(STDOUT_FILENO, "\n", 1);
 	rl_replace_line("", 0);
 	rl_on_new_line();
@@ -24,7 +36,7 @@ int	check_sigint(void)
 	return (0);
 }
 
-void	handle_sigint_heredoc(int	signo)
+void	handle_sigint_heredoc(int signo)
 {
 	(void)signo;
 	g_signal_status = 130;
@@ -34,7 +46,7 @@ void	handle_sigint_heredoc(int	signo)
 
 void	setup_signal_handlers(void)
 {
-	struct sigaction sa;
+	struct sigaction	sa;
 
 	signal(SIGQUIT, SIG_IGN);
 	sa.sa_handler = handle_sigint;
@@ -48,11 +60,11 @@ void	handle_eof(t_minishell *shell)
 {
 	int	saved_exit_status;
 
-	if(g_signal_status == 130)
+	if (g_signal_status == 130)
 		saved_exit_status = 130;
 	else
 		saved_exit_status = shell->exit_status;
-	if (isatty(STDIN_FILENO)) // Only print if we're in interactive mode
+	if (isatty(STDIN_FILENO))
 		printf("exit\n");
 	cleanup(&shell);
 	if (shell->envp)
@@ -63,19 +75,3 @@ void	handle_eof(t_minishell *shell)
 	free(shell);
 	exit(saved_exit_status);
 }
-
-
-// void handle_sigquit(int signo)
-// {
-//     (void)signo;
-//     if (g_signal_status == 2)
-//     { // Child is running
-//         // Do nothing, let the default action occur in the child
-//         return;
-//     }
-    
-//     // For the parent shell, completely ignore SIGQUIT
-//     // But also handle the terminal display issue
-//     rl_on_new_line();
-//     rl_redisplay();
-// }

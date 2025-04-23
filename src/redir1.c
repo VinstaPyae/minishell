@@ -1,13 +1,25 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redir1.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 02:32:18 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 02:32:22 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
-t_list *create_redir(char *file, int type)
+t_list	*create_redir(char *file, int type)
 {
-	t_redir *c_redir;
-	t_list *redir;
+	t_redir	*c_redir;
+	t_list	*redir;
 
 	c_redir = malloc(sizeof(t_redir));
 	if (c_redir == NULL)
-		return NULL;
+		return (NULL);
 	if (file == NULL)
 		c_redir->file = NULL;
 	else
@@ -16,7 +28,7 @@ t_list *create_redir(char *file, int type)
 		if (c_redir->file == NULL)
 		{
 			free(c_redir);
-			return NULL;
+			return (NULL);
 		}
 	}
 	c_redir->type = type;
@@ -28,13 +40,13 @@ t_list *create_redir(char *file, int type)
 	return (redir);
 }
 
-void close_heredoc_fds(t_ast_node *node)
+void	close_heredoc_fds(t_ast_node *node)
 {
-	t_list *current;
-	t_redir *redir;
+	t_list	*current;
+	t_redir	*redir;
 
 	if (!node)
-		return;
+		return ;
 	if (node->redir)
 	{
 		current = node->redir;
@@ -44,7 +56,7 @@ void close_heredoc_fds(t_ast_node *node)
 			if (redir->type == TOKEN_HDC && redir->fd != -1)
 			{
 				close(redir->fd);
-				redir->fd = -1; // Mark as closed
+				redir->fd = -1;
 			}
 			current = current->next;
 		}
@@ -56,12 +68,12 @@ void close_heredoc_fds(t_ast_node *node)
 	}
 }
 
-void print_redir(t_list *redir)
+void	print_redir(t_list *redir)
 {
-	t_list *current;
-	t_redir *r;
+	t_list	*current;
+	t_redir	*r;
 
-	current = redir;;
+	current = redir;
 	while (current != NULL)
 	{
 		r = (t_redir *)current->content;
@@ -70,11 +82,10 @@ void print_redir(t_list *redir)
 	}
 }
 
-// Modified process_heredocs function
-int process_heredocs(t_ast_node *node, t_minishell *shell)
+int	process_heredocs(t_ast_node *node, t_minishell *shell)
 {
-	t_list *current;
-	t_redir *redir;
+	t_list	*current;
+	t_redir	*redir;
 
 	if (!node)
 		return (0);
@@ -88,7 +99,7 @@ int process_heredocs(t_ast_node *node, t_minishell *shell)
 			{
 				redir->fd = handle_heredoc(redir->file, shell);
 				if (redir->fd == -1)
-					return (close_heredoc_fds(node),-1);
+					return (close_heredoc_fds(node), -1);
 			}
 			current = current->next;
 		}
@@ -99,12 +110,14 @@ int process_heredocs(t_ast_node *node, t_minishell *shell)
 			return (close_heredoc_fds(node), -1);
 	return (0);
 }
-char *append_expanded_heredoc(char *result, char *var_name, t_minishell *shell)
+
+char	*append_expanded_heredoc(char *result,
+	char *var_name, t_minishell *shell)
 {
-	char *name;
-	char *expanded;
-	char *value;
-	char *temp;
+	char	*name;
+	char	*expanded;
+	char	*value;
+	char	*temp;
 
 	name = var_name + 1;
 	if (ft_strcmp(name, "?") == 0)
@@ -115,7 +128,7 @@ char *append_expanded_heredoc(char *result, char *var_name, t_minishell *shell)
 		if (value)
 			expanded = ft_strdup(value);
 		else
-			expanded = ft_strdup("");   // safe: expand undefined vars to empty
+			expanded = ft_strdup("");
 	}
 	temp = ft_strjoin(result, expanded);
 	free(result);

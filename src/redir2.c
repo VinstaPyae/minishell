@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redir2.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 02:28:32 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 02:28:35 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
-char *extract_heredoc_name(const char *input, int *i)
+char	*extract_heredoc_name(const char *input, int *i)
 {
-	char *var_name;
-	int start;
-	int j;
+	char	*var_name;
+	int		start;
+	int		j;
 
 	start = *i;
 	j = start + 1;
@@ -28,11 +40,11 @@ char *extract_heredoc_name(const char *input, int *i)
 	return (var_name);
 }
 
-char *expand_heredoc(char *input, t_minishell *shell)
+char	*expand_heredoc(char *input, t_minishell *shell)
 {
-	char *result;
-	char *var_name;
-	int i;
+	char	*result;
+	char	*var_name;
+	int		i;
 
 	i = 0;
 	result = ft_strdup("");
@@ -55,34 +67,31 @@ char *expand_heredoc(char *input, t_minishell *shell)
 	return (result);
 }
 
-// Modified handle_heredoc function
-// ...existing code...
-// Function to handle the expansion of a heredoc line
-char *process_heredoc_line(char *line, char *delimiter, t_minishell *shell, int *should_break)
+char	*process_heredoc_line(char *line, char *delimiter,
+	t_minishell *shell, int *should_break)
 {
-	char *expanded_line;
+	char	*expanded_line;
 
 	expanded_line = expand_heredoc(line, shell);
-	if (g_signal_status == 130) // Signal interrupt
+	if (g_signal_status == 130)
 	{
 		free(line);
 		free(expanded_line);
 		*should_break = 1;
-		return NULL;
+		return (NULL);
 	}
-	if (ft_strcmp(line, delimiter) == 0) // End of heredoc
+	if (ft_strcmp(line, delimiter) == 0)
 	{
 		free(line);
 		free(expanded_line);
 		*should_break = 1;
-		return NULL;
+		return (NULL);
 	}
 	free(line);
-	return expanded_line;
+	return (expanded_line);
 }
 
-// Function to write the expanded line to the pipe
-void write_expanded_line_to_pipe(char *expanded_line, int pipefd)
+void	write_expanded_line_to_pipe(char *expanded_line, int pipefd)
 {
 	if (expanded_line)
 	{
@@ -92,9 +101,11 @@ void write_expanded_line_to_pipe(char *expanded_line, int pipefd)
 	}
 }
 
-void process_eof_warning(char *delimiter)
+void	process_eof_warning(char *delimiter)
 {
-	write(STDERR_FILENO, "minishell: warning: here-document delimited by end-of-file (wanted `", 68);
-	write(STDERR_FILENO, delimiter, ft_strlen(delimiter));
-	write(STDERR_FILENO, "')\n", 3);
+	ft_putstr_fd("minishell: warning: here-document delimited by ",
+		STDERR_FILENO);
+	ft_putstr_fd("end-of-file (wanted `", STDERR_FILENO);
+	ft_putstr_fd (delimiter, STDERR_FILENO);
+	ft_putstr_fd ("')\n", STDERR_FILENO);
 }
