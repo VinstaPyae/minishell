@@ -65,44 +65,28 @@ void cleanup(t_minishell **shell)
 {
     if (!shell || !*shell)
         return;
-
-    // Free input
     if ((*shell)->input)
     {
         free((*shell)->input);
         (*shell)->input = NULL;
     }
-
-    // Free tokens
     if ((*shell)->l_token)
     {
         ft_lstclear(&(*shell)->l_token, c_token_destroy);
         (*shell)->l_token = NULL;
     }
-
-    // Free AST
     if ((*shell)->ast)
     {
         free_ast((*shell)->ast);
         (*shell)->ast = NULL;
     }
-
     if ((*shell)->path)
     {
         free((*shell)->path);
         (*shell)->path = NULL;
     }
-	// free envp
-	// if ((*shell)->envp)
-	// {
-	// 	free_env_list((*shell)->envp);
-	// 	(*shell)->envp = NULL;
-	// }
-
-	// free(*shell);
-    // *shell = NULL;
-    // Do not free envp here, as it is shared across iterations
 }
+
 void c_token_destroy(void *c_token)
 {
 	t_token *token = (t_token *)c_token;
@@ -125,29 +109,18 @@ void free_ast(t_ast_node *node)
 	i = 0;
 	if (!node)
 		return;
-
-	// Free command arguments
-	// if (node->cmd)
-	// {
-	// 	free(node->cmd);
-	// }
 	if (node->cmd_arg)
 	{
 		free_arg(node->cmd_arg);
 		node->cmd_arg = NULL;
 	}
-	// Free redirections
 	if (node->redir)
 	{
 		ft_lstclear(&node->redir, free_redir); // Free the redirection list
 		node->redir = NULL; // Avoid dangling pointers
 	}
-
-	// Recursively free left and right nodes
 	free_ast(node->left);
 	free_ast(node->right);
-
-	// Free the node itself
 	free(node);
 }
 
@@ -169,7 +142,6 @@ void	free_arg(char **str)
 
 	if (!str) // Check if str is NULL before accessing it
 		return;
-	
 	i = 0;
 	while (str[i])
 	{
