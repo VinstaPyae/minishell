@@ -1,13 +1,5 @@
 #include "minishell.h"
 
-void init_tmp(int *tmp)
-{
-	tmp[0] = 0;
-	tmp[1] = 0;
-	tmp[2] = 0;
-	tmp[3] = 0;
-	tmp[4] = 0;
-}
 static int	calculate_lengths(const char **strings, int *tmp)
 {
     int	cpylen;

@@ -190,9 +190,6 @@ char *ft_getenv(t_env *env, const char *key);
 int builtin_cmd_check(t_ast_node *ast, t_minishell *shell);
 int exe_cmd(t_ast_node *left_node, t_minishell *shell);
 int execute_ast(t_ast_node *ast_root, t_minishell *shell);
-int n_option_checked(const char *str);
-int exe_echo(t_ast_node *ast);
-int exe_exit(t_minishell **shell, t_ast_node *ast);
 void split_key_value(char *str, char **key, char **value);
 t_env *init_env(char **envp);
 t_env *init_env(char **envp);
@@ -211,6 +208,16 @@ t_env *add_new_env_var(const char *name, const char *value, t_env *envp);
 
 // exe env
 t_env	*search_env_list(t_env *env_list, const char *name);
+
+//exe_echo
+int exe_echo(t_ast_node *ast);
+int is_llong_min(const char *str, int start);
+int skip_whitespace_and_sign(const char *str, int *sign, int *index);
+int handle_llong_min(const char *str, int sign, int index, long long *num);
+int convert_to_long_long(const char *str, int index, long long *res);
+
+//exe_exit
+int exe_exit(t_minishell **shell, t_ast_node *ast);
 
 // execute
 void print_error_message(char *cmd, char *message);
@@ -250,8 +257,9 @@ void remove_node(t_list **head, t_list *node_to_remove, void (*del)(void *));
 void handle_sigint(int signo);
 void setup_signal_handlers(void);
 // debug
-// void print_error(const char *func_name, const char *file, int line, const char *format, ...);
+void init_tmp(int *tmp);
 void free_array_list(char **path_dirs, int index);
+int n_option_checked(const char *str);
 
 int check_sigint(void);
 void handle_sigint_heredoc(int signo);
