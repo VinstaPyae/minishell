@@ -11,13 +11,26 @@ static int is_pipe_token(t_list *tokens)
 static int process_redirections(t_ast_node *cmd_node, t_list **tokens)
 {
 	t_list *redir;
+	t_list *temp;
 
 	redir = get_redir(tokens);
-	cmd_node->redir = redir;
-	if (!cmd_node->redir)
+	if (!redir)
 		return 0; // Return failure if memory allocation fails
+
+	if (cmd_node->redir)
+	{
+		temp = cmd_node->redir;
+		while (temp->next)
+			temp = temp->next;
+		temp->next = redir;
+	}
+	else
+	{
+		cmd_node->redir = redir;
+	}
 	return 1; // Return success
 }
+
 
 // Helper to count elements in a NULL-terminated char**
 int count_strs(char **arr)
