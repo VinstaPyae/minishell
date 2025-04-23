@@ -205,6 +205,9 @@ int exe_cd(t_ast_node *ast, t_minishell *shell);
 void split_value(char *str, char **key, char **value);
 int exe_export(t_ast_node *ast, t_minishell *shell);
 t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
+//exe_cd1
+t_env *find_and_update_env_var(const char *name, const char *value, t_env *envp, int *found);
+t_env *add_new_env_var(const char *name, const char *value, t_env *envp);
 
 // exe env
 t_env	*search_env_list(t_env *env_list, const char *name);
