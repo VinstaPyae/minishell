@@ -20,7 +20,7 @@ LDLIBS = -lreadline -lhistory
 RM = rm -rf
 SRCS = main.c lexer.c lex_handle.c lex_wd.c token.c utils.c lex_gram_check.c error_handle.c error_handle1.c \
 	debug.c parser.c redir.c execute.c exe_echo.c exe_exit.c exe_env.c exe_unset.c exe_pwd.c exe_cd.c exe_cd1.c\
-	exe_export.c expansion.c utils_2.c env.c env1.c env2.c status_utils.c exe_cmd.c exe_check_cmd.c
+	exe_export.c exe_export1.c expansion.c utils_2.c env.c env1.c env2.c status_utils.c exe_cmd.c exe_check_cmd.c
 SRC = $(addprefix ./src/,$(SRCS))
 OBJ = $(SRC:.c=.o)
 

@@ -215,7 +215,12 @@ int is_llong_min(const char *str, int start);
 int skip_whitespace_and_sign(const char *str, int *sign, int *index);
 int handle_llong_min(const char *str, int sign, int index, long long *num);
 int convert_to_long_long(const char *str, int index, long long *res);
-
+//exe_export1
+void handle_split_with_equal_sign(char *str, char *equal_sign, char **key, char **value);
+void split_value(char *str, char **key, char **value);
+int init_new_env_var(const char *key, const char *value, t_env **new_var);
+void new_var_update(const char *key, const char *value, t_env *prev, t_minishell *shell);
+void add_or_update_env_var(const char *key, const char *value, t_minishell *shell);
 //exe_exit
 int exe_exit(t_minishell **shell, t_ast_node *ast);
 
