@@ -36,3 +36,19 @@ void	printer_token(t_list *l_token)
 		printf("Token: Type = %d, Value = (%s), Space = (%d) \n", token_content(l_token)->type, token_content(l_token)->token, token_content(l_token)->space);
 	}
 }
+int handle_input_and_signals(t_minishell *shell)
+{
+    shell->input = get_input(shell);
+    if (g_signal_status == 130)
+    {
+        shell->exit_status = 130;
+        g_signal_status = 0; // Reset after handling
+    }
+    if (!shell->input || ft_strlen(shell->input) == 0)
+    {
+        free(shell->input);
+        shell->input = NULL;
+        return 0; // Skip processing
+    }
+    return 1; // Continue processing
+}

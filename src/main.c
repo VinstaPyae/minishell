@@ -16,68 +16,6 @@ char *get_input(t_minishell *shell)
     return input;
 }
 
-t_minishell *create_minshell(t_env *envp)
-{
-    t_minishell *shell;
-
-    shell = malloc(sizeof(t_minishell));
-    if (!shell)
-        return (NULL);
-    shell = (t_minishell *)ft_memset(shell, 0, sizeof(t_minishell));
-    shell->ast = NULL;
-    shell->input = NULL;
-    shell->l_token = NULL;
-    shell->envp = envp;
-    if (!shell->envp)
-    {
-        free(shell);
-        return (NULL);
-    }
-    shell->exit_status = 0;
-    return (shell);
-}
-
-// Function to initialize the environment and shell
-t_minishell *initialize_shell(char **env)
-{
-    t_env *envp;
-    t_minishell *shell;
-
-    envp = init_env(env);
-    if (!envp)
-    {
-        printf("Error: Failed to initialize environment\n");
-        return NULL;
-    }
-    shell = create_minshell(envp);
-    if (!shell)
-    {
-        printf("Error: Failed to create minishell\n");
-        free_env_list(envp);
-        return NULL;
-    }
-    return shell;
-}
-
-// Function to handle input and signal status
-int handle_input_and_signals(t_minishell *shell)
-{
-    shell->input = get_input(shell);
-    if (g_signal_status == 130)
-    {
-        shell->exit_status = 130;
-        g_signal_status = 0; // Reset after handling
-    }
-    if (!shell->input || ft_strlen(shell->input) == 0)
-    {
-        free(shell->input);
-        shell->input = NULL;
-        return 0; // Skip processing
-    }
-    return 1; // Continue processing
-}
-
-// Function to process tokens and AST
 int process_tokens_and_ast(t_minishell *shell)
 {
     shell->l_token = lexer(shell);

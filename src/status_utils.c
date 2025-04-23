@@ -19,3 +19,45 @@ int return_error(t_minishell **shell, const char *msg, int status)
         ft_putstr_fd((char *)msg, STDERR_FILENO);
     return (return_with_status((*shell), status));
 }
+
+t_minishell *create_minshell(t_env *envp)
+{
+    t_minishell *shell;
+
+    shell = malloc(sizeof(t_minishell));
+    if (!shell)
+        return (NULL);
+    shell = (t_minishell *)ft_memset(shell, 0, sizeof(t_minishell));
+    shell->ast = NULL;
+    shell->input = NULL;
+    shell->l_token = NULL;
+    shell->envp = envp;
+    if (!shell->envp)
+    {
+        free(shell);
+        return (NULL);
+    }
+    shell->exit_status = 0;
+    return (shell);
+}
+
+t_minishell *initialize_shell(char **env)
+{
+    t_env *envp;
+    t_minishell *shell;
+
+    envp = init_env(env);
+    if (!envp)
+    {
+        printf("Error: Failed to initialize environment\n");
+        return NULL;
+    }
+    shell = create_minshell(envp);
+    if (!shell)
+    {
+        printf("Error: Failed to create minishell\n");
+        free_env_list(envp);
+        return NULL;
+    }
+    return shell;
+}

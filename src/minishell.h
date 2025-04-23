@@ -130,6 +130,7 @@ t_list *create_token(char *str, int type, int s);
 t_token *token_content(t_list *token);
 void c_token_destroy(void *c_token);
 void printer_token(t_list *l_token);
+int handle_input_and_signals(t_minishell *shell);
 // utils
 int quote_len(char *str);
 int ot_len(char *input);
@@ -258,8 +259,6 @@ void print_error_message(char *cmd, char *message);
 void handle_child_signals(void);
 int handle_no_path(char *cmd, t_minishell *shell);
 char **get_env_array(t_minishell *shell);
-//char **split_path(char *path_env);
-//int execute_left_command(t_ast_node *cmd_node, t_minishell *shell);
 void reset_close_fd(int *org_fd);
 int wait_for_child(pid_t pid);
 //
@@ -300,7 +299,12 @@ void handle_sigint_heredoc(int signo);
 
 void print_signal_message(int sig);
 // status_utils
+t_minishell *create_minshell(t_env *envp);
 void set_exit_status(t_minishell *shell, int status);
 int return_with_status(t_minishell *shell, int status);
 int return_error(t_minishell **shell, const char *msg, int status);
+t_minishell *initialize_shell(char **env);
+int handle_input_and_signals(t_minishell *shell);
+//main
+char *get_input(t_minishell *shell);
 #endif
