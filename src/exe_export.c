@@ -1,40 +1,13 @@
 #include "minishell.h"
 
-void split_value(char *str, char **key, char **value)
+static void handle_split_with_equal_sign(char *str, char *equal_sign, char **key, char **value)
 {
-    char *equal_sign;
-    //     char *quote_start;
-    //     char *quote_end;
-
-    if (!str) // Check if input string is NULL
-    {
-        *key = NULL;
-        *value = NULL;
-        return;
-    }
-    //     printf("cmd_arg : (%s)\n", str);
-    equal_sign = ft_strchr(str, '='); // Find the first '=' in the string
-    if (!equal_sign)
-    {
-        *key = ft_strdup(str); // If no '=', the whole string is the key
-        *value = NULL;         // Set value to NULL
-        if (!*key)
-        {
-            perror("malloc failed");
-            return;
-        }
-        return;
-    }
-
-    // Split the string into key and value
-    *key = ft_strndup(str, equal_sign - str); // Copy everything before '='
+    *key = ft_strndup(str, equal_sign - str);
     if (!*key)
     {
         perror("malloc failed");
         return;
     }
-
-    // Get the value part after '='
     *value = ft_strdup(equal_sign + 1);
     if (!*value)
     {
@@ -44,17 +17,86 @@ void split_value(char *str, char **key, char **value)
     }
 }
 
+void split_value(char *str, char **key, char **value)
+{
+    char *equal_sign;
+
+    if (!str)
+    {
+        *key = NULL;
+        *value = NULL;
+        return;
+    }
+    equal_sign = ft_strchr(str, '=');
+    if (!equal_sign)
+    {
+        *key = ft_strdup(str);
+        *value = NULL;
+        if (!*key)
+        {
+            perror("malloc failed");
+            return;
+        }
+        return;
+    }
+    handle_split_with_equal_sign(str, equal_sign, key, value);
+}
+
+static int init_new_env_var(const char *key, const char *value, t_env **new_var)
+{
+    *new_var = malloc(sizeof(t_env));
+    if (!*new_var)
+        return (perror("malloc failed for new variable"), 1);
+    (*new_var)->key = ft_strdup(key);
+    if (!(*new_var)->key)
+    {
+        perror("malloc failed for key");
+        free(*new_var);
+        return (1);
+    }
+    if (value)
+        (*new_var)->value = ft_strdup(value);
+    else
+        (*new_var)->value = NULL;
+    if (value && !(*new_var)->value)
+    {
+        perror("malloc failed for value");
+        free((*new_var)->key);
+        free(*new_var);
+        return (1);
+    }
+    (*new_var)->next = NULL;
+    return (0);
+}
+
+void new_var_update(const char *key, const char *value, t_env *prev, t_minishell *shell)
+{
+    t_env *new_var;
+    int result;
+
+    result = init_new_env_var(key, value, &new_var);
+    if (result != 0)
+        return;
+    if (prev)
+        prev->next = new_var;
+    else
+        shell->envp = new_var;
+}
+
+
 // Function to add or update an environment variable in the envp linked list
 static void add_or_update_env_var(const char *key, const char *value, t_minishell *shell)
 {
-    t_env *tmp = shell->envp;
-    t_env *prev = NULL;
+    t_env *tmp;
+    t_env *prev;
 
+    tmp = shell->envp;
+    prev = NULL;
     while (tmp)
     {
         if (ft_strcmp(tmp->key, key) == 0)
         {
-            if (value) // Only update the value if provided
+            if (value)
             {
                 free(tmp->value);
                 tmp->value = ft_strdup(value);
@@ -64,43 +106,12 @@ static void add_or_update_env_var(const char *key, const char *value, t_minishel
                     return;
                 }
             }
-            return; // Variable already exists
+            return;
         }
         prev = tmp;
         tmp = tmp->next;
     }
-
-    // If variable does not exist, create a new one
-    t_env *new_var = (t_env *)malloc(sizeof(t_env));
-    if (!new_var)
-    {
-        perror("malloc failed for new variable");
-        return;
-    }
-
-    new_var->key = ft_strdup(key);
-    if (!new_var->key)
-    {
-        perror("malloc failed for key");
-        free(new_var);
-        return;
-    }
-
-    new_var->value = value ? ft_strdup(value) : NULL; // Allow NULL values
-
-    if (value && !new_var->value)
-    {
-        perror("malloc failed for value");
-        free(new_var->key);
-        free(new_var);
-        return;
-    }
-
-    new_var->next = NULL;
-    if (prev)
-        prev->next = new_var;
-    else
-        shell->envp = new_var;
+    new_var_update(key, value, prev, shell);
 }
 
 // Helper function to check if a string is a valid environment variable name
@@ -118,63 +129,46 @@ static int is_valid_env_name(const char *name)
     return (1);
 }
 
+// Function to process a single export argument
+static int process_single_export_arg(char *arg, t_minishell *shell)
+{
+    char *key;
+    char *value;
+
+    key = NULL;
+    value = NULL;
+    split_value(arg, &key, &value);
+    if (!key || !is_valid_env_name(key))
+    {
+        printf("minishell: export: `%s`: not a valid identifier\n", arg);
+        free(key);
+        free(value);
+        return (1);
+    }
+    add_or_update_env_var(key, value, shell);
+    free(key);
+    free(value);
+    return (0);
+}
+
 // Function to process the arguments for export
 static int process_export_args(t_ast_node *ast, t_minishell *shell)
 {
     int i;
-    char *key = NULL;
-    char *value = NULL;
+    int error_flag;
     char **cmd;
-    int error_flag = 0;
 
+    error_flag = 0;
     if (!shell || !ast || !ast->cmd_arg)
         return (1);
-
     cmd = ast->cmd_arg;
     i = 1;
-
     while (cmd[i])
     {
-        // Split the string into key and value
-        printf("cmd: (%s)\n", cmd[i]);
-
-        // Trim the last character if necessary
-        // if (cmd[i + 1])
-        // {
-        //     char *trimmed = trim_last_char(cmd[i], ' ');
-        //     if (!trimmed)
-        //     {
-        //         perror("malloc failed in trim_last_char");
-        //         error_flag = 1;
-        //         i++;
-        //         continue;
-        //     }
-        //     free(cmd[i]); // Free the original cmd[i] before overwriting
-        //     cmd[i] = trimmed;
-        //     printf("cmd: (%s)\n", cmd[i]);
-        // }
-        // Split the string into key and value
-        split_value(cmd[i], &key, &value);
-
-        if (!key || !is_valid_env_name(key))
-        {
-            printf("export: `%s`: not a valid identifier\n", cmd[i]);
-            free(key);
-            free(value);
+        if (process_single_export_arg(cmd[i], shell) != 0)
             error_flag = 1;
-            i++;
-            continue;
-        }
-
-        // Add or update the environment variable
-        add_or_update_env_var(key, value, shell);
-
-        // Free allocated memory
-        free(key);
-        free(value);
         i++;
     }
-
     return (error_flag);
 }
 
@@ -199,9 +193,7 @@ int exe_export(t_ast_node *ast, t_minishell *shell)
 {
     if (!shell || !ast)
         return (1); // Early exit if shell or AST is invalid
-
     if (!ast->cmd_arg[1])
         return process_export_no_args(shell);
-
     return process_export_args(ast, shell);
 }
