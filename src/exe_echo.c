@@ -225,10 +225,10 @@ int exe_exit(t_minishell **shell, t_ast_node *ast)
 
 	if(g_signal_status == 130)
 		(*shell)->exit_status = 130; // Reset after handling
-	// Save exit status before freeing *shell
+	
 	saved_exit_status = (*shell)->exit_status;
-	//printf("Exit status: %d\n", saved_exit_status);
-
+	
+	printf("exit\n");
 	// No arguments: exit with last status
 	if (arg_count == 1)
 	{
@@ -245,6 +245,7 @@ int exe_exit(t_minishell **shell, t_ast_node *ast)
 	if (!ft_atoll(args[1], &exit_num))
 	{
 		ft_putstr_fd("exit: ", STDERR_FILENO);
+		ft_putstr_fd(args[1], STDERR_FILENO);
 		ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
 		reset_close_fd((*shell)->og_fd); // Reset file descriptors
 		cleanup(shell); // Final cleanup

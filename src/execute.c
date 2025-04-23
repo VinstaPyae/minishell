@@ -173,9 +173,9 @@ static void handle_left_child(t_ast_node *pipe_node, t_minishell *shell, int pip
 {
     int ret;
 
-    handle_child_signals();
-    // signal(SIGINT, handle_sigint);
-	// signal(SIGQUIT, SIG_DFL);
+    //handle_child_signals();
+    signal(SIGINT, handle_sigint);
+	signal(SIGQUIT, SIG_DFL);
     close_heredoc_fds(pipe_node->right);
     close(pipe_fds[0]);
     if (dup2(pipe_fds[1], STDOUT_FILENO) == -1)
@@ -201,9 +201,9 @@ static void handle_right_child(t_ast_node *pipe_node, t_minishell *shell, int pi
 {
     int ret;
 
-    handle_child_signals();
-    // signal(SIGINT, handle_sigint);
-	// signal(SIGQUIT, SIG_DFL);
+    // handle_child_signals();
+    signal(SIGINT, handle_sigint);
+	signal(SIGQUIT, SIG_DFL);
     close_heredoc_fds(pipe_node->left);
     close(pipe_fds[1]);
     if (dup2(pipe_fds[0], STDIN_FILENO) == -1)
