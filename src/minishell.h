@@ -215,8 +215,36 @@ void expand_tokens(t_minishell *shell);
 // parser
 t_ast_node *create_node(t_node_type type);
 char **get_cmd_args(t_list **tokens);
-// char	*get_cmd(t_list **tokens);
+
+//parser1
+int is_pipe_token(t_list *tokens);
+int process_redirections(t_ast_node *cmd_node, t_list **tokens);
+int count_strs(char **arr);
+int duplicate_strings(char **dest, char **src, int *index);
+int calculate_total_length(char **arg, char **new);
+
+// parser2
+char **join_args(char **arg, char **new);
+int handle_existing_arguments(t_ast_node *cmd_node, t_list **tokens);
+int handle_new_arguments(t_ast_node *cmd_node, t_list **tokens);
+int trim_first_argument(char **tmp_arg, t_list *tmp_list);
+int process_command_arguments(t_ast_node *cmd_node, t_list **tokens);
+t_list *process_redirection(t_list **redir, t_token *current_token, t_list *tmp_list);
+
+// parser3
+t_ast_node *create_command_node(void);
+int count_parse_arguments(t_list *tokens);
+char *join_tokens(t_list **tmp_list, char *arg);
+int validate_redirection(t_list *tmp_list);
+
+// parser4
+t_list *handle_invalid_redirection(t_list **redir);
+t_ast_node *create_pipe_node(t_list *tokens, t_ast_node *left);
 t_list *get_redir(t_list **tokens);
+char *get_argument(t_list **tmp_list, char *tmp, t_list *tokens);
+int allocate_cmd_args(char ***cmd_arg, int arg_count, char **tmp);
+
+// char	*get_cmd(t_list **tokens);
 t_ast_node *parse_pipe(t_list *tokens);
 t_ast_node *parse_cmd(t_list **tokens);
 
