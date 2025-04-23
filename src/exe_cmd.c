@@ -19,13 +19,28 @@ int execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
 		return (exe_exit(&shell, ast));
 	return (-1);
 }
+
+void execute_external_helper(t_ast_node *ast_cmd, t_minishell *shell)
+{
+	handle_child_signals();
+	close_heredoc_fds(ast_cmd);
+	close(shell->og_fd[FD_IN]);
+	close(shell->og_fd[FD_OUT]);
+	shell->env_path = get_env_array(shell);
+	execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
+	perror("execve failed");
+	free_array_list(shell->env_path, 0);
+	cleanup(&shell);
+	free_env_list(shell->envp);
+	if (shell)
+		free(shell);
+}
 int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
 	pid_t pid;
 	int status;
 
 	g_signal_status = 2;
-	//(signal(SIGINT, SIG_IGN), signal(SIGQUIT, SIG_IGN));
 	pid = fork();
 	if (pid < 0)
 	{
@@ -36,25 +51,11 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 	}
 	if (pid == 0)
 	{
-		handle_child_signals();
-		close_heredoc_fds(ast_cmd);
-		close(shell->og_fd[FD_IN]);
-		close(shell->og_fd[FD_OUT]);
-		shell->env_path = get_env_array(shell);
-		execve(shell->path, ast_cmd->cmd_arg, shell->env_path);
-		//reset_close_fd(shell->og_fd);
-		perror("execve failed");
-		free_array_list(shell->env_path, 0);
-		cleanup(&shell);
-		free_env_list(shell->envp);
-		if (shell)
-			free(shell);
+		execute_external_helper(ast_cmd, shell);
 		exit(127);
 	}
-	
 	status = wait_for_child(pid);
-	
-    g_signal_status = 0;  // Reset signal status
+    g_signal_status = 0;
 	return (return_with_status(shell, status));
 }
 

@@ -8,36 +8,56 @@ void init_tmp(int *tmp)
 	tmp[3] = 0;
 	tmp[4] = 0;
 }
+static int	calculate_lengths(const char **strings, int *tmp)
+{
+    int	cpylen;
+
+    init_tmp(tmp);
+    if (!strings[0] && !strings[1] && !strings[2] && !strings[3])
+        return (0);
+    if (strings[0])
+        tmp[1] = ft_strlen(strings[0]);
+    if (strings[1])
+        tmp[2] = ft_strlen(strings[1]);
+    if (strings[2])
+        tmp[3] = ft_strlen(strings[2]);
+    if (strings[3])
+        tmp[4] = ft_strlen(strings[3]);
+    cpylen = tmp[1] + tmp[2] + tmp[3] + tmp[4];
+    return (cpylen);
+}
+
+static void	copy_strings(char *result, const char **strings, int *tmp)
+{
+    if (strings[0])
+        ft_memcpy(result, strings[0], tmp[1]);
+    if (strings[1])
+        ft_memcpy(result + tmp[1], strings[1], tmp[2]);
+    if (strings[2])
+        ft_memcpy(result + tmp[1] + tmp[2], strings[2], tmp[3]);
+    if (strings[3])
+        ft_memcpy(result + tmp[1] + tmp[2] + tmp[3], strings[3], tmp[4]);
+}
+
 
 char	*ft_strnc(char *s1, const char *s2, const char *s3, const char *s4)
 {
 	char		*result;
 	int			cpylen;
 	int		tmp[5];
+    const char	*strings[4];
 
-	init_tmp(tmp);
-	if (!s1 && !s2 && !s3 && !s4)
+    strings[0] = s1;
+    strings[1] = s2;
+    strings[2] = s3;
+    strings[3] = s4;
+	cpylen = calculate_lengths(strings, tmp);
+	if (cpylen == 0)
 		return (NULL);
-	if (s1)
-		tmp[1] = ft_strlen(s1);
-	if (s2)
-		tmp[2] = ft_strlen(s2);
-	if (s3)
-		tmp[3] = ft_strlen(s3);
-	if (s4)
-		tmp[4] = ft_strlen(s4);
-	cpylen = tmp[1] + tmp[2] + tmp[3] + tmp[4];
 	result = (char *)malloc((cpylen + 1) * (sizeof(char)));
 	if (!result)
 		return (NULL);
-	if (s1)
-		ft_memcpy(result, s1, tmp[1]);
-	if (s2)
-		ft_memcpy(result + tmp[1], s2, tmp[2]);
-	if (s3)
-		ft_memcpy(result + tmp[1] + tmp[2], s3, tmp[3]);
-	if (s4)
-		ft_memcpy(result + tmp[1] + tmp[2] + tmp[3], s4, tmp[4]);
+	copy_strings(result, strings, tmp);
 	result[cpylen] = 0;
 	return (result);
 }
