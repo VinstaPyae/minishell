@@ -165,13 +165,38 @@ int process_heredocs(t_ast_node *node, t_minishell *shell);
 int handle_heredoc(char *delimiter, t_minishell *shell);
 void close_heredoc_fds(t_ast_node *node);
 
-// expansion
-void expand_tokens(t_minishell *shell);
-char	*expand_quote_variable(char *var, t_minishell *shell);
+//expan_hep1
+char *get_env_value(t_env *env, char *key);
+char **create_single_result(char *str);
+char **expand_dollar_sign(void);
+char **expand_exit_status(t_minishell *shell);
+//expan_hep2
+char **handle_empty_var_name(void);
+char **get_valid_env_value(char **var_name, int c, t_minishell *shell);
+char **expand_env_variable(char **var_name, t_minishell *shell);
+void debug_print_expansion(char **result);
+char **expand_variable(char *var, t_minishell *shell);
+//expan_hep3
+char *expand_quote_variable(char *var, t_minishell *shell);
 char *extract_variable_name(const char *input, int *i);
 char *append_expanded_variable(char *result, char *var_name, t_minishell *shell);
 char *append_normal_character(char *result, char c);
-char *get_env_value(t_env *env, char *key);
+char *expand_double_quotes(char *input, t_minishell *shell);
+//expan_hep4
+void update_token_with_expansion(t_token *token, char *expanded_value, int space);
+void handle_empty_expansion(t_token *token);
+void process_double_quote_token(t_token *token, t_minishell *shell);
+int count_words(char *expanded_value);
+char **allocate_result_array(int word_count);
+//expan_hep5
+char *extract_word(char *expanded_value, int start, int len);
+int populate_result_array(char **result, char *expanded_value, int word_count);
+char **split_expanded_value(char *expanded_value);
+char *join_expanded_values(char **expanded_value);
+char **handle_split_value(char *result, char **split_value);
+
+// expansion
+void expand_tokens(t_minishell *shell);
 
 // parser
 t_ast_node *create_node(t_node_type type);
@@ -196,7 +221,6 @@ t_env *init_env(char **envp);
 void print_env(t_minishell *shell);
 int exe_env(t_minishell **shell);
 char *ft_strndup(const char *s, size_t n);
-int exe_unset(t_minishell **shell);
 int exe_pwd(t_minishell **shell);
 int exe_cd(t_ast_node *ast, t_minishell *shell);
 void split_value(char *str, char **key, char **value);
@@ -206,6 +230,11 @@ t_env *replace_or_add_env_var(const char *name, const char *value, t_env *envp);
 t_env *find_and_update_env_var(const char *name, const char *value, t_env *envp, int *found);
 t_env *add_new_env_var(const char *name, const char *value, t_env *envp);
 
+//exe_unset
+int exe_unset(t_minishell **shell);
+void handle_first_split_value(t_token *token, char **split_value, int i, int space1);
+t_list *create_and_insert_node(t_list *insert_pos, char *value, int space);
+t_list *handle_remaining_split_values(t_list *insert_pos, char **split_value, int i, int space1);
 // exe env
 t_env	*search_env_list(t_env *env_list, const char *name);
 
