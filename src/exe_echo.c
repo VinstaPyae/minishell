@@ -41,6 +41,203 @@ int exe_echo(t_ast_node *ast)
 		printf("\n");
 	return (0);
 }
+
+
+static int is_llong_min(const char *str, int start)
+{
+	const char *llmin = "9223372036854775808";
+	int i = 0;
+
+	while (llmin[i])
+	{
+		if (str[start + i] != llmin[i])
+			return 0;
+		i++;
+	}
+	return (str[start + i] == '\0' || ft_isspace(str[start + i]));
+}
+
+static int skip_whitespace_and_sign(const char *str, int *sign, int *index)
+{
+    *index = 0;
+    *sign = 1;
+
+    while (ft_isspace(str[*index]))
+        (*index)++;
+    if (str[*index] == '-' || str[*index] == '+')
+    {
+        if (str[*index] == '-')
+            *sign = -1;
+        (*index)++;
+    }
+    if (!ft_isdigit(str[*index]))
+        return 0;
+    return 1;
+}
+
+static int handle_llong_min(const char *str, int sign, int index, long long *num)
+{
+    if (sign == -1 && is_llong_min(str, index))
+    {
+        *num = LLONG_MIN;
+        return 1;
+    }
+    return 0;
+}
+
+static int convert_to_long_long(const char *str, int index, long long *res)
+{
+    *res = 0;
+    while (ft_isdigit(str[index]))
+    {
+        if (*res > LLONG_MAX / 10 || (*res == LLONG_MAX / 10 && (str[index] - '0') > 7))
+            return 0;
+        *res = *res * 10 + (str[index] - '0');
+        index++;
+    }
+    while (str[index])
+    {
+        if (!ft_isspace(str[index]))
+            return 0;
+        index++;
+    }
+    return 1;
+}
+
+static int ft_atoll(const char *str, long long *num)
+{
+    int index;
+    int sign;
+    long long res;
+
+    if (!skip_whitespace_and_sign(str, &sign, &index))
+        return 0;
+    if (handle_llong_min(str, sign, index, num))
+        return 1;
+    if (!convert_to_long_long(str, index, &res))
+        return 0;
+    *num = res * sign;
+    return 1;
+}
+
+static void handle_exit_cleanup(t_minishell **shell, int exit_status)
+{
+    reset_close_fd((*shell)->og_fd); // Reset file descriptors
+    cleanup(shell); // Final cleanup
+    if ((*shell)->envp)
+        free_env_list((*shell)->envp);
+    if (*shell)
+        free(*shell);
+    rl_clear_history();
+    exit(exit_status);
+}
+
+static void handle_numeric_error(t_minishell **shell,char *arg)
+{
+    ft_putstr_fd("exit: ", STDERR_FILENO);
+    ft_putstr_fd(arg, STDERR_FILENO);
+    ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
+    handle_exit_cleanup(shell, 2);
+}
+
+static int count_arguments(char **args)
+{
+    int count;
+
+    count = 0;
+    while (args[count])
+        count++;
+    return (count);
+}
+
+int exe_exit(t_minishell **shell, t_ast_node *ast)
+{
+    char **args;
+    int arg_count;
+    int saved_exit_status;
+    long long exit_num;
+
+    args = ast->cmd_arg;
+    arg_count = count_arguments(args);
+    if (g_signal_status == 130)
+        (*shell)->exit_status = 130; // Reset after handling
+    saved_exit_status = (*shell)->exit_status;
+    printf("exit\n");
+    if (arg_count == 1)
+        handle_exit_cleanup(shell, saved_exit_status);
+    if (!ft_atoll(args[1], &exit_num))
+        handle_numeric_error(shell, args[1]);
+    if (arg_count > 2)
+    {
+		reset_close_fd((*shell)->og_fd); // Reset file descriptors
+		ft_putstr_fd("exit: too many arguments\n", STDERR_FILENO);
+        return (1); // Don't exit shell
+    }
+    handle_exit_cleanup(shell, (unsigned char)exit_num);
+    return (0); // This line will never be reached
+}
+
+
+// int exe_exit(t_minishell **shell, t_ast_node *ast)
+// {
+// 	char **args = ast->cmd_arg;
+// 	int arg_count = 0;
+// 	int saved_exit_status;
+// 	long long exit_num;
+
+// 	while (args[arg_count])
+// 		arg_count++;
+
+// 	if(g_signal_status == 130)
+// 		(*shell)->exit_status = 130; // Reset after handling
+	
+// 	saved_exit_status = (*shell)->exit_status;
+	
+// 	printf("exit\n");
+// 	// No arguments: exit with last status
+// 	if (arg_count == 1)
+// 	{
+// 		reset_close_fd((*shell)->og_fd); // Reset file descriptors
+// 		cleanup(shell); // Final cleanup
+// 		if ((*shell)->envp)
+// 			free_env_list((*shell)->envp);
+// 		if (*shell)
+// 			free(*shell);
+// 		rl_clear_history();
+// 		exit(saved_exit_status);
+// 	}
+
+// 	if (!ft_atoll(args[1], &exit_num))
+// 	{
+// 		ft_putstr_fd("exit: ", STDERR_FILENO);
+// 		ft_putstr_fd(args[1], STDERR_FILENO);
+// 		ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
+// 		reset_close_fd((*shell)->og_fd); // Reset file descriptors
+// 		cleanup(shell); // Final cleanup
+// 		if ((*shell)->envp)
+// 			free_env_list((*shell)->envp);
+// 		if (*shell)
+// 			free(*shell);
+// 		rl_clear_history();
+// 		exit(2);
+// 	}
+
+// 	if (arg_count > 2)
+// 	{
+// 		reset_close_fd((*shell)->og_fd); // Reset file descriptors
+// 		ft_putstr_fd("exit: too many arguments\n", STDERR_FILENO);
+// 		return (1); // Don't exit shell
+// 	}
+// 	reset_close_fd((*shell)->og_fd); // Reset file descriptors
+// 	cleanup(shell); // Final cleanup
+// 	if ((*shell)->envp)
+// 			free_env_list((*shell)->envp);
+// 	if (*shell)
+// 		free(*shell);
+// 	rl_clear_history();
+// 	exit((unsigned char)exit_num);
+// }
+
 /*
 // Helper function to skip leading whitespace and handle sign
 int parse_sign_and_whitespace(const char *str, int *sign, int *i)
@@ -161,115 +358,3 @@ int exe_exit(t_minishell **shell)
 	rl_clear_history();
 	exit(normalize_exit_status(exit_value));
 }*/
-
-static int is_llong_min(const char *str, int start)
-{
-	const char *llmin = "9223372036854775808";
-	int i = 0;
-
-	while (llmin[i])
-	{
-		if (str[start + i] != llmin[i])
-			return 0;
-		i++;
-	}
-	return (str[start + i] == '\0' || ft_isspace(str[start + i]));
-}
-
-static int ft_atoll(const char *str, long long *num)
-{
-	int i = 0, sign = 1;
-
-	while (ft_isspace(str[i]))
-		i++;
-	if (str[i] == '-' || str[i] == '+')
-		sign = (str[i++] == '-') ? -1 : 1;
-	if (!ft_isdigit(str[i]))
-		return 0;
-
-	// Handle LLONG_MIN explicitly
-	if (sign == -1 && is_llong_min(str, i))
-	{
-		*num = LLONG_MIN;
-		return 1;
-	}
-
-	long long res = 0;
-	while (ft_isdigit(str[i]))
-	{
-		if (res > LLONG_MAX / 10 || (res == LLONG_MAX / 10 && (str[i] - '0') > 7))
-			return 0;
-		res = res * 10 + (str[i++] - '0');
-	}
-
-	// Check for trailing non-whitespace
-	while (str[i])
-	{
-		if (!ft_isspace(str[i++]))
-			return 0;
-	}
-
-	*num = res * sign;
-	return 1;
-}
-
-int exe_exit(t_minishell **shell, t_ast_node *ast)
-{
-	char **args = ast->cmd_arg;
-	int arg_count = 0;
-	int saved_exit_status;
-	long long exit_num;
-
-	while (args[arg_count])
-		arg_count++;
-
-	if(g_signal_status == 130)
-		(*shell)->exit_status = 130; // Reset after handling
-	
-	saved_exit_status = (*shell)->exit_status;
-	
-	printf("exit\n");
-	// No arguments: exit with last status
-	if (arg_count == 1)
-	{
-		reset_close_fd((*shell)->og_fd); // Reset file descriptors
-		cleanup(shell); // Final cleanup
-		if ((*shell)->envp)
-			free_env_list((*shell)->envp);
-		if (*shell)
-			free(*shell);
-		rl_clear_history();
-		exit(saved_exit_status);
-	}
-
-	if (!ft_atoll(args[1], &exit_num))
-	{
-		ft_putstr_fd("exit: ", STDERR_FILENO);
-		ft_putstr_fd(args[1], STDERR_FILENO);
-		ft_putstr_fd(": numeric argument required\n", STDERR_FILENO);
-		reset_close_fd((*shell)->og_fd); // Reset file descriptors
-		cleanup(shell); // Final cleanup
-		if ((*shell)->envp)
-			free_env_list((*shell)->envp);
-		if (*shell)
-			free(*shell);
-		rl_clear_history();
-		exit(2);
-	}
-
-	if (arg_count > 2)
-	{
-		reset_close_fd((*shell)->og_fd); // Reset file descriptors
-		ft_putstr_fd("exit: too many arguments\n", STDERR_FILENO);
-		return (1); // Don't exit shell
-	}
-	reset_close_fd((*shell)->og_fd); // Reset file descriptors
-	cleanup(shell); // Final cleanup
-	if ((*shell)->envp)
-			free_env_list((*shell)->envp);
-	if (*shell)
-		free(*shell);
-	rl_clear_history();
-	exit((unsigned char)exit_num);
-}
-
