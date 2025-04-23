@@ -251,8 +251,25 @@ t_ast_node *parse_cmd(t_list **tokens);
 // exe_check_cmd
 t_error_cmd search_cmd_path(char *cmd, t_minishell *shell);
 
-// execute_builtin
+//execute1
 char *ft_getenv(t_env *env, const char *key);
+char	*create_env_entry(char	*key,char	*value);
+char	**fill_env_array(char	**env_array,t_env	*tmp,int	i);
+char	**env_list_to_array(t_env	*env);
+void	handle_child_signals(void);
+
+// execute2
+void	print_error_message(char	*cmd, char	*message);
+char	**get_env_array(t_minishell	*shell);
+int	handle_no_path(char	*cmd, t_minishell	*shell);
+void	print_signal_message(int	sig);
+void reset_close_fd(int *org_fd);
+
+//execute3
+int create_pipe(int pipe_fds[2], t_ast_node *pipe_node);
+void handle_left_child(t_ast_node *pipe_node, t_minishell *shell, int pipe_fds[2]);
+void handle_right_child(t_ast_node *pipe_node, t_minishell *shell, int pipe_fds[2]);
+// execute_builtin
 //void close_og_fd(t_minishell *shell);
 int builtin_cmd_check(t_ast_node *ast, t_minishell *shell);
 int exe_cmd(t_ast_node *left_node, t_minishell *shell);
@@ -296,11 +313,6 @@ void add_or_update_env_var(const char *key, const char *value, t_minishell *shel
 int exe_exit(t_minishell **shell, t_ast_node *ast);
 
 // execute
-void print_error_message(char *cmd, char *message);
-void handle_child_signals(void);
-int handle_no_path(char *cmd, t_minishell *shell);
-char **get_env_array(t_minishell *shell);
-void reset_close_fd(int *org_fd);
 int wait_for_child(pid_t pid);
 //
 
@@ -338,7 +350,6 @@ int n_option_checked(const char *str);
 int check_sigint(void);
 void handle_sigint_heredoc(int signo);
 
-void print_signal_message(int sig);
 // status_utils
 t_minishell *create_minshell(t_env *envp);
 void set_exit_status(t_minishell *shell, int status);
