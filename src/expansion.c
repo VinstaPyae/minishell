@@ -308,8 +308,8 @@ static int populate_result_array(char **result, char *expanded_value, int word_c
     int len;
 
     i = 0;
-    idx = 0;
-    while (expanded_value[i] && idx < word_count)
+    idx = -1;
+    while (expanded_value[i] && ++idx < word_count)
     {
         while (expanded_value[i] && ft_isspace((unsigned char)expanded_value[i]))
             i++;
@@ -322,10 +322,8 @@ static int populate_result_array(char **result, char *expanded_value, int word_c
         {
             while (idx-- > 0)
                 free(result[idx]);
-            free(result);
-            return (0);
+            return (free(result), 0);
         }
-        idx++;
     }
     result[word_count] = NULL;
     return (1);

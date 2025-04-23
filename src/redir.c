@@ -182,6 +182,45 @@ char *expand_heredoc(char *input, t_minishell *shell) {
 }
 
 // Modified handle_heredoc function
+// ...existing code...
+
+// Function to handle the expansion of a heredoc line
+char *process_heredoc_line(char *line, char *delimiter, t_minishell *shell, int *should_break)
+{
+    char *expanded_line = expand_heredoc(line, shell);
+
+    if (g_signal_status == 130) // Signal interrupt
+    {
+        free(line);
+        free(expanded_line);
+        *should_break = 1;
+        return NULL;
+    }
+
+    if (ft_strcmp(line, delimiter) == 0) // End of heredoc
+    {
+        free(line);
+        free(expanded_line);
+        *should_break = 1;
+        return NULL;
+    }
+
+    free(line);
+    return expanded_line;
+}
+
+// Function to write the expanded line to the pipe
+void write_expanded_line_to_pipe(char *expanded_line, int pipefd)
+{
+    if (expanded_line)
+    {
+        write(pipefd, expanded_line, ft_strlen(expanded_line));
+        write(pipefd, "\n", 1);
+        free(expanded_line);
+    }
+}
+
+// Refactored handle_heredoc function
 int handle_heredoc(char *delimiter, t_minishell *shell)
 {
     int pipefd[2];
@@ -204,6 +243,8 @@ int handle_heredoc(char *delimiter, t_minishell *shell)
     char *line;
     char *expanded_line = NULL;
     int eof_warning = 0;
+    int should_break = 0;
+
     while (1)
     {
         line = readline("> ");
@@ -218,24 +259,12 @@ int handle_heredoc(char *delimiter, t_minishell *shell)
             }
             break;
         }
-        expanded_line = expand_heredoc(line, shell);
-        // printf("Expanded line: %s\n", expanded_line);
-        if (g_signal_status == 130)
-        {
-            free(line);
-            free(expanded_line);
+
+        expanded_line = process_heredoc_line(line, delimiter, shell, &should_break);
+        if (should_break)
             break;
-        }
-        if (ft_strcmp(line, delimiter) == 0)
-        {
-            free(line);
-            free(expanded_line);
-            break;
-        }
-        write(pipefd[1], expanded_line, ft_strlen(expanded_line));
-        write(pipefd[1], "\n", 1);
-        free(line);
-        free(expanded_line);
+
+        write_expanded_line_to_pipe(expanded_line, pipefd[1]);
     }
 
     close(pipefd[1]);
