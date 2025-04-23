@@ -19,7 +19,7 @@ int	variable_len(char *input)
 		return (i + 1);
 	while (input[i] && (ft_isalnum(input[i]) || ft_isalpha(input[i]) || input[i] == '_' || input[i] == '$'))
 	{
-		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"'))
+		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"') || (input[i] == '$' && (input[i + 1] == '\0' || ft_isspace(input[i+1]) || input[i+1] == '$')))
 			break;
 		i++;
 	}
