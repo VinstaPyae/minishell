@@ -6,7 +6,7 @@
 /*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 01:55:02 by pzaw              #+#    #+#             */
-/*   Updated: 2025/04/24 01:55:03 by pzaw             ###   ########.fr       */
+/*   Updated: 2025/04/24 03:57:53 by pzaw             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ char	*init_pwd(void)
 	if (!pwd)
 	{
 		if (getcwd(buffer, sizeof(buffer)) != NULL)
-			pwd = strdup(buffer);
+			pwd = ft_strdup(buffer);
 		else
 			pwd = ft_strdup("/");
 	}
