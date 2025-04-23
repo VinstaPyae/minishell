@@ -281,7 +281,7 @@ char **get_cmd_args(t_list **tokens)
 	}
 
 	arg_count = count_arguments(*tokens);
-	cmd_arg = malloc((arg_count + 1) * sizeof(char *));
+	cmd_arg = malloc((arg_count + 2) * sizeof(char *));
 	if (!cmd_arg)
 	{
 		free(tmp);
