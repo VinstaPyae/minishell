@@ -222,7 +222,18 @@ int wait_for_child(pid_t pid);
 
 // env
 void update_shlvl(t_env **env_list);
-
+t_env *init_minimal_env(void);
+//env1
+t_env *init_env(char **envp);
+t_env *find_shlvl_node(t_env *env_list);
+void increment_shlvl_value(t_env *shlvl_node);
+void add_shlvl_if_missing(t_env **env_list);
+void update_shlvl(t_env **env_list);
+//env2
+t_env *handle_minimal_env(void);
+t_env *create_env_node(char *key, char *value, t_env *env);
+int process_envp_entry(char *envp_entry, t_env **env);
+t_env *init_env_from_envp(char **envp);
 // error_handle
 int cmd_error_msg(t_error_cmd cmd_err, char *cmd, t_minishell *shell);
 void cleanup(t_minishell **shell);
