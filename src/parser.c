@@ -42,85 +42,122 @@ int count_strs(char **arr)
 }
 
 // Function to join two char** arrays
+// Helper function to duplicate strings from source to destination
+static int duplicate_strings(char **dest, char **src, int *index)
+{
+    int i;
+
+    i = 0;
+    while (src && src[i])
+    {
+        dest[*index] = ft_strdup(src[i]);
+        if (!dest[*index])
+        {
+            free_arg(dest);
+            return 0;
+        }
+        (*index)++;
+        i++;
+    }
+    return 1;
+}
+
+// Helper function to calculate total length of joined arrays
+static int calculate_total_length(char **arg, char **new)
+{
+    int arg_len;
+    int new_len;
+
+    arg_len = count_strs(arg);
+    new_len = count_strs(new);
+    return arg_len + new_len;
+}
+
+// Main function to join two char** arrays
 char **join_args(char **arg, char **new)
 {
-    int arg_len = count_strs(arg);
-    int new_len = count_strs(new);
-    int total_len = arg_len + new_len;
-    char **joined = malloc(sizeof(char *) * (total_len + 1));
-    int i = 0;
+    int total_len;
+    char **joined;
+    int index;
 
+    total_len = calculate_total_length(arg, new);
+    joined = malloc(sizeof(char *) * (total_len + 1));
     if (!joined)
         return NULL;
 
-    // Copy arg strings
-    while (i < arg_len)
-    {
-        joined[i] = ft_strdup(arg[i]);
-        if (!joined[i]) // handle strdup failure
-        {
-            free_arg(joined);
-            return NULL;
-        }
-        i++;
-    }
+    index = 0;
+    if (!duplicate_strings(joined, arg, &index))
+        return NULL;
 
-    // Copy new strings
-    int j = 0;
-    while (j < new_len)
-    {
-        joined[i] = ft_strdup(new[j]);
-        if (!joined[i])
-        {
-            free_arg(joined);
-            return NULL;
-        }
-        i++;
-        j++;
-    }
+    if (!duplicate_strings(joined, new, &index))
+        return NULL;
 
-    // Null-terminate
-    joined[i] = NULL;
+    joined[index] = NULL;
 
-    // Optionally free old arrays if not needed
     free_arg(arg);
     free_arg(new);
 
     return joined;
 }
 
+static int handle_existing_arguments(t_ast_node *cmd_node, t_list **tokens)
+{
+    char **new_arg;
+
+    new_arg = get_cmd_args(tokens);
+    if (!new_arg)
+        return 0;
+    cmd_node->cmd_arg = join_args(cmd_node->cmd_arg, new_arg);
+    if (!cmd_node->cmd_arg)
+        return 0; // Allocation failure
+    return 1;
+}
+
+static int handle_new_arguments(t_ast_node *cmd_node, t_list **tokens)
+{
+    cmd_node->cmd_arg = get_cmd_args(tokens);
+    if (!cmd_node->cmd_arg)
+        return 0; // Allocation failure
+    return 1;
+}
+
+static int trim_first_argument(char **tmp_arg, t_list *tmp_list)
+{
+    char *trimmed;
+
+    if (ft_strchr(tmp_arg[0], ' ') != NULL &&
+        token_content(tmp_list)->type != TOKEN_DQUOTE &&
+        token_content(tmp_list)->type != TOKEN_SQUOTE)
+    {
+        trimmed = ft_strtrim(tmp_arg[0], " ");
+        if (!trimmed)
+            return 0; // Allocation failure
+        free(tmp_arg[0]);
+        tmp_arg[0] = trimmed;
+    }
+    return 1;
+}
+
 static int process_command_arguments(t_ast_node *cmd_node, t_list **tokens)
 {
-	char **tmp_arg;
-	char *trimmed;
-	char **new_arg;
-	char **arg;
-	t_list *tmp_list;
+    char **tmp_arg;
+    t_list *tmp_list;
+    int result;
 
-	tmp_list = *tokens;
-	arg = cmd_node->cmd_arg;
-	if (arg)
-	{
-		new_arg = get_cmd_args(tokens);
-		if (!new_arg)
-			return 0;
-		cmd_node->cmd_arg = join_args(arg, new_arg);
-	}
-	else
-		cmd_node->cmd_arg = get_cmd_args(tokens);
-	if (!cmd_node->cmd_arg)
-		return 0; // Allocation failure
+    tmp_list = *tokens;
+    if (cmd_node->cmd_arg)
+        result = handle_existing_arguments(cmd_node, tokens);
+    else
+        result = handle_new_arguments(cmd_node, tokens);
 
-	tmp_arg = cmd_node->cmd_arg;
-	if (ft_strchr(tmp_arg[0], ' ') != NULL && token_content(tmp_list)->type != TOKEN_DQUOTE && token_content(tmp_list)->type != TOKEN_SQUOTE)
-	{
-		trimmed = ft_strtrim(tmp_arg[0], " ");
-		if (!trimmed)
-			return 0; // Allocation failure
-		free(tmp_arg[0]);
-		tmp_arg[0] = trimmed;
-	}
-	return 1; // Success
+    if (!result)
+        return 0;
+
+    tmp_arg = cmd_node->cmd_arg;
+    if (!trim_first_argument(tmp_arg, tmp_list))
+        return 0;
+
+    return 1; // Success
 }
 
 static t_ast_node *create_command_node(void)
@@ -260,61 +297,82 @@ t_list *get_redir(t_list **tokens)
 	*tokens = tmp_list; // Update the tokens pointer to the new position
 	return redir;
 }
+static char *get_argument(t_list **tmp_list, char *tmp, t_list *tokens)
+{
+    char *arg;
+
+    if (token_content(*tmp_list)->space == 0 && (*tmp_list)->next != NULL && *tmp_list != tokens)
+        arg = join_tokens(tmp_list, ft_strdup(token_content(*tmp_list)->token));
+    else if (ft_strcmp(token_content(*tmp_list)->token, tmp) == 0 && (*tmp_list)->next != NULL)
+        arg = join_tokens(tmp_list, ft_strdup(token_content(*tmp_list)->token));
+    else
+        arg = ft_strdup(token_content(*tmp_list)->token);
+
+    return arg;
+}
+
+static int allocate_cmd_args(char ***cmd_arg, int arg_count, char **tmp)
+{
+    *cmd_arg = malloc((arg_count + 2) * sizeof(char *));
+    if (!(*cmd_arg))
+    {
+        free(*tmp);
+        return 0;
+    }
+    return 1;
+}
+
+static int process_arguments(t_list **tmp_list, char **cmd_arg, char *tmp, t_list *tokens)
+{
+    char *arg;
+    int i;
+
+    i = 0;
+    while (*tmp_list != NULL && is_word_token(token_content(*tmp_list)->type) &&
+           token_content(*tmp_list)->type != TOKEN_PIPE)
+    {
+        arg = get_argument(tmp_list, tmp, tokens);
+        if (!arg)
+        {
+            free_arg(cmd_arg);
+            free(tmp);
+            return 0;
+        }
+        cmd_arg[i] = arg;
+        i++;
+        *tmp_list = (*tmp_list)->next;
+    }
+    cmd_arg[i] = NULL;
+    return 1;
+}
 
 char **get_cmd_args(t_list **tokens)
 {
-	t_list *tmp_list;
-	char **cmd_arg;
-	char *arg;
-	char *tmp;
-	int i;
-	int arg_count;
+    t_list *tmp_list;
+    char **cmd_arg;
+    char *tmp;
+    int arg_count;
 
-	tmp = ft_strdup("");
-	if (!tmp)
-		return NULL;
+    tmp = ft_strdup("");
+    if (!tmp)
+        return NULL;
 
-	if (!tokens || !(*tokens))
-	{
-		free(tmp);
-		return NULL;
-	}
+    if (!tokens || !(*tokens))
+    {
+        free(tmp);
+        return NULL;
+    }
 
-	arg_count = count_arguments(*tokens);
-	cmd_arg = malloc((arg_count + 2) * sizeof(char *));
-	if (!cmd_arg)
-	{
-		free(tmp);
-		return NULL;
-	}
+    arg_count = count_arguments(*tokens);
+    if (!allocate_cmd_args(&cmd_arg, arg_count, &tmp))
+        return NULL;
 
-	i = 0;
-	tmp_list = *tokens;
-	while (tmp_list != NULL && is_word_token(token_content(tmp_list)->type) &&
-		   token_content(tmp_list)->type != TOKEN_PIPE)
-	{
-		if (token_content(tmp_list)->space == 0 && tmp_list->next != NULL && tmp_list != *tokens)
-			arg = join_tokens(&tmp_list, ft_strdup(token_content(tmp_list)->token));
-		else if (ft_strcmp(token_content(tmp_list)->token, tmp) == 0 && tmp_list->next != NULL)
-			arg = join_tokens(&tmp_list, ft_strdup(token_content(tmp_list)->token));
-		else
-			arg = ft_strdup(token_content(tmp_list)->token);
-
-		if (!arg)
-		{
-			free_arg(cmd_arg);
-			free(tmp);
-			return NULL;
-		}
-
-		cmd_arg[i++] = arg;
-		tmp_list = tmp_list->next;
-	}
-
-	free(tmp); // Free the temporary string
-	cmd_arg[i] = NULL;
-	*tokens = tmp_list;
-	return cmd_arg;
+    tmp_list = *tokens;
+    if (!process_arguments(&tmp_list, cmd_arg, tmp, *tokens))
+        return NULL;
+    free(tmp);
+    *tokens = tmp_list;
+    return cmd_arg;
 }
 
 t_ast_node *create_node(t_node_type type)
@@ -357,7 +415,6 @@ t_ast_node *parse_cmd(t_list **tokens)
 	cmd_node = create_command_node();
 	if (!cmd_node)
 		return NULL;
-
 	while ((*tokens) != NULL && !is_pipe_token((*tokens)))
 	{
 		if (is_word_token(token_content(*tokens)->type))
