@@ -1,7 +1,19 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 03:48:46 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 03:48:46 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 /* Wait for child and handle status */
-int wait_for_child(pid_t pid)
+int	wait_for_child(pid_t pid)
 {
 	int	status;
 	int	ret;
@@ -14,120 +26,116 @@ int wait_for_child(pid_t pid)
 	{
 		sig = WTERMSIG(status);
 		ret = 128 + sig;
-		//printf("g_signal_status: %d\n", g_signal_status);
 		if ((sig == SIGINT || sig == SIGQUIT) && g_signal_status)
 		{
 			print_signal_message(sig);
-			g_signal_status = 0; // Prevent duplicates
+			g_signal_status = 0;
 		}
-		//printf("g_signal_status: %d\n", g_signal_status);
 	}
 	else if (WIFEXITED(status))
 		ret = WEXITSTATUS(status);
 	return (ret);
 }
 
-
 /* Helper function to fork and handle child processes */
-static pid_t fork_and_handle(t_ast_node *pipe_node, t_minishell *shell, 
-                            int pipe_fds[2], int is_left_child)
+static pid_t	fork_and_handle(t_ast_node *pipe_node, t_minishell *shell,
+							int pipe_fds[2], int is_left_child)
 {
-    pid_t pid;
+	pid_t	pid;
 
-    pid = fork();
-    if (pid < 0)
-    {
-        perror("minishell: fork");
-        close(pipe_fds[0]);
-        close(pipe_fds[1]);
-        return (-1);
-    }
-    if (pid == 0)
-    {
-        // handle_child_signals();
-        if (is_left_child)
-            handle_left_child(pipe_node, shell, pipe_fds);
-        else
-            handle_right_child(pipe_node, shell, pipe_fds);
-    }
-    return (pid);
+	pid = fork();
+	if (pid < 0)
+	{
+		perror("minishell: fork");
+		close(pipe_fds[0]);
+		close(pipe_fds[1]);
+		return (-1);
+	}
+	if (pid == 0)
+	{
+		if (is_left_child)
+			handle_left_child(pipe_node, shell, pipe_fds);
+		else
+			handle_right_child(pipe_node, shell, pipe_fds);
+	}
+	return (pid);
 }
 
 /* Execute a pipe command */
-int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
+int	execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 {
-    int pipe_fds[2];
-    pid_t left_pid;
-    pid_t right_pid;
-    int left_status;
-    int right_status;
+	pid_t	left_pid;
+	pid_t	right_pid;
+	int		pipe_fds[2];
+	int		left_status;
+	int		right_status;
 
-    if (!pipe_node)
-        return (-1);
-    if (create_pipe(pipe_fds, pipe_node) == -1)
-        return (-1);
-    g_signal_status = 2;
-    left_pid = fork_and_handle(pipe_node, shell, pipe_fds, 1);
-    if (left_pid < 0)
-        return (-1);
-    right_pid = fork_and_handle(pipe_node, shell, pipe_fds, 0);
-    if (right_pid < 0)
-    {
-        waitpid(left_pid, NULL, 0);
-        return (-1);
-    }
-    (close(pipe_fds[0]), close(pipe_fds[1]));
-    left_status = wait_for_child(left_pid);
-    right_status = wait_for_child(right_pid);
-    g_signal_status = 0;
-    return (return_with_status(shell, right_status));
-}
-static int handle_ast_execution(t_ast_node *ast_root, t_minishell *shell)
-{
-    int result;
-
-    result = 0;
-    if (ast_root->type == NODE_PIPE)
-    {
-        result = execute_pipe(ast_root, shell);
-        if (result == -1)
-        {
-            close_heredoc_fds(ast_root);
-            perror("minishell: execute_pipe");
-            return (return_with_status(shell, 1));
-        }
-    }
-    else if (ast_root->type == NODE_COMMAND)
-    {
-        result = exe_cmd(ast_root, shell);
-        if (result == -1)
-        {
-            close_heredoc_fds(ast_root);
-            perror("minishell: execute_ast_command");
-            return (return_with_status(shell, 1));
-        }
-    }
-    return (result);
+	if (!pipe_node)
+		return (-1);
+	if (create_pipe(pipe_fds, pipe_node) == -1)
+		return (-1);
+	g_signal_status = 2;
+	left_pid = fork_and_handle(pipe_node, shell, pipe_fds, 1);
+	if (left_pid < 0)
+		return (-1);
+	right_pid = fork_and_handle(pipe_node, shell, pipe_fds, 0);
+	if (right_pid < 0)
+	{
+		waitpid(left_pid, NULL, 0);
+		return (-1);
+	}
+	(close(pipe_fds[0]), close(pipe_fds[1]));
+	left_status = wait_for_child(left_pid);
+	right_status = wait_for_child(right_pid);
+	g_signal_status = 0;
+	return (return_with_status(shell, right_status));
 }
 
-int execute_ast(t_ast_node *ast_root, t_minishell *shell)
+static int	handle_ast_execution(t_ast_node *ast_root, t_minishell *shell)
 {
-    int result;
+	int	result;
 
-    result = 0;
-    if (!ast_root)
-    {
-        close_heredoc_fds(ast_root);
-        perror("minishell: No AST to execute");
-        return (return_with_status(shell, 1));
-    }
-    result = handle_ast_execution(ast_root, shell);
-    setup_signal_handlers();
-    close_heredoc_fds(ast_root);
-    cleanup(&shell);
-    return (result);
+	result = 0;
+	if (ast_root->type == NODE_PIPE)
+	{
+		result = execute_pipe(ast_root, shell);
+		if (result == -1)
+		{
+			close_heredoc_fds(ast_root);
+			perror("minishell: execute_pipe");
+			return (return_with_status(shell, 1));
+		}
+	}
+	else if (ast_root->type == NODE_COMMAND)
+	{
+		result = exe_cmd(ast_root, shell);
+		if (result == -1)
+		{
+			close_heredoc_fds(ast_root);
+			perror("minishell: execute_ast_command");
+			return (return_with_status(shell, 1));
+		}
+	}
+	return (result);
 }
 
+int	execute_ast(t_ast_node *ast_root, t_minishell *shell)
+{
+	int	result;
+
+	result = 0;
+	if (!ast_root)
+	{
+		close_heredoc_fds(ast_root);
+		perror("minishell: No AST to execute");
+		return (return_with_status(shell, 1));
+	}
+	result = handle_ast_execution(ast_root, shell);
+	setup_signal_handlers();
+	close_heredoc_fds(ast_root);
+	cleanup(&shell);
+	return (result);
+}
 
 /* Execute a pipe command */
 // int execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
@@ -135,7 +143,6 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 //     int pipe_fds[2];
 //     pid_t left_pid, right_pid;
 //     int status;
-    
 //     if (!pipe_node)
 //         return -1;
 //     if (pipe(pipe_fds) == -1)
@@ -178,7 +185,6 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 //         waitpid(left_pid, NULL, 0); /* Clean up the left child */
 //         return -1;
 //     }
-    
 //     if (right_pid == 0) /* Right child process */
 //     {
 //         handle_child_signals();
@@ -192,7 +198,6 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 //             exit(1);
 //         }
 //         close(pipe_fds[0]);
-        
 //         int ret;
 //         ret = execute_ast(pipe_node->right, shell);
 //         cleanup(&shell);
@@ -209,8 +214,6 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 //     return (return_with_status(shell, right_status));
 // }
 ///////////////////////////****************** //////////////////
-
-
 
 // int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 // {
@@ -248,8 +251,6 @@ int execute_ast(t_ast_node *ast_root, t_minishell *shell)
 //     cleanup(&shell);
 //     return result;
 // }
-
-
 
 // void close_og_fd(t_minishell *shell)
 // {

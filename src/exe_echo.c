@@ -1,10 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exe_echo.c                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 03:48:25 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 03:48:25 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
-// echo builtin
-int exe_echo(t_ast_node *ast)
+int	exe_echo(t_ast_node *ast)
 {
-	int i;
-	int newline;
+	int	i;
+	int	newline;
 
 	i = 1;
 	newline = 1;
@@ -30,68 +41,68 @@ int exe_echo(t_ast_node *ast)
 	return (0);
 }
 
-
-int is_llong_min(const char *str, int start)
+int	is_llong_min(const char *str, int start)
 {
-	const char *llmin = "9223372036854775808";
-	int i = 0;
+	const char	*llmin;
+	int			i;
 
+	llmin = "9223372036854775808";
+	i = 0;
 	while (llmin[i])
 	{
 		if (str[start + i] != llmin[i])
-			return 0;
+			return (0);
 		i++;
 	}
 	return (str[start + i] == '\0' || ft_isspace(str[start + i]));
 }
 
-int skip_whitespace_and_sign(const char *str, int *sign, int *index)
+int	skip_whitespace_and_sign(const char *str, int *sign, int *index)
 {
-    *index = 0;
-    *sign = 1;
-
-    while (ft_isspace(str[*index]))
-        (*index)++;
-    if (str[*index] == '-' || str[*index] == '+')
-    {
-        if (str[*index] == '-')
-            *sign = -1;
-        (*index)++;
-    }
-    if (!ft_isdigit(str[*index]))
-        return 0;
-    return 1;
+	*index = 0;
+	*sign = 1;
+	while (ft_isspace(str[*index]))
+		(*index)++;
+	if (str[*index] == '-' || str[*index] == '+')
+	{
+		if (str[*index] == '-')
+			*sign = -1;
+		(*index)++;
+	}
+	if (!ft_isdigit(str[*index]))
+		return (0);
+	return (1);
 }
 
-int handle_llong_min(const char *str, int sign, int index, long long *num)
+int	handle_llong_min(const char *str, int sign, int index, long long *num)
 {
-    if (sign == -1 && is_llong_min(str, index))
-    {
-        *num = LLONG_MIN;
-        return 1;
-    }
-    return 0;
+	if (sign == -1 && is_llong_min(str, index))
+	{
+		*num = LLONG_MIN;
+		return (1);
+	}
+	return (0);
 }
 
-int convert_to_long_long(const char *str, int index, long long *res)
+int	convert_to_long_long(const char *str, int index, long long *res)
 {
-    *res = 0;
-    while (ft_isdigit(str[index]))
-    {
-        if (*res > LLONG_MAX / 10 || (*res == LLONG_MAX / 10 && (str[index] - '0') > 7))
-            return 0;
-        *res = *res * 10 + (str[index] - '0');
-        index++;
-    }
-    while (str[index])
-    {
-        if (!ft_isspace(str[index]))
-            return 0;
-        index++;
-    }
-    return 1;
+	*res = 0;
+	while (ft_isdigit(str[index]))
+	{
+		if (*res > LLONG_MAX / 10
+			|| (*res == LLONG_MAX / 10 && (str[index] - '0') > 7))
+			return (0);
+		*res = *res * 10 + (str[index] - '0');
+		index++;
+	}
+	while (str[index])
+	{
+		if (!ft_isspace(str[index]))
+			return (0);
+		index++;
+	}
+	return (1);
 }
-
 
 // int exe_exit(t_minishell **shell, t_ast_node *ast)
 // {
@@ -105,9 +116,7 @@ int convert_to_long_long(const char *str, int index, long long *res)
 
 // 	if(g_signal_status == 130)
 // 		(*shell)->exit_status = 130; // Reset after handling
-	
 // 	saved_exit_status = (*shell)->exit_status;
-	
 // 	printf("exit\n");
 // 	// No arguments: exit with last status
 // 	if (arg_count == 1)

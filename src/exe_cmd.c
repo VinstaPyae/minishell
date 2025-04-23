@@ -1,7 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exe_cmd.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pzaw <pzaw@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 03:48:22 by pzaw              #+#    #+#             */
+/*   Updated: 2025/04/24 03:48:23 by pzaw             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
-
-int execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
+int	execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
 {
 	if (ft_strcmp(cmd, "echo") == 0)
 		return (exe_echo(ast));
@@ -20,7 +31,7 @@ int execute_builtin(t_ast_node *ast, t_minishell *shell, char *cmd)
 	return (-1);
 }
 
-void execute_external_helper(t_ast_node *ast_cmd, t_minishell *shell)
+void	execute_external_helper(t_ast_node *ast_cmd, t_minishell *shell)
 {
 	handle_child_signals();
 	close_heredoc_fds(ast_cmd);
@@ -35,10 +46,11 @@ void execute_external_helper(t_ast_node *ast_cmd, t_minishell *shell)
 	if (shell)
 		free(shell);
 }
-int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
+
+int	execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 {
-	pid_t pid;
-	int status;
+	pid_t	pid;
+	int		status;
 
 	g_signal_status = 2;
 	pid = fork();
@@ -55,13 +67,13 @@ int execute_external_command(t_ast_node *ast_cmd, t_minishell *shell)
 		exit(127);
 	}
 	status = wait_for_child(pid);
-    g_signal_status = 0;
+	g_signal_status = 0;
 	return (return_with_status(shell, status));
 }
 
-int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
+int	builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
 {
-	int ret;
+	int	ret;
 
 	if (!ast || !ast->cmd_arg)
 		return (return_with_status(shell, 0));
@@ -71,27 +83,28 @@ int builtin_cmd_check(t_ast_node *ast, t_minishell *shell)
 	return (ret);
 }
 
-int exe_cmd(t_ast_node *node, t_minishell *shell)
+int	exe_cmd(t_ast_node *node, t_minishell *shell)
 {
-	int ret;
-	t_error_cmd cmd_err;
+	t_error_cmd	cmd_err;
+	int			ret;
 
 	shell->og_fd[FD_IN] = dup(STDIN_FILENO);
 	shell->og_fd[FD_OUT] = dup(STDOUT_FILENO);
 	if (node->redir)
 	{
 		if (handle_redirections(node->redir) == -1)
-			return (reset_close_fd(shell->og_fd) ,return_with_status(shell, 1));
+			return (reset_close_fd(shell->og_fd), return_with_status(shell, 1));
 	}
 	ret = builtin_cmd_check(node, shell);
 	if (ret != -1)
 		return (reset_close_fd(shell->og_fd), return_with_status(shell, ret));
-	// print_ast_node(node); // Print AST node for debugging
 	if (ft_strcmp(node->cmd_arg[0], "") == 0 && node->cmd_arg[1] == NULL)
-		return (reset_close_fd(shell->og_fd), return_with_status(shell, shell->exit_status));
+		return (reset_close_fd(shell->og_fd),
+			return_with_status(shell, shell->exit_status));
 	cmd_err = search_cmd_path(node->cmd_arg[0], shell);
 	if (cmd_err != OK_CMD)
-		return (reset_close_fd(shell->og_fd), cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
+		return (reset_close_fd(shell->og_fd),
+			cmd_error_msg(cmd_err, node->cmd_arg[0], shell));
 	ret = execute_external_command(node, shell);
 	reset_close_fd(shell->og_fd);
 	close_heredoc_fds(node);
