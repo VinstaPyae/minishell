@@ -8,7 +8,7 @@ int	ft_isspace(int c)
 	return (0);
 }
 
-int	variable_len(char *input)
+int	variable_len(char	*input)
 {
 	int	i;
 
@@ -19,7 +19,8 @@ int	variable_len(char *input)
 		return (i + 1);
 	while (input[i] && (ft_isalnum(input[i]) || ft_isalpha(input[i]) || input[i] == '_' || input[i] == '$'))
 	{
-		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"') || (input[i] == '$' && (input[i + 1] == '\0' || ft_isspace(input[i+1]) || input[i+1] == '$')))
+		if (ft_isspace(input[i]) || (input[i] == '\'' || input[i] == '"') 
+			|| (input[i] == '$' && (input[i + 1] == '\0' || ft_isspace(input[i+1]) || input[i+1] == '$')))
 			break;
 		i++;
 	}
@@ -64,6 +65,41 @@ int is_redirection_token(t_token_type type)
             type == TOKEN_APPEND || type == TOKEN_HDC);
 }
 
+
+int	quote_len(char *str)
+{
+	int	i;
+	char quote_char;
+
+	i = 0;
+	if (str[i] == '\'' || str[i] == '"')
+	{
+		quote_char = str[i];
+		i++;
+		while (str[i] && str[i] != quote_char)
+			i++;
+		if (str[i] == quote_char)
+			return (i + 1); // Include the closing quote
+		else
+			return (-1); // Unclosed quote
+	}
+	return (0);
+}
+
+int	ft_strcmp(const char *s1, const char *s2)
+{
+	if (!s1)
+		return (-1);
+	if (!s2)
+		return (1);
+	while (*s1 && *s2 && *s1 == *s2)
+	{
+		s1++;
+		s2++;
+	}
+	return ((unsigned char)*s1 - (unsigned char)*s2);
+}
+
 // int	quote_len(char *str)
 // {
 // 	int		i;
@@ -84,24 +120,6 @@ int is_redirection_token(t_token_type type)
 // 	return (0);
 // }
 
-int	quote_len(char *str)
-{
-	int i = 0;
-	char quote_char;
-
-	if (str[i] == '\'' || str[i] == '"')
-	{
-		quote_char = str[i];
-		i++;
-		while (str[i] && str[i] != quote_char)
-			i++;
-		if (str[i] == quote_char)
-			return (i + 1); // Include the closing quote
-		else
-			return -1; // Unclosed quote
-	}
-	return 0;
-}
 
 /*int quote_len(char *str)
 {
@@ -131,71 +149,58 @@ int	quote_len(char *str)
 	return (0); // Not a quote
 }*/
 
-int	ft_strcmp(const char *s1, const char *s2)
-{
-	if (!s1)
-		return (-1);
-	if (!s2)
-		return (1);
-	while (*s1 && *s2 && *s1 == *s2)
-	{
-		s1++;
-		s2++;
-	}
-	return ((unsigned char)*s1 - (unsigned char)*s2);
-}
 
 
 // Assuming you have t_node_type, t_list, t_ast_node, and t_redir defined
 
-void print_redirs(t_list *redir_list)
-{
-    printf("Redirections:\n");
-    while (redir_list)
-    {
-        t_redir *redir = (t_redir *)redir_list->content;
-        if (redir)
-        {
-            printf("  [fd: %d, type: %d, file: %s]\n", redir->fd, redir->type, redir->file);
-        }
-        redir_list = redir_list->next;
-    }
-}
+// void	print_redirs(t_list *redir_list)
+// {
+//     printf("Redirections:\n");
+//     while (redir_list)
+//     {
+//         t_redir *redir = (t_redir *)redir_list->content;
+//         if (redir)
+//         {
+//             printf("  [fd: %d, type: %d, file: %s]\n", redir->fd, redir->type, redir->file);
+//         }
+//         redir_list = redir_list->next;
+//     }
+// }
 
-void print_ast_node(t_ast_node *node)
-{
-    if (!node)
-    {
-        printf("NULL node\n");
-        return;
-    }
+// void	print_ast_node(t_ast_node *node)
+// {
+//     if (!node)
+//     {
+//         printf("NULL node\n");
+//         return;
+//     }
 
-    printf("---- AST Node ----\n");
+//     printf("---- AST Node ----\n");
 
-    // Node type
-    printf("Type: %d\n", node->type); // Replace with string if you have a mapper
+//     // Node type
+//     printf("Type: %d\n", node->type); // Replace with string if you have a mapper
 
-    // Command arguments
-    printf("Command Args: ");
-    if (node->cmd_arg)
-    {
-        for (int i = 0; node->cmd_arg[i]; i++)
-            printf("[%s] ", node->cmd_arg[i]);
-        printf("\n");
-    }
-    else
-        printf("NULL\n");
+//     // Command arguments
+//     printf("Command Args: ");
+//     if (node->cmd_arg)
+//     {
+//         for (int i = 0; node->cmd_arg[i]; i++)
+//             printf("[%s] ", node->cmd_arg[i]);
+//         printf("\n");
+//     }
+//     else
+//         printf("NULL\n");
 
-    // Redirections
-    if (node->redir)
-        print_redirs(node->redir);
-    else
-        printf("Redirections: NULL\n");
+//     // Redirections
+//     if (node->redir)
+//         print_redirs(node->redir);
+//     else
+//         printf("Redirections: NULL\n");
 
-    // Recursively print left and right
-    printf("Left:\n");
-    print_ast_node(node->left);
-    printf("Right:\n");
-    print_ast_node(node->right);
-	printf("------------------------\n");
-}
+//     // Recursively print left and right
+//     printf("Left:\n");
+//     print_ast_node(node->left);
+//     printf("Right:\n");
+//     print_ast_node(node->right);
+// 	printf("------------------------\n");
+// }
