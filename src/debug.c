@@ -50,5 +50,5 @@ int	n_option_checked(const char *str)
 	i = 1;
 	while (str[i] == 'n')
 		i++;
-	return ((i > 1) && (str[i + 1] == '\0'));
+	return ((i > 1) && (str[i] == '\0'));
 }
