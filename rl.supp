@@ -1,8 +1,43 @@
 {
-   <readline>
+   readline_still_reachable_1
+   Memcheck:Leak
+   match-leak-kinds:reachable
+   fun:malloc
+   fun:xmalloc
+   fun:rl_make_bare_keymap
+   fun:rl_generic_bind
+   fun:rl_bind_keyseq_if_unbound_in_map
+   obj:/usr/lib/x86_64-linux-gnu/libreadline.so.8.2
+   fun:rl_initialize
+   fun:readline
+   fun:get_input
+   fun:handle_input_and_signals
+   fun:minishell_loop
+   fun:main
+}
+
+{
+   readline_still_reachable_2
+   Memcheck:Leak
+   match-leak-kinds:reachable
+   fun:malloc
+   fun:xmalloc
+   fun:rl_make_bare_keymap
+   fun:rl_generic_bind
+   fun:rl_parse_and_bind
+   obj:/usr/lib/x86_64-linux-gnu/libreadline.so.8.2
+   fun:rl_initialize
+   fun:readline
+   fun:get_input
+   fun:handle_input_and_signals
+   fun:minishell_loop
+   fun:main
+}
+{
+   readline_catchall
    Memcheck:Leak
    match-leak-kinds:reachable
    ...
-   obj:/usr/lib/x86_64-linux-gnu/libreadline.so.8.1
-   ...
+   obj:/usr/lib/x86_64-linux-gnu/libreadline.so.*
 }
+

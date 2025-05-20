@@ -99,9 +99,6 @@ void	c_token_destroy(void *c_token)
 
 void	free_ast(t_ast_node *node)
 {
-	int	i;
-
-	i = 0;
 	if (!node)
 		return ;
 	if (node->cmd_arg)

@@ -67,7 +67,6 @@ int	execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 	pid_t	left_pid;
 	pid_t	right_pid;
 	int		pipe_fds[2];
-	int		left_status;
 	int		right_status;
 
 	if (!pipe_node)
@@ -85,7 +84,7 @@ int	execute_pipe(t_ast_node *pipe_node, t_minishell *shell)
 		return (-1);
 	}
 	(close(pipe_fds[0]), close(pipe_fds[1]));
-	left_status = wait_for_child(left_pid);
+	wait_for_child(left_pid);
 	right_status = wait_for_child(right_pid);
 	g_signal_status = 0;
 	return (return_with_status(shell, right_status));
